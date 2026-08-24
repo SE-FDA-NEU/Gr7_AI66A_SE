@@ -1,6 +1,3 @@
-# D3_Gr7_AI66A
-
-## Group 7 – AI66A
 # Team Project
 
 One-paragraph description of what your team is building goes here.
@@ -9,8 +6,11 @@ One-paragraph description of what your team is building goes here.
 
 | Name | GitHub username | Role |
 | --- | --- | --- |
-| Ngân An | nganannn| |
-| Tran Tue Khang | khangtrannf | Blank |
+| Lê Ngọc Anh Thư | anhthu0910 | Leader |
+| Đào Ngọc Hiền | dnghien | Member |
+| Nguyễn Ngân An | nganannn| Member |
+| Trần Tuệ Khang | khangtrannf | Member |
+| Nguyễn Thành Lân | ngthanhlan06-droid | Member |
 
 ## Setup
 
@@ -18,4 +18,3 @@ One-paragraph description of what your team is building goes here.
 git clone <this-repo-url>
 cd <repo-name>
 ```
-

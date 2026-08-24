@@ -7,8 +7,10 @@ One-paragraph description of what your team is building goes here.
 | Name | GitHub username | Role |
 | --- | --- | --- |
 | Lê Ngọc Anh Thư | anhthu0910 | Leader |
-| Ngân An | nganannn| |
-| Tran Tue Khang | khangtrannf | Blank |
+| Đào Ngọc Hiền | dnghien | Member |
+| Nguyễn Ngân An | nganannn| Member |
+| Trần Tuệ Khang | khangtrannf | Member |
+| Nguyễn Thành Lân | ngthanhlan06-droid | Member |
 
 ## Setup
 

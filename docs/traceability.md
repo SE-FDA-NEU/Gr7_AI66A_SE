@@ -10,6 +10,7 @@ update this file should not be approved.
 | `/` | Landing page | G | P0 | F1 | #3 | #14 | Done |
 | | | | | | | | |
 
+
 **Access codes:** G = guest (not logged in) · U = authenticated user · A = admin
 
 **Status:** Not started / In progress / Done

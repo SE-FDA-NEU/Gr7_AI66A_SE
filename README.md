@@ -1,20 +1,16 @@
-# Team Project
+# Mini LMS
 
-One-paragraph description of what your team is building goes here.
+Nền tảng giúp giảng viên dễ dàng tạo, quản lý và chấm quiz, đồng thời cung cấp cho sinh viên môi trường làm bài và nhận kết quả, thống kê học tập nhanh chóng.
 
-## Team
+**Nhóm:** Group 7 · **Thành viên:** Lê Ngọc Anh Thư, Nguyễn Ngân An, Đào Ngọc Hiền, Nguyễn Thành Lân, Trần Tuệ Khang
+**Product Owner (cố định cả kỳ):** Lê Ngọc Anh Thư
+**Scrum Master (luân phiên mỗi sprint):** Nguyễn Ngân An (Sprint 1)
+**Board:** https://github.com/orgs/SE-FDA-NEU/projects/17
 
-| Name | GitHub username | Role |
-| --- | --- | --- |
-| Lê Ngọc Anh Thư | anhthu0910 | Leader |
-| Đào Ngọc Hiền | dnghien | Member |
-| Nguyễn Ngân An | nganannn| Member |
-| Trần Tuệ Khang | khangtrannf | Member |
-| Nguyễn Thành Lân | ngthanhlan06-droid | Member |
-
-## Setup
+## Chạy thử
 
 ```bash
-git clone <this-repo-url>
-cd <repo-name>
+git clone <repo>
+cd <repo>
+# các lệnh cài đặt — người không có gì trên máy phải làm theo được
 ```

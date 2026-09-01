@@ -12,5 +12,4 @@ Nền tảng giúp giảng viên dễ dàng tạo, quản lý và chấm quiz, �
 ```bash
 git clone <repo>
 cd <repo>
-# các lệnh cài đặt — người không có gì trên máy phải làm theo được
 ```

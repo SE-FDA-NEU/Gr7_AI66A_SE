@@ -1,24 +1,17 @@
 # Traceability
 
 Every screen traces back to a feature and forward to the issue that built it.
-This table is the single source of truth for Milestone 1 section 6 and for the
-Milestone 4 report. Keep it current - a PR that adds a route and does not
-update this file should not be approved.
-
 | Route | Purpose | Access | Priority | Feature | Story issue | PR | Status |
 |-------|---------|--------|----------|---------|-------------|-----|--------|
-| `/` | Landing page | G | P0 | F1 | #3 | #14 | Done |
-| | | | | | | | |
-
+| `/login` | User authentication & role selection | G | P0 | F1 | #3 | - | In progress |
+| `/lecturer/dashboard` | Lecturer dashboard & quiz list | U | P0 | F2 | #4 | - | In progress |
+| `/quiz/create` | Quiz creation form | U | P0 | F2 | #4 | - | In progress |
+| `/quiz/:id/questions` | Question & choice management | U | P0 | F3 | #5 | - | In progress |
+| `/student/dashboard` | Student dashboard & quiz listing | U | P0 | F4 | #6 | - | In progress |
+| `/student/quiz/:id/take` | Student quiz taking screen & anti-cheat | U | P0 | F4 | #6 | - | In progress |
 **Access codes:** G = guest (not logged in) · U = authenticated user · A = admin
-
-**Status:** Not started / In progress / Done
-
-## Business rules
-
-Numbered, so issues and tests can cite them.
-
 | # | Rule | Enforced where | Tested by |
 |---|------|----------------|-----------|
-| BR1 | | | |
-| BR2 | | | |
+| BR1 | Lecturers can only view and edit quizzes created by themselves | Backend API / Quiz Controller | `tests/test_quiz_permissions.py` |
+| BR2 | Exam attempt records must be append-only for audit log integrity | Database / Attempt Service | `tests/test_attempt_audit.py` |
+| BR3 | Auto-grading score must be computed immediately upon submission | Grading Engine | `tests/test_auto_grading.py` |

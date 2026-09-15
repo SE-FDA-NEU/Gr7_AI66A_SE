@@ -6,57 +6,68 @@ evidence that the process was real.
 
 ---
 
-## Sprint N - <start date> to <end date>
-
-<!-- Sprint 1: weeks 5-6 | Sprint 2: 7-8 | Sprint 3: 9-10 | Sprint 4: 11-12 | Sprint 5: 13-14 -->
+## Sprint 1 - 2026-09-15 to 2026-09-29
 
 ### Sprint goal
 
-<One sentence. If you cannot state the goal in one sentence, the sprint
-has no goal and you are just doing tasks.>
+Deliver core user authentication, lecturer quiz creation & management, and foundational student exam attempt entry for Mini LMS.
 
 ### Hai chore issue bắt buộc
 
 | Issue | Người làm | Đã đóng? |
 |-------|-----------|----------|
-| [Chore] Refine backlog cho Sprint N | @ (PO) | |
-| [Chore] Sprint N wrap-up | @ (SM) | |
+| [Chore] Refine backlog cho Sprint 1 | @anhthu (PO) | Chưa |
+| [Chore] Sprint 1 wrap-up | @nganan (SM) | Chưa |
 
 ### Committed
 
 | Issue | Story | Points | Owner |
 |-------|-------|--------|-------|
-| #     |       |        | @     |
+| #1 | [Chore] Refine backlog for Sprint 1 | 2 | @anhthu |
+| #2 | [Chore] Sprint 1 wrap-up | 2 | @nganan |
+| #3 | [Story] User Authentication & Role Separation | 5 | @tuekhang |
+| #4 | [Story] Lecturer Quiz Creation & Management | 5 | @thanhlan |
+| #5 | [Story] Add Multiple-Choice Questions to Quiz | 8 | @ngochien |
+| #6 | [Story] Student Quiz Listing & Attempt Initialization | 5 | @tuekhang |
+| #7 | [Spike] Prototype Quiz-Taking UI & Anti-Cheat Rules | 3 | @ngochien |
 
-**Total committed: __ points**
+**Total committed: 30 points**
 
 ### Result
 
 | Issue | Points | Status | If not done, why |
 |-------|--------|--------|------------------|
-| #     |        | Done / Carried over | |
+| #1 | 2 | In progress | |
+| #2 | 2 | In progress | |
+| #3 | 5 | In progress | |
+| #4 | 5 | In progress | |
+| #5 | 8 | In progress | |
+| #6 | 5 | In progress | |
+| #7 | 3 | In progress | |
 
-**Completed: __ points. Velocity this sprint: __**
+**Completed: 0 points. Velocity this sprint: TBD**
 
 ### Sprint Review
 
-- What we demonstrated:
-- Feedback received:
-- Backlog changes as a result:
+- What we demonstrated: TBD at end of sprint
+- Feedback received: TBD at end of sprint
+- Backlog changes as a result: TBD at end of sprint
 
 ### Retrospective
 
 | Keep doing | Stop doing | Start doing |
 |------------|------------|-------------|
-|            |            |             |
+| TBD | TBD | TBD |
 
-**One concrete action for next sprint (with an owner):**
-
-<!-- A retro that produces no action item is a complaint session.
-     Exactly one action, one owner, checked at the next retro. -->
+**One concrete action for next sprint (with an owner):** TBD at Sprint 1 Retro
 
 ### Attendance
 
 | Member | Planning | Review | Retro |
 |--------|----------|--------|-------|
-| @      |          |        |       |
+| @anhthu | Yes | | |
+| @nganan | Yes | | |
+| @ngochien | Yes | | |
+| @thanhlan | Yes | | |
+| @tuekhang | Yes | | |
+

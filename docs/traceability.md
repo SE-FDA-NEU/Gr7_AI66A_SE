@@ -9,7 +9,7 @@ Every screen traces back to a feature and forward to the issue that built it.
 | `/quiz/:id/questions` | Question & choice management | U | P0 | F3 | #5 | - | In progress |
 | `/student/dashboard` | Student dashboard & quiz listing | U | P0 | F4 | #6 | - | In progress |
 | `/student/quiz/:id/take` | Student quiz taking screen & anti-cheat | U | P0 | F4 | #6 | - | In progress |
-
+# Business Rules
 
 **Access codes:** G = guest (not logged in) · U = authenticated user · A = admin
 | # | Rule | Enforced where | Tested by |

@@ -1,6 +1,6 @@
 ## Section 1 — Chosen process and its position on the spectrum
 
-**(a) The model.** We follow **incremental development with throwaway prototyping** used as a technique inside it (prototypes for the quiz-taking screen and for the anti-cheat rules only; prototype code is never merged) [1]. 
+**(a) The model.** We follow **incremental development with throwaway prototyping** used as a technique inside it (prototypes for the quiz-taking screen and for the anti-cheat rules only; prototype code is never merged) 
 
 One cycle = one two-week iteration and runs as follows. Monday of week 1: the whole team holds iteration planning; the member acting as product owner brings the re-prioritized backlog, and each story entering the sprint must already carry written acceptance criteria [1]. Uncertain UI or scoring stories get a one-day prototype spike first, reviewed by the team before implementation starts [1]. Implementation happens on feature branches, one member per story, with a second member assigned as reviewer at planning time [1]. Every branch reaches main only through a reviewed Pull Request with CI green [1]. Friday of week 2: integration build is deployed to staging, we run a 30-minute usability session with students outside the team, demo the increment, then hold a retrospective [1]. At the end of each cycle, **a potentially deployable, verified, and tested software increment exists on the staging environment**.
 

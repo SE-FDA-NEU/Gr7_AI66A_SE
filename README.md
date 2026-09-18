@@ -11,6 +11,6 @@ Nền tảng giúp giảng viên dễ dàng tạo, quản lý và chấm quiz, �
 ## Chạy thử
 
 ```bash
-git clone <repo>
+git clone 
 cd <repo>
 ```

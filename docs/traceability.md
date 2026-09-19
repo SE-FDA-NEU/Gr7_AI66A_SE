@@ -8,7 +8,7 @@ Every screen traces back to a feature and forward to the issue that built it.
 | `/quiz/create` | Quiz creation form | U | P0 | F2 | [#18](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/18) | - | In progress |
 | `/quiz/:id/questions` | Question & choice management | U | P0 | F3 | #5 | - | In progress |
 | `/student/dashboard` | Student dashboard & quiz listing | U | P0 | F4 | [#20](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/20) | - | In progress |
-| `/student/quiz/:id/take` | Student quiz taking screen & anti-cheat | U | P0 | F4 | #6 | - | In progress |
+| `/student/quiz/:id/take` | Student quiz taking screen & anti-cheat | U | P0 | F4 | [#30](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/30) | - | In progress |
 
 # Business Rules
 

@@ -14,10 +14,6 @@ Deliver core user authentication, lecturer quiz creation & management, and found
 
 ### Hai chore issue bắt buộc
 
-| Issue | Người làm | Đã đóng? |
-|-------|-----------|----------|
-| [Chore] Refine backlog cho Sprint 1 | @anhthu (PO) | Chưa |
-| [Chore] Sprint 1 wrap-up | @nganan (SM) | Chưa |
 
 ### Committed
 

@@ -9,7 +9,7 @@ Every screen traces back to a feature and forward to the issue that built it.
 | `/quiz/:id/questions` | Question & choice management | U | P0 | F3 | #5 | - | In progress |
 | `/student/dashboard` | Student dashboard & quiz listing | U | P0 | F4 | [#20](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/20) | - | In progress |
 | `/student/quiz/:id/take` | Student quiz taking screen & anti-cheat | U | P0 | F4 | #6 | - | In progress |
-| `/lecturer/quiz/:id/publish` | Lecturer Publishes and Closes Quiz | U | P0 | F5 | [#34](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/34) | - | In progress |
+| `/lecturer/quiz/:id/publish` | Lecturer Publishes and Closes Quiz | U | P0 | F5 | [#34](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/34) | [#39](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/39) | In progress |
 # Business Rules
 
 **Access codes:** G = guest (not logged in) · U = authenticated user · A = admin

@@ -5,7 +5,11 @@ Every screen traces back to a feature and forward to the issue that built it.
 | Route | Purpose | Access | Priority | Feature | Story issue | PR | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `/login` | User authentication & role selection | G | P0 | F1 | [#51](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/51) | - | In progress |
-| `/lecturer/dashboard` | Lecturer dashboard & quiz list | U | P0 | F2 | #4 | - | In progress |
+| `/lecturer/dashboard` | Lecturer dashboard & quiz list | U | P0 | F2 | #4 | - | In progress |20-quiz-listing
+| `/quiz/create` | Quiz creation form | U | P0 | F3 | [#18](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/18) | - | In progress |
+| `/quiz/:id/questions` | Question & choice management | U | P0 | F4 | #5 | - | In progress |
+| `/student/dashboard` | Student dashboard with available quiz listing | U | P0 | F5 | [#20](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/20) | [#40](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/40) | In progress |
+| `/student/quiz/:id/take` | Student quiz taking screen & anti-cheat | U | P0 | F6 | #6 | - | In progress |
 | `/quiz/create` | Quiz creation form | U | P0 | F2 | [#18](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/18) | - | In progress |
 | `/quiz/:id/questions` | Question & choice management | U | P0 | F3 | [#19](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/19) | [#47](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/47) | In progress |
 | `/student/dashboard` | Student dashboard & quiz listing | U | P0 | F4 | [#35](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/35) | [#43](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/43) | In progress |

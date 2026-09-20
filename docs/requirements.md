@@ -1,27 +1,12 @@
 # Mini LMS - Milestone 1 Requirements
 
-> **Submission note:** Replace every `[TO FILL]` item with verified team or GitHub information before exporting the PDF. Interview notes must reflect conversations that actually happened.
-
-## Cover block
-
-- **Team:** Group 7 - Mini LMS
-- **Topic:** [TO FILL - assigned topic]
-- **Members:** Lê Ngọc Anh Thư, Nguyễn Ngân An, Đào Ngọc Hiền, Nguyễn Thành Lân, Trần Tuệ Khang
-- **Product Owner:** Lê Ngọc Anh Thư (`@anhthu`)
-- **Scrum Master (Sprint 1):** Nguyễn Ngân An (`@nganan`)
-- **Repository:** https://github.com/SE-FDA-NEU/Gr7_AI66A_SE
-- **Project board:** https://github.com/orgs/SE-FDA-NEU/projects/17
-- **Pull Request:** [TO FILL]
-- **Merge commit:** [TO FILL]
-- **Submitted by:** [TO FILL]
-
 ## 1. Product vision
 
 Mini LMS is for university lecturers and students who need to create, deliver, complete, and review online quizzes, removing manual quiz administration and delayed marking while providing a more structured and auditable alternative to collecting answers through chat, email, or spreadsheets.
 
 ## 2. Personas
 
-### Persona 1 - Linh, university lecturer
+### Persona 1 - Ngan, university lecturer
 
 - **Role:** Lecturer teaching a large undergraduate class.
 - **Goal:** Create a multiple-choice quiz, publish it to the correct class, and see reliable scores without manually checking every answer.
@@ -29,7 +14,7 @@ Mini LMS is for university lecturers and students who need to create, deliver, c
 - **In her words:** "I need to know that every student received the same quiz and that the score came from the submitted answers."
 - **Technical context:** Uses a laptop for preparation and expects clear validation before publishing.
 
-### Persona 2 - Minh, first-year student
+### Persona 2 - Duc, first-year student
 
 - **Role:** University student taking quizzes on a phone or laptop.
 - **Goal:** Find an available quiz, complete it before the deadline, submit it once, and see the result quickly.
@@ -37,46 +22,47 @@ Mini LMS is for university lecturers and students who need to create, deliver, c
 - **In his words:** "When I submit, I want a clear result instead of wondering whether my answers were saved."
 - **Technical context:** Uses a phone on campus Wi-Fi and needs readable questions with a visible remaining-time indicator.
 
-**Interview note:** [TO FILL - record the real names/roles or pseudonyms, dates, and key findings for at least two people interviewed by the team. Confirm the two quotes above against the actual conversations before submission.]
+**Interview note:** 
+  - Ngan An spoke to Mrs. Ngan on 3.40 p.m, 17th September 2026
+  - Anh Thu spoke to Duc on 10.31 a.m, 20th September 2026
 
 ## 3. Scenarios
 
-### Scenario 1 - Linh creates and publishes a quiz
+### Scenario 1 - Ngan creates and publishes a quiz
 
-1. Linh signs in as a lecturer before her Monday class.
+1. Ngan signs in as a lecturer before her Monday class.
 2. She starts a new quiz and enters the title "Week 3 - Software Engineering".
 3. She sets the quiz duration to 20 minutes and adds 10 multiple-choice questions.
 4. The system identifies that each question has exactly one correct choice and shows the quiz as ready to review.
-5. Linh reviews the question list, correct choices, duration, and availability dates.
+5. Ngan reviews the question list, correct choices, duration, and availability dates.
 6. She publishes the quiz for her class, and the quiz becomes visible to eligible students.
 7. She opens the quiz list and sees the published status and the number of student attempts.
 
-### Scenario 2 - Minh completes and submits a quiz
+### Scenario 2 - Duc completes and submits a quiz
 
-1. Minh signs in as a student and looks for quizzes currently available to him.
+1. Duc signs in as a student and looks for quizzes currently available to him.
 2. He chooses "Week 3 - Software Engineering" and reads its 20-minute duration and deadline.
 3. He starts the attempt and answers the 10 multiple-choice questions while the remaining time is visible.
 4. Before finishing, he reviews the selected choices and sees that question 7 has no answer.
 5. He selects an answer for question 7 and submits the attempt.
 6. The system confirms that the attempt was submitted and calculates the score from the stored answers.
-7. Minh opens the result and sees his score, the number of correct answers, and the submission time.
+7. Duc opens the result and sees his score, the number of correct answers, and the submission time.
 
 ## 4. User stories
 
 ### 4.1 Story summary
-
-| ID   | Story                                               | Priority | Points |
-| ---- | --------------------------------------------------- | -------: | -----: |
-| US01 | Sign in and receive the correct role                |       P0 |      3 |
-| US02 | Lecturer creates a quiz                             |       P0 |      5 |
-| US03 | Lecturer adds multiple-choice questions             |       P0 |      5 |
-| US04 | Lecturer publishes a quiz                           |       P0 |      3 |
-| US05 | Student sees available quizzes                      |       P0 |      3 |
-| US06 | Student starts a quiz attempt                       |       P0 |      3 |
-| US07 | Student answers and reviews a quiz                  |       P1 |      5 |
-| US08 | Student submits a quiz                              |       P0 |      3 |
-| US09 | Student sees an automatically calculated result     |       P1 |      5 |
-| US10 | Lecturer views an append-only attempt audit history |       P2 |      5 |
+| ID | Story | Priority | Points |
+| --- | --- | ---: | ---: |
+| US01 | Sign in and receive the correct role | P0 | 3 |
+| US02 | Lecturer creates a quiz | P0 | 5 |
+| US03 | Lecturer adds multiple-choice questions | P0 | 5 |
+| US04 | Lecturer publishes a quiz | P0 | 3 |
+| US05 | Student sees available quizzes | P0 | 3 |
+| US06 | Student starts a quiz attempt | P0 | 3 |
+| US07 | Student answers and reviews a quiz | P1 | 5 |
+| US08 | Student submits a quiz | P0 | 3 |
+| US09 | Student sees an automatically calculated result | P1 | 5 |
+| US10 | Lecturer views an append-only attempt audit history | P2 | 5 |
 
 ### 4.2 Acceptance criteria
 
@@ -162,7 +148,7 @@ A guest cannot access authenticated quiz data, a student cannot access lecturer 
 
 A lecturer may edit or publish only quizzes they created.
 
-**Worked example:** Lecturer Linh owns quiz Q01. At 09:00 Linh may edit Q01; lecturer Nam requests the same edit at 09:01 and receives `403 Forbidden`, while Q01 remains unchanged.
+**Worked example:** Lecturer Ngan owns quiz Q01. At 09:00 Ngan may edit Q01; lecturer Nam requests the same edit at 09:01 and receives `403 Forbidden`, while Q01 remains unchanged.
 
 ### BR3 - A quiz must contain valid questions before publication
 
@@ -180,7 +166,7 @@ The attempt cannot continue after the configured duration or the quiz closing ti
 
 After a student submits an attempt for a quiz, another submitted attempt for that same student and quiz is rejected.
 
-**Worked example:** Minh submits Q03 at 14:20. At 14:25 he tries to start Q03 again; the system rejects the request with `You have already submitted this quiz` and keeps the submitted attempt count at 1.
+**Worked example:** Duc submits Q03 at 14:20. At 14:25 he tries to start Q03 again; the system rejects the request with `You have already submitted this quiz` and keeps the submitted attempt count at 1.
 
 ### BR6 - Submitted attempts and scores are append-only
 
@@ -192,13 +178,19 @@ After submission, the original answers, score, and event history cannot be updat
 
 **Access codes:** G = guest, U = authenticated user, A = administrator.
 
-| Route                    | Purpose                                   | Access | Priority |
-| ------------------------ | ----------------------------------------- | ------ | -------: |
-| `/login`                 | Sign in and select the user role          | G      |       P0 |
-| `/student/dashboard`     | Show quizzes available to a student       | U      |       P0 |
-| `/lecturer/dashboard`    | Show lecturer-owned quizzes and statuses  | U      |       P0 |
-| `/quiz/create`           | Create a quiz and add its basic details   | U      |       P0 |
-| `/student/quiz/:id/take` | Answer, review, and submit a quiz attempt | U      |       P0 |
+| Route | Purpose | Access | Priority | 
+| --- | --- | --- | --- | 
+| `/login` | User authentication & role selection | G | P0 | 
+| `/quiz/create` | Quiz creation form | U | P0 | 
+| `/quiz/:id/questions` | Question & choice management | U | P0 | 
+| `/student/dashboard` | Student dashboard with available quiz listing | U | P0 |
+| `/student/quiz/:id/take` | Student quiz taking screen & anti-cheat | U | P0 | 
+| `/lecturer/quiz/:id/audit` | Preserve Attempt Audit History | U | P2 |
+| `/student/quiz/:id/grade` | Automatic quiz grading & score result | U | P1 | 
+| `/lecturer/quiz/:id/publish` | Lecturer Publishes and Closes Quiz | U | P0 | 
+| `/lecturer/quiz/:id/time` | Set quiz duration | A | P1 | 
+| `/student/quiz/:id/submit` | Submit quiz & confirm completion | U | P0 | 
+| `/student/quiz/:id/review` | Student views quiz result | U | P1 | 
 
 ```mermaid
 flowchart TD
@@ -211,3 +203,17 @@ flowchart TD
 ```
 
 Every listed route appears in the flow and is reachable from `/login` through a role-specific path. The lecturer path returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.
+
+    Create -->|save and publish| Lecturer
+    Student -->|choose available quiz| Take["/student/quiz/:id/take"]
+    Take -->|submit| Student
+```
+
+Every listed route appears in the flow and is reachable from `/login` through a role-specific path. The lecturer path returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.
+vailable quiz| Take["/student/quiz/:id/take"]
+    Take -->|submit| Student
+```
+
+Every listed route appears in the flow and is reachable from `/login` through a role-specific path. The lecturer path returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.
+reachable from `/login` through a role-specific path. The lecturer path returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.
+ returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.

@@ -1,15 +1,20 @@
-# Traceabilityệ
+# Traceability
 
 Every screen traces back to a feature and forward to the issue that built it.
+
 | Route | Purpose | Access | Priority | Feature | Story issue | PR | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `/login` | User authentication & role selection | G | P0 | F1 | [#17](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/17) | - | In progress |
-| `/lecturer/dashboard` | Lecturer dashboard & quiz list | U | P0 | F2 | #4 | - | In progress |
-| `/quiz/create` | Quiz creation form | U | P0 | F2 | [#18](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/18) | - | In progress |
-| `/quiz/:id/questions` | Question & choice management | U | P0 | F3 | #5 | - | In progress |
-| `/student/dashboard` | Student dashboard & quiz listing | U | P0 | F4 | [#20](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/20) | - | In progress |
-| `/student/quiz/:id/take` | Student quiz taking screen & anti-cheat | U | P0 | F4 | #6 | - | In progress |
-| `/student/quiz/:id/take` | Student quiz taking screen & anti-cheat | U | P0 | F4 | #6 | - | In progress |
+| `/login` | User authentication & role selection | G | P0 | F1 | [#17](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/17) | [#51](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/51) | In progress |
+| `/quiz/create` | Quiz creation form | U | P0 | F2 | [#18](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/18) | [#29](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/29) | In progress |
+| `/quiz/:id/questions` | Question & choice management | U | P0 | F3 | [#19](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/19) | [#47](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/47) | In progress |
+| `/student/dashboard` | Student dashboard with available quiz listing | U | P0 | F4 | [#20](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/20) | [#40](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/40) | In progress |
+| `/student/quiz/:id/take` | Student quiz taking screen & anti-cheat | U | P0 | F5 | [#30](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/30) | [#45](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/45) | In progress |
+| `/lecturer/quiz/:id/audit` | Preserve Attempt Audit History | U | P2 | F6 | [#37](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/37) | [#41](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/41/) | In progress |
+| `/student/quiz/:id/grade` | Automatic quiz grading & score result | U | P1 | F7 | [#32](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/32) | [#44](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/44) | In progress |
+| `/lecturer/quiz/:id/publish` | Lecturer Publishes and Closes Quiz | U | P0 | F8 | [#34](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/34) | [#39](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/39) | In progress |
+| `/lecturer/quiz/:id/time` | Set quiz duration | A | P1 | F9 | [#36](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/36) | [#48](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/48) | In progress |
+| `/student/quiz/:id/submit` | Submit quiz & confirm completion | U | P0 | F10 | [#31](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/31) | [#42](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/42) | In progress |
+| `/student/quiz/:id/review` | Student views quiz result | U | P1 | F11 | [#33](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/33) | [#50](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/50) | In progress |
 
 **Access codes:** G = guest (not logged in) · U = authenticated user · A = admin
 

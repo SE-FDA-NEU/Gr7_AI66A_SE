@@ -21,7 +21,7 @@ Every screen traces back to a feature and forward to the issue that built it.
 | `/lecturer/quiz/:id/time` | Set quiz duration | A | P1 | F7 | [#36](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/36) | [#48](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/48) | In progress |
 | `/student/quiz/:id/submit` | Submit quiz & confirm completion | U | P0 | F8 | [#31](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/31) | [#42](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/42) | In progress |
 | `/student/quiz/:id/review` | Student views quiz result | U | P1 | F9 | [#33](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/33) | [#50](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/50) | In progress |
-| `/admin/users` | Admin Manages User Accounts and Roles | A | P0 | F10 | [#49](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/49) | [#50](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/50) | In progress |
+| `/admin/users` | Admin Manages User Accounts and Roles | A | P0 | F10 | [#49](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/49) | [#52](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/52) | In progress |
 
 # Business Rules
 

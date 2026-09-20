@@ -7,6 +7,8 @@ Nền tảng giúp giảng viên dễ dàng tạo, quản lý và chấm quiz, �
 - **Product Owner (cố định cả kỳ):** Lê Ngọc Anh Thư
 - **Scrum Master (luân phiên mỗi sprint):** Nguyễn Ngân An (Sprint 1)
 - **Board:** https://github.com/orgs/SE-FDA-NEU/projects/17
+- **Definition of Done:** [docs/definition-of-done.md](docs/definition-of-done.md)
+- **Requirements:** [docs/requirements.md](docs/requirements.md)
 
 ## Chạy thử
 

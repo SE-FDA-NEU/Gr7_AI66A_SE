@@ -11,6 +11,8 @@ Every screen traces back to a feature and forward to the issue that built it.
 | `/student/dashboard` | Student dashboard & quiz listing | U | P0 | F4 | [#20](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/20) | - | In progress |
 | `/student/quiz/:id/take` | Student quiz taking screen & anti-cheat | U | P0 | F4 | [#30](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/30) | - | In progress |
 | `/student/quiz/:id/grade` | Automatic quiz grading & score result | U | P1 | F4 | [#44](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/44) | - | In progress |
+| `/student/quiz/:id/take` | Student quiz taking screen & anti-cheat | U | P0 | F4 | [#45](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/45) | - | In progress |
+| `/student/quiz/:id/take` | Student quiz taking screen & anti-cheat | U | P0 | F4 | #6 | - | In progress |
 | `/student/quiz/:id/take/warning` | Student quiz taking screen & anti-cheat | U | P1 | F5 | [#38](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/38) | [#46](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/46) | In progress |
 | `/lecturer/quiz/:id/time` | Set quiz duration | A | P1 | F7 | [#36](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/36) | [#48](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/48) | In progress |
 | `/student/quiz/:id/submit` | Submit quiz & confirm completion | U | P0 | F8 | [#31](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/31) | [#42](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/42) | In progress |

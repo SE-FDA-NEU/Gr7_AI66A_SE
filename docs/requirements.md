@@ -129,8 +129,8 @@ As a student, I want to start an available quiz so that the system records my at
 
 As a student, I want to answer and review questions before submission so that I can correct missing or unintended choices.
 
-- **Given** a quiz has 10 questions, **when** the student selects choice `B` for question 7 and moves to question 8, **then** question 7 remains marked as answered with choice `B`.
-- **Given** question 7 is unanswered, **when** the student opens the review, **then** the review lists `Question 7` under unanswered questions.
+- Given a quiz has 10 questions, when the student selects choice `B` for question 7 and moves to question 8, then question 7 remains marked as answered with choice `B`.
+- Given question 7 is unanswered, when the student opens the review, then the review lists `Question 7` under unanswered questions.
 
 #### US08 - Student submits a quiz
 
@@ -296,3 +296,82 @@ Every listed route appears in the flow and is reachable from `/login` through a 
 ```
 
 Every listed route appears in the flow and is reachable from `/login` through a role-specific path. The lecturer path returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.
+```
+
+Every listed route appears in the flow and is reachable from `/login` through a role-specific path. The lecturer path returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.
+```
+
+Every listed route appears in the flow and is reachable from `/login` through a role-specific path. The lecturer path returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.
+    Take -->|submit| Student
+```
+
+Every listed route appears in the flow and is reachable from `/login` through a role-specific path. The lecturer path returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.
+    Take -->|submit| Student
+```
+
+Every listed route appears in the flow and is reachable from `/login` through a role-specific path. The lecturer path returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.
+    Student -->|choose available quiz| Take["/student/quiz/:id/take"]
+    Take -->|submit| Student
+```
+
+Every listed route appears in the flow and is reachable from `/login` through a role-specific path. The lecturer path returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.
+    Student -->|choose available quiz| Take["/student/quiz/:id/take"]
+    Take -->|submit| Student
+```
+
+Every listed route appears in the flow and is reachable from `/login` through a role-specific path. The lecturer path returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.
+    Student -->|choose available quiz| Take["/student/quiz/:id/take"]
+    Take -->|submit| Student
+```
+
+Every listed route appears in the flow and is reachable from `/login` through a role-specific path. The lecturer path returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.
+    Create -->|save and publish| Lecturer
+    Student -->|choose available quiz| Take["/student/quiz/:id/take"]
+    Take -->|submit| Student
+```
+
+Every listed route appears in the flow and is reachable from `/login` through a role-specific path. The lecturer path returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.
+    Create -->|save and publish| Lecturer
+    Student -->|choose available quiz| Take["/student/quiz/:id/take"]
+    Take -->|submit| Student
+```
+
+Every listed route appears in the flow and is reachable from `/login` through a role-specific path. The lecturer path returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.
+    Create -->|save and publish| Lecturer
+    Student -->|choose available quiz| Take["/student/quiz/:id/take"]
+    Take -->|submit| Student
+```
+
+Every listed route appears in the flow and is reachable from `/login` through a role-specific path. The lecturer path returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.
+Every listed route appears in the flow and is reachable from `/login` through a role-specific path. The lecturer path returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.
+
+Every listed route appears in the flow and is reachable from `/login` through a role-specific path. The lecturer path returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.
+
+Every listed route appears in the flow and is reachable from `/login` through a role-specific path. The lecturer path returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.
+```
+
+Every listed route appears in the flow and is reachable from `/login` through a role-specific path. The lecturer path returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.
+```
+
+Every listed route appears in the flow and is reachable from `/login` through a role-specific path. The lecturer path returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.
+ attempt is submitted.
+attempt is submitted.
+ttempt is submitted.
+tempt is submitted.
+empt is submitted.
+mpt is submitted.
+pt is submitted.
+t is submitted.
+ is submitted.
+is submitted.
+s submitted.
+ submitted.
+submitted.
+ubmitted.
+bmitted.
+mitted.
+itted.
+tted.
+ted.
+ed.
+.

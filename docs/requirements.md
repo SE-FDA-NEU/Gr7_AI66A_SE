@@ -73,21 +73,21 @@ Mini LMS is for university lecturers and students who need to create, deliver, c
 
 ### 4.1 Story summary
 
-| ID   | Story                                                    | Priority | Points |
-| ---- | --------------------------------------------------------- | -------: | -----: |
-| US01 | Sign in and receive the correct role                     |       P0 |      3 |
-| US02 | Lecturer creates a quiz                                  |       P0 |      5 |
-| US03 | Lecturer adds multiple-choice questions                  |       P0 |      5 |
-| US04 | Lecturer publishes a quiz                                |       P0 |      3 |
-| US05 | Student sees available quizzes                           |       P1 |      3 |
-| US06 | Student starts a quiz attempt                            |       P0 |      3 |
-| US07 | Student views the score and feedback after submission    |       P1 |      3 |
-| US08 | Student submits a quiz                                   |       P0 |      3 |
-| US09 | Student sees an automatically calculated result          |       P1 |      5 |
-| US10 | Lecturer views quiz statistics                           |       P1 |      5 |
-| US11 | Lecturer configures a time limit for a quiz              |       P1 |      5 |
-| US12 | Lecturer views an append-only attempt audit history      |       P2 |      3 |
-| US13 | Student's quiz attempt is protected from invalid actions |       P1 |      5 |
+| ID | Story | Priority | Points |
+| --- | --- | ---: | ---: |
+| US01 | Sign in and receive the correct role | P0 | 3 |
+| US02 | Lecturer creates a quiz | P0 | 5 |
+| US03 | Lecturer adds multiple-choice questions | P0 | 5 |
+| US04 | Lecturer publishes a quiz | P0 | 3 |
+| US05 | Student sees available quizzes | P1 | 3 |
+| US06 | Student starts a quiz attempt | P0 | 3 |
+| US07 | Student answers and reviews a quiz | P1 | 3 |
+| US08 | Student submits a quiz | P0 | 3 |
+| US09 | Student sees an automatically calculated result | P1 | 5 |
+| US10 | Lecturer views quiz statistics | P1 | 5 |
+| US11 | Lecturer configures a time limit for a quiz | P1 | 5 |
+| US12 | Lecturer views an append-only attempt audit history | P2 | 3 |
+| US13 | Student's quiz attempt is protected from invalid actions | P1 | 5 |
 
 ### 4.2 Acceptance criteria
 

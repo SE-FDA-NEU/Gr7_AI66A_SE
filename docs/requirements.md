@@ -22,10 +22,19 @@ Mini LMS is for university lecturers and students who need to create, deliver, c
 - **In his words:** "When I submit, I want a clear result instead of wondering whether my answers were saved."
 - **Technical context:** Uses a phone on campus Wi-Fi and needs readable questions with a visible remaining-time indicator.
 
+### Persona 3 - Mai, teaching assistant (TA)
+
+- **Role:** Teaching assistant who supports a lecturer but does not own any quiz.
+- **Goal:** Look into a student's grading dispute by checking exactly what happened during their attempt, without needing to edit the quiz or ask the lecturer to look it up.
+- **Blocked by:** Only the quiz owner can currently see the attempt/audit history, so every dispute means waiting on the lecturer to check and report back.
+- **In her words:** "I just need to see what the system recorded for that attempt - I'm not trying to change anything."
+- **Technical context:** Uses a laptop between classes, only reads data, never creates or publishes quizzes.
+
 **Interview note:**
 
 - Ngan An spoke to Mrs. Ngan on 3.40 p.m, 17th September 2026
 - Anh Thu spoke to Duc on 10.31 a.m, 20th September 2026
+- Ngoc Hien spoke to Mai on 04.06 p.m, 22th September 2026
 
 ## 3. Scenarios
 
@@ -49,22 +58,33 @@ Mini LMS is for university lecturers and students who need to create, deliver, c
 6. The system confirms that the attempt was submitted and calculates the score from the stored answers.
 7. Duc opens the result and sees his score, the number of correct answers, and the submission time.
 
+### Scenario 3 - Mai looks into a grading dispute
+
+1. A student emails the lecturer to say their score for "Week 3 - Software Engineering" looks wrong.
+2. The lecturer asks Mai to check it, since she has read-only access for this class.
+3. Mai signs in and opens the record for that student's attempt.
+4. She checks when the attempt was started and when it was submitted.
+5. She confirms the attempt has exactly one submission event, not two.
+6. She compares the stored answers against the questions' correct choices and confirms the score matches.
+7. She finds the attempt was submitted automatically because the 20-minute timer reached zero.
+8. She reports the finding back to the lecturer, and no score is changed.
+
 ## 4. User stories
 
 ### 4.1 Story summary
 
 | ID   | Story                                                    | Priority | Points |
-| ---- | -------------------------------------------------------- | -------: | -----: |
+| ---- | --------------------------------------------------------- | -------: | -----: |
 | US01 | Sign in and receive the correct role                     |       P0 |      3 |
 | US02 | Lecturer creates a quiz                                  |       P0 |      5 |
 | US03 | Lecturer adds multiple-choice questions                  |       P0 |      5 |
 | US04 | Lecturer publishes a quiz                                |       P0 |      3 |
-| US05 | Student sees available quizzes                           |       P0 |      3 |
+| US05 | Student sees available quizzes                           |       P1 |      3 |
 | US06 | Student starts a quiz attempt                            |       P0 |      3 |
 | US07 | Student views the score and feedback after submission    |       P1 |      3 |
 | US08 | Student submits a quiz                                   |       P0 |      3 |
 | US09 | Student sees an automatically calculated result          |       P1 |      5 |
-| US10 | Lecturer views quiz statistics                           |       P0 |      5 |
+| US10 | Lecturer views quiz statistics                           |       P1 |      5 |
 | US11 | Lecturer configures a time limit for a quiz              |       P1 |      5 |
 | US12 | Lecturer views an append-only attempt audit history      |       P2 |      3 |
 | US13 | Student's quiz attempt is protected from invalid actions |       P1 |      5 |
@@ -77,16 +97,17 @@ Each story below has at least two testable criteria. Every block includes a conc
 
 As a system user (Lecturer/Student), I want to log in and log out of the Mini LMS system with my assigned role, So that I can access the features relevant to my role securely.
 
-- Given a user enters a valid email and password, when they sign in, then the system redirects them to the dashboard for their role.
-- Given a lecturer logs in, when they access a quiz created by another lecturer, then the system rejects access with the message “You do not have permission to edit this quiz.”
+- Given a user enters a valid email and password, when they sign in, then the system redirects them to `/lecturer/dashboard` or `/student/dashboard` according to their role.
+- Given a lecturer logs in, when they access a quiz created by another lecturer, then the system rejects access with the message "You do not have permission to edit this quiz."
 - Given a student logs in, when they open the student dashboard, then they see only quizzes available to them and not the lecturer management page.
+- Given a user enters an incorrect password 5 times within 10 minutes, when they attempt to sign in again, then the system blocks further attempts for 15 minutes and shows the message "Too many failed attempts. Try again in 15 minutes."
 
 #### US02 - Lecturer creates a quiz
 
 As a lecturer, I want to create a quiz so that I can prepare an assessment for my class.
 
-- Given the lecturer enters the title “Midterm Quiz 1” and description “Week 5 review,” when they save, then a new quiz is created with status “Draft.”
-- Given the title field is empty, when the lecturer tries to save, then the system shows the error “Quiz title is required.”
+- Given the lecturer enters the title "Midterm Quiz 1" and description "Week 5 review," when they save, then a new quiz is created with status "Draft."
+- Given the title field is empty, when the lecturer tries to save, then the system shows the error "Quiz title is required."
 - Given the lecturer sets the quiz duration to 30 minutes, when the quiz is saved, then the system stores the duration as 30 minutes.
 
 #### US03 - Lecturer adds multiple-choice questions
@@ -95,7 +116,7 @@ As a Lecturer, I want to add multiple-choice questions with answer choices and c
 
 - Given a quiz has 0 questions, when the lecturer adds 1 multiple-choice question, then the question count becomes 1.
 - Given a question has 4 options and 1 correct answer, when it is saved, then the system stores exactly 4 options and 1 correct answer.
-- Given a question is missing a correct answer, when the lecturer tries to save, then the system shows the error “Please select one correct option.”
+- Given a question is missing a correct answer, when the lecturer tries to save, then the system shows the error "Please select one correct option."
 
 #### US04 - Lecturer publishes a quiz
 
@@ -136,8 +157,8 @@ As a student, I want to answer and review questions before submission so that I 
 
 As a student, I want to submit my answers so that my attempt is completed and cannot be changed accidentally.
 
-- **Given** all 10 questions are answered, **when** the student confirms submission, **then** the attempt status becomes `Submitted` and exactly 1 submission timestamp is stored.
-- **Given** question 7 is unanswered, **when** the student requests submission, **then** the system lists `Question 7` and requires explicit confirmation before final submission.
+- Given all 10 questions are answered, when the student confirms submission, then the attempt status becomes `Submitted` and exactly 1 submission timestamp is stored.
+- Given question 7 is unanswered, when the student requests submission, then the system lists `Question 7` and requires explicit confirmation before final submission.
 
 #### US09 - Student sees an automatically calculated result
 
@@ -226,28 +247,39 @@ After submission, the original answers, score, and event history cannot be updat
 **Access codes:** G = guest, U = authenticated user, A = administrator.
 
 | Route                        | Purpose                                       | Access | Priority |
-| ---------------------------- | --------------------------------------------- | ------ | -------- |
+| ----------------------------- | ---------------------------------------------- | ------ | -------- |
 | `/login`                     | User authentication & role selection          | G      | P0       |
+| `/lecturer/dashboard`        | Lecturer dashboard listing their quizzes      | U      | P0       |
 | `/quiz/create`               | Quiz creation form                            | U      | P0       |
 | `/quiz/:id/questions`        | Question & choice management                  | U      | P0       |
+| `/lecturer/quiz/:id/publish` | Lecturer publishes and closes a quiz          | U      | P0       |
+| `/lecturer/quiz/:id/time`    | Set quiz duration                             | U      | P1       |
+| `/lecturer/quiz/:id/audit`   | Preserve attempt audit history                | U      | P2       |
 | `/student/dashboard`         | Student dashboard with available quiz listing | U      | P0       |
-| `/student/quiz/:id/take`     | Student quiz taking screen & anti-cheat       | U      | P0       |
-| `/lecturer/quiz/:id/audit`   | Preserve Attempt Audit History                | U      | P2       |
-| `/student/quiz/:id/grade`    | Automatic quiz grading & score result         | U      | P1       |
-| `/lecturer/quiz/:id/publish` | Lecturer Publishes and Closes Quiz            | U      | P0       |
-| `/lecturer/quiz/:id/time`    | Set quiz duration                             | A      | P1       |
+| `/student/quiz/:id/take`     | Student quiz taking screen & anti-cheat        | U      | P0       |
 | `/student/quiz/:id/submit`   | Submit quiz & confirm completion              | U      | P0       |
+| `/student/quiz/:id/grade`    | Automatic quiz grading & score result         | U      | P1       |
 | `/student/quiz/:id/review`   | Student views quiz result                     | U      | P1       |
 
 ```mermaid
 flowchart TD
-    Login["/login"] -->|student signs in| Student["/student/dashboard"]
-    Login -->|lecturer signs in| Lecturer["/lecturer/dashboard"]
-    Lecturer -->|create quiz| Create["/quiz/create"]
-    Create -->|save and publish| Lecturer
-    Student -->|choose available quiz| Take["/student/quiz/:id/take"]
-    Take -->|submit| Student
+    Login["/login"] -->|lecturer signs in| LDash["/lecturer/dashboard"]
+    Login -->|student signs in| SDash["/student/dashboard"]
+
+    LDash -->|start new quiz| Create["/quiz/create"]
+    Create -->|add questions| Questions["/quiz/:id/questions"]
+    Questions -->|ready to review| Publish["/lecturer/quiz/:id/publish"]
+    Publish -->|configure duration| Time["/lecturer/quiz/:id/time"]
+    Time --> Publish
+    Publish -->|quiz published| LDash
+    LDash -->|check attempt history| Audit["/lecturer/quiz/:id/audit"]
+    Audit --> LDash
+
+    SDash -->|choose an available quiz| Take["/student/quiz/:id/take"]
+    Take -->|finish answering| Submit["/student/quiz/:id/submit"]
+    Submit -->|auto graded| Grade["/student/quiz/:id/grade"]
+    Grade -->|see full review| Review["/student/quiz/:id/review"]
+    Review --> SDash
 ```
 
-Every listed route appears in the flow and is reachable from `/login` through a role-specific path. The lecturer path returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.
 Every listed route appears in the flow and is reachable from `/login` through a role-specific path. The lecturer path returns to `/lecturer/dashboard` after a quiz is saved and published; the student path returns to `/student/dashboard` after an attempt is submitted.

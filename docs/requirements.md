@@ -204,6 +204,15 @@ As a student, I want invalid actions to be rejected clearly so that my quiz atte
 - Given the student attempts to submit after the allowed time has expired, when the timer reaches 00:00, then the attempt is automatically submitted.
 - Given the student tries to submit the same attempt twice, when the second request is processed, then only one final attempt record is created.
 
+#### US14 - Lecturer sees their quizzes on a dashboard
+
+As a lecturer, I want to see all my quizzes with their status so that I can choose which one to edit, publish, or review.
+
+- Given a lecturer owns 5 quizzes (3 Draft, 2 Published), when they open /lecturer/dashboard, then 5 quiz rows are shown, 3 with status "Draft" and 2 with status "Published".
+- Given a published quiz has 20 submitted attempts, when the dashboard loads, then its row shows "20 attempts".
+- Given another lecturer owns a quiz, when the dashboard loads, then that quiz does not appear (BR2).
+- Given a lecturer has 0 quizzes, when the dashboard loads, then it shows "You have no quizzes yet" instead of an empty table.
+
 ## 5. Business rules
 
 ### BR1 - Role-based access is enforced
@@ -246,20 +255,20 @@ After submission, the original answers, score, and event history cannot be updat
 
 **Access codes:** G = guest, U = authenticated user, A = administrator.
 
-| Route                        | Purpose                                       | Access | Priority |
-| ----------------------------- | ---------------------------------------------- | ------ | -------- |
-| `/login`                     | User authentication & role selection          | G      | P0       |
-| `/lecturer/dashboard`        | Lecturer dashboard listing their quizzes      | U      | P0       |
-| `/quiz/create`               | Quiz creation form                            | U      | P0       |
-| `/quiz/:id/questions`        | Question & choice management                  | U      | P0       |
-| `/lecturer/quiz/:id/publish` | Lecturer publishes and closes a quiz          | U      | P0       |
-| `/lecturer/quiz/:id/time`    | Set quiz duration                             | U      | P1       |
-| `/lecturer/quiz/:id/audit`   | Preserve attempt audit history                | U      | P2       |
-| `/student/dashboard`         | Student dashboard with available quiz listing | U      | P0       |
-| `/student/quiz/:id/take`     | Student quiz taking screen & anti-cheat        | U      | P0       |
-| `/student/quiz/:id/submit`   | Submit quiz & confirm completion              | U      | P0       |
-| `/student/quiz/:id/grade`    | Automatic quiz grading & score result         | U      | P1       |
-| `/student/quiz/:id/review`   | Student views quiz result                     | U      | P1       |
+| Route | Purpose | Access | Priority |
+| --- | --- | --- | --- |
+| `/login` | User authentication & role selection | G | P0 |
+| `/lecturer/dashboard` | Lecturer dashboard listing their quizzes | U | P1 |
+| `/quiz/create` | Quiz creation form | U | P0 |
+| `/quiz/:id/questions` | Question & choice management | U | P0 |
+| `/lecturer/quiz/:id/publish` | Lecturer publishes and closes a quiz | U | P0 |
+| `/lecturer/quiz/:id/time` | Set quiz duration | U | P1 |
+| `/lecturer/quiz/:id/audit` | Preserve attempt audit history | U | P2 |
+| `/student/dashboard` | Student dashboard with available quiz listing | U | P0 |
+| `/student/quiz/:id/take` | Student quiz taking screen & anti-cheat | U | P0 |
+| `/student/quiz/:id/submit` | Submit quiz & confirm completion | U | P0 |
+| `/student/quiz/:id/grade` | Automatic quiz grading & score result | U | P1 |
+| `/student/quiz/:id/review` | Student views quiz result | U | P1 |
 
 ```mermaid
 flowchart TD

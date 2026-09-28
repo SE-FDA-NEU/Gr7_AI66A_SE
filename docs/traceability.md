@@ -5,7 +5,7 @@ Every screen traces back to a feature and forward to the issue that built it.
 | Route | Purpose | Access | Priority | Feature | Story issue | PR | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `/login` | User authentication & role selection | G | P0 | F1 | [#17](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/17) | [#51](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/51) | In progress |
-| `/lecturer/dashboard` | Lecturer dashboard listing their quizzes | U | P0 | F12 | TODO - create issue | TODO - open PR | In pregress |
+| `/lecturer/dashboard` | Lecturer dashboard listing their quizzes | U | P1 | F12 | TODO - create issue | TODO - open PR | In pregress |
 | `/quiz/create` | Quiz creation form | U | P0 | F2 | [#18](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/18) | [#29](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/29) | In progress |
 | `/quiz/:id/questions` | Question & choice management | U | P0 | F3 | [#19](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/19) | [#47](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/47) | In progress |
 | `/lecturer/quiz/:id/publish` | Lecturer publishes and closes a quiz | U | P0 | F8 | [#34](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/34) | [#39](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/39) | In progress |

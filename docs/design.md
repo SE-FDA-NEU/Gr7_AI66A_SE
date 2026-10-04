@@ -40,17 +40,41 @@ routes and service functions; they do not add new containers.
 
 | Table | Purpose | Columns | Constraints / Business rules |
 |---|---|---|---|
-| `USER` | Stores user accounts for lecturers and students. | `user_id` INT PK, `name` STRING, `email` STRING UNIQUE, `password_hash` STRING, `role` STRING | `user_id` uniquely identifies each user. `email` is unique so one email cannot be used by multiple accounts. `role` distinguishes lecturers from students. |
-| `QUIZ` | Stores a lecturer's quiz, its publication state, and the availability and time-limit settings used for student attempts. | `quiz_id` INT PK, `lecturer_id` INT FK, `title` STRING, `status` STRING, `duration_minutes` INT, `start_at` DATETIME, `end_at` DATETIME | `lecturer_id` references `USER.user_id`; it identifies the quiz owner and is used to enforce BR2 (only that lecturer can edit or publish the quiz). A quiz has one owner and may contain many questions and receive many attempts. `status` represents draft, published, or closed state. `duration_minutes` must be positive when set; an attempt must end at the earlier of its duration limit or `end_at` (BR4). Publication requires at least one valid question, with at least two choices and exactly one correct choice per question (BR3). `start_at` and `end_at` define availability. |
-| `QUESTION` | Stores the ordered multiple-choice questions that make up a quiz and contribute to its automatically graded score. | `question_id` INT PK, `quiz_id` INT FK, `content` STRING, `points` INT, `position` INT | `quiz_id` references `QUIZ.quiz_id`. Each question belongs to exactly one quiz. `position` determines display order and should be unique within a quiz. Each question needs at least two choices and exactly one correct choice before its quiz can be published (BR3). `points` contributes to the score calculated upon submission. |
-| `CHOICE` | Stores the available answer options for a question and identifies the correct option used by automatic grading. | `choice_id` INT PK, `question_id` INT FK, `content` STRING, `is_correct` BOOLEAN | `question_id` references `QUESTION.question_id`. Each choice belongs to one question. A publishable question has at least two choices and exactly one choice with `is_correct = true` (BR3). The correct-answer flag supports grading and review; whether students may see correct answers is controlled by the lecturer's answer-review setting (US09). |
-| `ATTEMPT` | Stores a student's quiz session, its submission state and timestamp, and the score calculated from the submitted answers. | `attempt_id` INT PK, `student_id` INT FK, `quiz_id` INT FK, `started_at` DATETIME, `submitted_at` DATETIME, `score` DECIMAL | `student_id` references `USER.user_id` and must identify a student; `quiz_id` references `QUIZ.quiz_id`. Each attempt belongs to one student and one quiz. The attempt starts only when the student is eligible and the quiz is available. `submitted_at` records the single final submission; after submission, answers, score, and event history are immutable through normal application actions (BR6). Enforce at most one submitted attempt per student and quiz (BR5), and reject duplicate submission requests (US12/US13). |
-| `ANSWER` | Stores the choice selected for a question in a particular attempt, providing the source data for grading and answer review. | `answer_id` INT PK, `attempt_id` INT FK, `question_id` INT FK, `choice_id` INT FK | `attempt_id` references `ATTEMPT.attempt_id`; `question_id` references `QUESTION.question_id`; `choice_id` references `CHOICE.choice_id` and may be NULL while unanswered. Each answer belongs to one attempt and one question. Enforce at most one answer per `(attempt_id, question_id)` and ensure the selected choice belongs to that question. Submitted answers are immutable as part of BR6. |
+| `user` | Stores lecturer, student, and teaching-assistant accounts. | `user_id` INTEGER PK, `name` TEXT, `email` TEXT UNIQUE, `password_hash` TEXT, `role` TEXT | `email` is unique and required. `role` is required and limited to `lecturer`, `student`, or `ta`; application authorization enforces role-based access (BR1). |
+| `quiz` | Stores a lecturer's quiz, its publication state, availability, and time limit. | `quiz_id` INTEGER PK, `lecturer_id` INTEGER FK, `title` TEXT, `status` TEXT, `duration_minutes` INTEGER, `start_at` TEXT, `end_at` TEXT | `lecturer_id` references `user.user_id` (BR2). `status` is required, defaults to `draft`, and is limited to `draft`, `published`, or `closed`. Duration must be positive (US11); when both are set, `end_at` must be later than `start_at`. Attempts respect the earlier duration or closing deadline (BR4). Publication validity requirements are enforced by the service (BR3). |
+| `question` | Stores ordered multiple-choice questions belonging to a quiz. | `question_id` INTEGER PK, `quiz_id` INTEGER FK, `content` TEXT, `points` INTEGER, `position` INTEGER | `quiz_id` references `quiz.quiz_id`; `points` and `position` must be positive. `(quiz_id, position)` is unique. Quiz publication requires at least one question and at least two choices per question (BR3; checked by application logic). |
+| `choice` | Stores answer options and the correctness flag for a question. | `choice_id` INTEGER PK, `question_id` INTEGER FK, `content` TEXT, `is_correct` INTEGER (0/1) | `question_id` references `question.question_id`. A partial unique index permits at most one correct choice per question; publish validation requires exactly one and at least two choices (BR3). |
+| `attempt` | Stores a student's quiz session, submission time, and score. | `attempt_id` INTEGER PK, `student_id` INTEGER FK, `quiz_id` INTEGER FK, `started_at` TEXT, `submitted_at` TEXT, `score` REAL | `student_id` references `user.user_id`; `quiz_id` references `quiz.quiz_id`. A partial unique index permits at most one submitted attempt per student and quiz (BR5). Submitted attempts and scores are append-only through normal application actions (BR6). |
+| `answer` | Stores the selected choice for each question in an attempt. | `answer_id` INTEGER PK, `attempt_id` INTEGER FK, `question_id` INTEGER FK, `choice_id` INTEGER FK (nullable) | Foreign keys reference `attempt`, `question`, and `choice`; `(attempt_id, question_id)` is unique. A NULL `choice_id` represents an unanswered question. The application must ensure the selected choice belongs to that question and prevent changes after submission (BR6, US13). |
 
 
 ## 3. API design
 
 ## 4. Walking skeleton
+
+- Selected route: `GET /student/dashboard`
+- Database table: `quiz`, joined with `user` to display the lecturer's name.
+- Rows displayed: 12 published quizzes; draft quizzes are excluded.
+- Database query executed:
+
+  ```sql
+  SELECT
+      q.quiz_id,
+      q.title,
+      u.name AS lecturer_name,
+      q.duration_minutes,
+      q.end_at
+  FROM quiz q
+  JOIN user u ON u.user_id = q.lecturer_id
+  WHERE q.status = 'published'
+  ORDER BY q.end_at ASC;
+  ```
+
+- Runtime proof:
+
+  ![Student dashboard showing 12 published quizzes](images/skeleton.png)
+
+- Setup instructions: See [docs/SETUP.md](SETUP.md).
 
 ## 5. Design decisions
 Both decisions are also kept as separate records in `docs/adr/`

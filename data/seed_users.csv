@@ -1,0 +1,8 @@
+user_id,name,email,password_hash,role
+1,Ngan,ngan.lecturer@example.edu,seed-only-hash-01,lecturer
+2,Nam,nam.lecturer@example.edu,seed-only-hash-02,lecturer
+3,Duc,duc.student@example.edu,seed-only-hash-03,student
+4,Lan,lan.student@example.edu,seed-only-hash-04,student
+5,Minh,minh.student@example.edu,seed-only-hash-05,student
+6,An,an.student@example.edu,seed-only-hash-06,student
+7,Mai,mai.ta@example.edu,seed-only-hash-07,ta

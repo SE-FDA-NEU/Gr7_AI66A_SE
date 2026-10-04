@@ -1,0 +1,16 @@
+quiz_id,lecturer_id,title,status,duration_minutes,start_at,end_at
+1,1,Introduction to Software Engineering,published,20,2026-10-01T08:00:00,2026-10-10T23:59:00
+2,1,Requirements and User Stories,published,25,2026-10-02T08:00:00,2026-10-11T23:59:00
+3,2,Agile Development Basics,published,15,2026-10-03T08:00:00,2026-10-12T23:59:00
+4,2,Version Control with Git,published,20,2026-10-04T08:00:00,2026-10-13T23:59:00
+5,1,Software Design Principles,published,30,2026-10-05T08:00:00,2026-10-14T23:59:00
+6,2,Testing Fundamentals,published,20,2026-10-06T08:00:00,2026-10-15T23:59:00
+7,1,Database Modeling,published,25,2026-10-07T08:00:00,2026-10-16T23:59:00
+8,2,Web Application Security,published,20,2026-10-08T08:00:00,2026-10-17T23:59:00
+9,1,REST API Design,published,15,2026-10-09T08:00:00,2026-10-18T23:59:00
+10,2,User Interface Principles,published,20,2026-10-10T08:00:00,2026-10-19T23:59:00
+11,1,Continuous Integration,published,25,2026-10-11T08:00:00,2026-10-20T23:59:00
+12,2,Software Maintenance,published,20,2026-10-12T08:00:00,2026-10-21T23:59:00
+13,1,Advanced Analytics,draft,30,2026-10-20T08:00:00,2026-10-30T23:59:00
+14,2,Quiz Security Review,draft,20,2026-10-21T08:00:00,2026-10-31T23:59:00
+15,1,Final Practice Quiz,draft,45,2026-10-22T08:00:00,2026-11-01T23:59:00

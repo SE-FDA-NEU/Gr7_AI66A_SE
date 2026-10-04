@@ -21,6 +21,16 @@
 
 
 ## 3. API design
+| Method | Path | Input | Success | Errors |
+| --- | --- | --- | --- | --- |
+| GET | /student/dashboard | — | 200 - trang danh sách quiz đã publish (walking skeleton, US05) | 302 → /login nếu chưa đăng nhập (BR1, từ Sprint 3) |
+| POST | /login | email, password | 302 → /lecturer/dashboard hoặc /student/dashboard (US01) | 400 thiếu trường · 401 sai email/mật khẩu · 429 sai 5 lần trong 10 phút (US01) |
+| POST | /quiz/create | title, description, duration_minutes | 201 - quiz_id, status Draft (US02) | 400 "Quiz title is required" · 403 không phải lecturer (BR1) · 422 thời gian ≤ 0 (US11) |
+| POST | /quiz/:id/questions | content, points, choices[], correct_index | 201 - question_id (US03) | 403 không phải chủ quiz (BR2) · 404 không có quiz · 422 "Please select one correct option" (BR3) |
+| POST | /lecturer/quiz/:id/publish | — | 200 - status published (US04) | 403 không phải chủ quiz (BR2) · 409 đã publish · 422 quiz không hợp lệ (BR3) |
+| POST | /student/quiz/:id:/take | — | 201 - attempt_id, thời gian còn lại (US06) | 403 quiz chưa publish hoặc đã đóng (US04) · 409 "You have already submitted this quiz" (BR5) |
+| POST | /student/quiz/:id/submit | attempt_id, answers[], confirm | 200 - điểm, thời điểm nộp (US08) | 409 đã nộp rồi (BR5, US13) · 422 còn câu chưa trả lời mà chưa xác nhận (US08) |
+| GET | /lecturer/dashboard | — | 200 - danh sách quiz của giảng viên (US14) | 403 không phải lecturer (BR1) |
 
 ## 4. Walking skeleton
 

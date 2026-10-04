@@ -1,6 +1,6 @@
 # ADR 0002 — Three layers: routes, services, repositories
 
-**Status:** Accepted · Sprint 2 · Owner: @ngochien
+**Status:** Accepted · Sprint 2 · Owner: @dnhien
 
 **Context.** BR1–BR6 apply across many routes. BR5 must be checked both when
 a student starts a quiz (`POST /student/quiz/<id>/take`) and when they submit

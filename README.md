@@ -5,7 +5,7 @@ Nền tảng giúp giảng viên dễ dàng tạo, quản lý và chấm quiz, �
 - **Nhóm:** Group 7 ·
 - **Thành viên:** Lê Ngọc Anh Thư, Nguyễn Ngân An, Đào Ngọc Hiền, Nguyễn Thành Lân, Trần Tuệ Khang
 - **Product Owner (cố định cả kỳ):** Lê Ngọc Anh Thư
-- **Scrum Master (luân phiên mỗi sprint):** Nguyễn Ngân An (Sprint 1)
+- **Scrum Master (luân phiên mỗi sprint):** Đào Ngọc Hiền (Sprint 2)
 - **Board:** https://github.com/orgs/SE-FDA-NEU/projects/17
 - **Definition of Done:** [docs/definition-of-done.md](docs/definition-of-done.md)
 - **Requirements:** [docs/requirements.md](docs/requirements.md)

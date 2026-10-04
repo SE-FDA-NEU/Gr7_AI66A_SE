@@ -85,62 +85,99 @@ milestone (it requires committed, completed, and velocity as actual figures).*
 
 ### Sprint goal
 
-### What Changed Since Milestone 1
-
-#### Change 1: Added Lecturer Dashboard (US14)
-* **What changed:** Introduced a new user story **US14 (Lecturer Dashboard)** and its corresponding route `/lecturer/dashboard`.
-* **Reason:** During Sprint 2 architecture design, we identified that lecturers required a centralized interface to view, edit, and track attempt counts for all quizzes they own.
-* **Affected Story / BR:** US14 & BR1 (Role-based access).
-* **Reference:** Issue #68 (Commit: "New route for new US14").
-
-#### Change 2: Aligned US03 Acceptance Criteria with BR3 and Database Schema
-* **What changed:** Updated the acceptance criteria for **US03** (Lecturer adds multiple-choice questions) from requiring "exactly 4 options" to "at least 2 options".
-* **Reason:** Resolved a contradiction between Milestone 1 (where US03 strictly mandated 4 choices) and Business Rule BR3 / `CHOICE` database schema (which permits flexible choice counts with a minimum of 2 options).
-* **Affected Story / BR:** US03, BR3, and `CHOICE` table constraint.
-* **Reference:** Issue #69.
-
-#### Change 3: Added TA Persona (Mai) and Read-Only Audit Access
-* **What changed:** Added persona **Mai (Teaching Assistant)** with dedicated read-only permission to view quiz attempt audit logs (`/lecturer/quiz/:id/audit`).
-* **Reason:** Feedback from the Sprint 1 Review highlighted the need for TAs to investigate student grading disputes without granting full editing/publishing authority over quizzes.
-* **Affected Story / BR:** US12 (Attempt audit history) & BR1.
-* **Reference:** Issue #70.
+Prove the architecture end to end for Milestone 2: a walking skeleton
+(`GET /student/dashboard` showing 12 published quizzes read from SQLite),
+the design document (`docs/design.md`, six sections, two ADRs in `docs/adr/`)
+and a setup guide that runs on a clean machine (`docs/SETUP.md`).
 
 ### Two mandatory chore issue
 
 | Issue | Assignee | Closed? |
 | --- | --- | --- |
-| [Chore] Refine backlog for Sprint 2 | @anhthu (PO) |  |
-| [Chore] Sprint 2 wrap-up | @ngochien (SM) |  |
+| #59 [Chore] Refine backlog for Sprint 2 | @anhthu0910 (PO) | Yes |
+| #58 [Chore] Sprint 2 wrap-up | @dnghien (SM) | Yes (closed by this PR) |
 
-### Change log
+### Committed (Sprint Planning, 2026-09-29)
 
+| Issue | Story | Story ID | Points | Owner |
+|-------|-------|----------|--------|-------|
+| #58 | [Chore] Sprint 2 wrap-up | - | 2 | @dnghien |
+| #59 | [Chore] Refine backlog for Sprint 2 | - | 2 | @anhthu0910 |
+| #57 | [Chore] Design ERD | - | 3 | @nganannn |
+| #60 | [Chore] design.md Section 1 architecture and Section 5 ADRs | - | 3 | @dnghien |
+| #61 | [Chore] design.md Section 3 API and Section 6 changes since M1 | - | 3 | @anhthu0910 |
+| #62 | [Chore] Design walking skeleton GET /student/dashboard (Section 4) | US05 | 3 | @ngthanhlan06-droid |
+| #63 | [Chore] Writing design decisions | - | 2 | - |
+
+**Total committed: 18 points**
+
+*Points use the Sprint 1 scale: chore = 2, one design.md section = 3,
+database work = 5. They were set during backlog refinement.*
+
+### Scope changes during the sprint
+
+- **2026-10-03 — re-planning.** Once the walking-skeleton route and the
+  database tables were agreed, the remaining work was split so that every
+  member owned one issue and one pull request: #65 ERD and schema (3),
+  #66 schema/seed/init_db (5), #67 SETUP.md (2), #68 test SETUP.md on a clean
+  machine (1), #69 Flask scaffold and CI (3), #70 US05 walking skeleton (3).
+  Added scope: 17 points.
+- **#63 closed as not planned** — merged into #60, which already covers the ADRs.
+- Requirement changes this sprint are recorded in `docs/design.md` Section 6
+  and `docs/changelog.md`.
 
 ### Result
 
 | Issue | Points | Status | If not done, why |
 |-------|--------|--------|------------------|
-| #1 |  | TBD | |
+| #57 | 3 | Done — PR #64 | |
+| #60 | 3 | Done — PR #76 | |
+| #61 | 3 | Done — PR #77 | |
+| #62 | 3 | Done — PR #75 | |
+| #63 | 2 | Closed, not planned | Merged into #60 |
+| #59 | 2 | Done | |
+| #58 | 2 | Done — this PR | |
+| #65 *(added 10-03)* | 3 | Done — PR #73 | |
+| #66 *(added 10-03)* | 5 | Done — PR #74 | |
+| #69 *(added 10-03)* | 3 | Done — PR #72 | |
+| #70 *(added 10-03)* | 3 | Done — PR #75 | |
+| #67 *(added 10-03)* | 2 | Done — PR #71, updated to the final route and tables in a follow-up PR | |
+| #68 *(added 10-03)* | 1 | Done — "Tested by" record in SETUP.md | |
 
-**Completed: `<fill in at end of sprint>` points. Velocity this sprint: `<fill in at end of sprint>`**
+**Completed: 33 points (16 of 18 committed + 17 added). Velocity this sprint: 33**
 
-*Fill this table in with the real status of each issue on the Sunday before
-submission - "TBD" and "In progress" for every row is not acceptable for the
-milestone (it requires committed, completed, and velocity as actual figures).*
+### Sprint Review
+
+- What we demonstrated: a fresh clone set up by following `docs/SETUP.md`;
+  `python src/init_db.py` creates 6 tables and seeds 97 rows;
+  `http://localhost:5000/student/dashboard` lists 12 published quizzes with
+  drafts hidden (US05); 8 automated tests pass in CI; `docs/design.md`
+  complete with six sections and two ADRs.
+- Feedback received: reviews asked for each requirement change in Section 6 to
+  state its reason, and for SETUP.md to be checked against the final code;
+  CI held back the database PR until it included the shared schema.
+- Backlog changes as a result: US03 acceptance criterion aligned with BR3
+  (at least 2 options, exactly 1 correct); Sprint 3 adds the BR1 login guard to
+  `/student/dashboard` together with US01.
 
 ### Retrospective
 
 | Keep doing | Stop doing | Start doing |
 |------------|------------|-------------|
-| TBD | TBD | TBD |
+| One issue, one branch, one PR per member | Merging before every review comment is resolved | Estimating points and taking a board screenshot at Sprint Planning |
+| CI on every PR — it caught a missing schema before merge | Letting any commit reach `main` without a pull request | Running SETUP.md on a teammate's machine before merging setup changes |
+| Reviews with "Review changes" and a concrete comment | Writing setup steps before the code they describe | Adding label and milestone when an issue is created |
 
-**One concrete action for next sprint (with an owner):** TBD at Sprint 1 Retro
+**One concrete action for next sprint (with an owner):** At Sprint 3 Planning,
+estimate every issue on the board and commit a board screenshot to
+`docs/sprint-log.md` the same day · @dnghien (hands over to the Sprint 3 SM)
 
 ### Attendance
 
 | Member | Planning | Review | Retro |
 |--------|----------|--------|-------|
-| @anhthu | Yes | Yes | Yes |
-| @nganan | Yes | Yes | Yes |
-| @ngochien | Yes | Yes | Yes |
-| @thanhlan | Yes | Yes | Yes |
-| @tuekhang | Yes | Yes | Yes |
+| @anhthu0910 | Yes | Yes | Yes |
+| @nganannn | Yes | Yes | Yes |
+| @dnghien | Yes | Yes | Yes |
+| @ngthanhlan06-droid | Yes | Yes | Yes |
+| @khangtrannf | Yes | Yes | Yes |

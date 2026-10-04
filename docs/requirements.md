@@ -86,7 +86,7 @@ Mini LMS is for university lecturers and students who need to create, deliver, c
 | US09 | Student sees an automatically calculated result | P1 | 5 |
 | US10 | Lecturer views quiz statistics | P1 | 5 |
 | US11 | Lecturer configures a time limit for a quiz | P1 | 5 |
-| US12 | Lecturer views an append-only attempt audit history | P2 | 3 |
+| US12 | Lecturer and TA views an append-only attempt audit history | P2 | 3 |
 | US13 | Student's quiz attempt is protected from invalid actions | P1 | 5 |
 
 ### 4.2 Acceptance criteria

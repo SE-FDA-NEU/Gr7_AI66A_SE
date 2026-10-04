@@ -109,8 +109,8 @@ milestone (it requires committed, completed, and velocity as actual figures).*
 
 | Issue | Assignee | Closed? |
 | --- | --- | --- |
-| [Chore] Refine backlog for Sprint 2 | @anhthu (PO) | Yes |
-| [Chore] Sprint 2 wrap-up | @ngochien (SM) | Yes |
+| [Chore] Refine backlog for Sprint 2 | @anhthu (PO) |  |
+| [Chore] Sprint 2 wrap-up | @ngochien (SM) |  |
 
 ### Change log
 

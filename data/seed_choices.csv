@@ -1,0 +1,61 @@
+choice_id,question_id,content,is_correct
+1,1,Planning and designing the software,1
+2,1,Only typing source code,0
+3,1,Ignoring user needs,0
+4,1,Removing all testing,0
+5,2,A user's goal expressed from their perspective,1
+6,2,A database table definition,0
+7,2,A list of programming languages,0
+8,2,A server installation guide,0
+9,3,Delivering a small tested increment and adapting from feedback,1
+10,3,Finishing every document before any implementation,0
+11,3,Combining all changes at the end of a project,0
+12,3,Avoiding feedback until release,0
+13,4,git checkout -b,1
+14,4,git status,0
+15,4,git log,0
+16,4,git diff,0
+17,5,Keeping related responsibilities organized and independent,1
+18,5,Putting all code in one function,0
+19,5,Duplicating the same logic everywhere,0
+20,5,Removing module boundaries,0
+21,6,To check one small unit of behavior in isolation,1
+22,6,To deploy an application to production,0
+23,6,To replace all integration tests,0
+24,6,To measure network bandwidth,0
+25,7,Uniquely identifying each row,1
+26,7,Encrypting every column,0
+27,7,Sorting rows by title,0
+28,7,Creating duplicate records,0
+29,8,Unexpected or malformed data causing unsafe behavior,1
+30,8,Valid users signing in successfully,0
+31,8,Pages rendering on small screens,0
+32,8,Database queries returning rows,0
+33,9,Retrieve a representation of a resource,1
+34,9,Delete a database permanently,0
+35,9,Change a user's password,0
+36,9,Create a new account in every case,0
+37,10,Use clear labels and explain validation errors,1
+38,10,Hide required fields until submission,0
+39,10,Use placeholder text as the only label,0
+40,10,Clear all input without feedback,0
+41,11,Integrate changes and run automated checks regularly,1
+42,11,Delay all testing until the final week,0
+43,11,Remove version control,0
+44,11,Manually copy source files between computers,0
+45,12,Updating and correcting software after its initial release,1
+46,12,Writing requirements before development,0
+47,12,Designing a logo for an application,0
+48,12,Removing user feedback,0
+49,13,The mean or median score,1
+50,13,The source code line count only,0
+51,13,The number of browser tabs,0
+52,13,The file extension of the database,0
+53,14,To prevent duplicate or invalid submissions,1
+54,14,To let users edit completed scores freely,0
+55,14,To remove timestamps from records,0
+56,14,To skip answer validation,0
+57,15,Clear wording and one defensible correct answer,1
+58,15,Several ambiguous correct answers,0
+59,15,No connection to the learning objective,0
+60,15,Unexplained technical abbreviations,0

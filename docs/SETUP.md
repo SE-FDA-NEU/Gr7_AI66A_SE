@@ -99,7 +99,7 @@ Open your web browser and navigate to: `127.0.0.1:5000/student/dashboard`
 
 - **Verification Criteria:**
   - The webpage displays a table containing **at least 12 quizzes** fetched directly from `data/minilms.db`.
-  - Each row clearly displays: *Quiz ID, Title, Lecturer Name, Duration (mins), Status (Published)*.
+  - Each row clearly displays: *Quiz ID, Title, Lecturer Name, Duration (mins), Closes at*.
   - Data is dynamically queried via SQL (not hardcoded arrays).
 
 ---

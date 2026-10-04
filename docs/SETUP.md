@@ -95,7 +95,7 @@ python src/app.py
 The server will run locally at: `http://localhost:5000`
 
 ### Step 5.2: Test the Walking Skeleton Route
-Open your web browser and navigate to: `http://localhost:5000/student/quizzes` (or `http://localhost:5000/api/quizzes`)
+Open your web browser and navigate to: `127.0.0.1:5000/student/dashboard`
 
 - **Verification Criteria:**
   - The webpage displays a table containing **at least 12 quizzes** fetched directly from `data/minilms.db`.
@@ -113,10 +113,10 @@ Open your web browser and navigate to: `http://localhost:5000/student/quizzes` (
   2. Ensure `(.venv)` appears in your terminal prompt, then rerun `pip install -r requirements.txt`.
 
 ### Issue 2: `Address already in use` or `Port 5000 is in use`
-- **Cause:** Port 5000 is occupied by another service (e.g., AirPlay Receiver on macOS).
+- **Cause:** Port 5000 is occupied by another service.
 - **Resolution:**
   1. Open `.env` and change the port configuration to `PORT=5001`.
-  2. Restart the application server (`python src/app.py`) and visit `http://localhost:5001/student/quizzes`.
+  2. Restart the application server (`python src/app.py`) and visit `127.0.0.1:5000/student/dashboard`.
 
 ### Issue 3: `sqlite3.OperationalError: no such table: quizzes`
 - **Cause:** The database initialization script has not been executed.

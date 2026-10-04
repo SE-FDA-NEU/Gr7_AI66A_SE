@@ -84,7 +84,7 @@ database schema.
 
 ### ADR 1 — SQLite instead of PostgreSQL
 
-**Status:** Accepted · Sprint 2 · Owner: @dnhien
+**Status:** Accepted · Sprint 2 · Owner: @dnghien
 
 **Context.** Mini LMS stores six tables: `user`, `quiz`, `question`,
 `choice`, `attempt` and `answer` (Section 2). The instructor must install
@@ -138,7 +138,7 @@ never changed).
 
 ### ADR 2 — Three layers: routes, services, repositories
 
-**Status:** Accepted · Sprint 2 · Owner: @dnhien
+**Status:** Accepted · Sprint 2 · Owner: @dnghien
 
 **Context.** BR1–BR6 apply across many routes. BR5 must be checked both when
 a student starts a quiz (`POST /student/quiz/<id>/take`) and when they submit

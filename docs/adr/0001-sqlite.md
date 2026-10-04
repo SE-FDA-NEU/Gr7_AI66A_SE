@@ -1,6 +1,6 @@
 # ADR 0001 — SQLite instead of PostgreSQL
 
-**Status:** Accepted · Sprint 2 · Owner: @dnhien
+**Status:** Accepted · Sprint 2 · Owner: @dnghien
 
 **Context.** Mini LMS stores six tables: `user`, `quiz`, `question`,
 `choice`, `attempt` and `answer` (Section 2). The instructor must install

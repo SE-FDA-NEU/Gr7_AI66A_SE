@@ -24,6 +24,30 @@
 
 ## 4. Walking skeleton
 
+- Selected route: `GET /student/dashboard`
+- Database table: `quiz`, joined with `user` to display the lecturer's name.
+- Rows displayed: 12 published quizzes; draft quizzes are excluded.
+- Database query executed:
+
+  ```sql
+  SELECT
+      q.quiz_id,
+      q.title,
+      u.name AS lecturer_name,
+      q.duration_minutes,
+      q.end_at
+  FROM quiz q
+  JOIN user u ON u.user_id = q.lecturer_id
+  WHERE q.status = 'published'
+  ORDER BY q.end_at ASC;
+  ```
+
+- Runtime proof:
+
+  ![Student dashboard showing 12 published quizzes](images/skeleton.png)
+
+- Setup instructions: See [docs/SETUP.md](SETUP.md).
+
 ## 5. Design decisions
 
 ## 6. What changed since M1

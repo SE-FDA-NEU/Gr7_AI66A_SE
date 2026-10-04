@@ -21,6 +21,16 @@
 
 
 ## 3. API design
+| Method | Path | Input | Success | Errors |
+| --- | --- | --- | --- | --- |
+| GET | /student/dashboard | — | 200 · published quiz listing page (walking skeleton, US05) | 302 → /login if not logged in (BR1, from Sprint 3) |
+| POST | /login | email, password | 302 → /lecturer/dashboard or /student/dashboard (US01) | 400 missing fields · 401 incorrect email/password · 429 incorrect 5 times within 10 minutes (US01) |
+| POST | /quiz/create | title, description, duration_minutes | 201 · quiz_id, status Draft (US02) | 400 "Quiz title is required" · 403 not a lecturer (BR1) · 422 duration ≤ 0 (US11) |
+| POST | /quiz/:id/questions | content, points, choices[], correct_index | 201 · question_id (US03) | 403 not the quiz owner (BR2) · 404 quiz not found · 422 "Please select one correct option" (BR3) |
+| POST | /lecturer/quiz/:id/publish | — | 200 · status published (US04) | 403 not the quiz owner (BR2) · 409 already published · 422 invalid quiz (BR3) |
+| POST | /student/quiz/:id/take | — | 201 · attempt_id, remaining time (US06) | 403 quiz not published or already closed (US04) · 409 "You have already submitted this quiz" (BR5) |
+| POST | /student/quiz/:id/submit | attempt_id, answers[], confirm | 200 · score, submission time (US08) | 409 already submitted (BR5, US13) · 422 unanswered questions remain without confirmation (US08) |
+| GET | /lecturer/dashboard | — | 200 · lecturer's quiz list (US14) | 403 not a lecturer (BR1) |
 
 ## 4. Walking skeleton
 
@@ -51,3 +61,9 @@
 ## 5. Design decisions
 
 ## 6. What changed since M1
+
+| Date | Author | Change Description | Affected Story / BR | Issue |
+| :--- | :--- | :--- | :--- | :--- |
+| 2026-09-27 | Anh Thu | Added US14 (Lecturer Dashboard) to list owned quizzes and attempt counts | US14, BR1 | #49 |
+| 2026-09-27 | Anh Thu | Updated US03 criteria to allow at least 2 choices per question, aligning with BR3 and ERD | US03, BR3 | #29 |
+| 2026-09-28 | Anh Thu | Added new persona - Mai (TA) and audit-reading permission | US12 | #37 |

@@ -1,6 +1,6 @@
 # Change log
 
-## Sprint 2
+## Sprint 2 (20/09/2026-03/10/2026)
 
 | Date | Author | Change Description | Affected Story / BR | Issue |
 | :--- | :--- | :--- | :--- | :--- |

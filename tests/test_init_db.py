@@ -1,6 +1,7 @@
 import sqlite3
 
 import pytest
+from werkzeug.security import check_password_hash
 
 from src.db import get_connection
 from src.init_db import init_db
@@ -71,3 +72,24 @@ def test_connection_enables_foreign_keys(db_path):
                 "INSERT INTO quiz (lecturer_id, title, duration_minutes) "
                 "VALUES (999, 'Invalid owner', 10)"
             )
+
+
+def test_seed_has_login_accounts_and_a_closed_quiz(db_path):
+    with get_connection(db_path) as connection:
+        lecturer = connection.execute(
+            "SELECT password_hash, role FROM user WHERE email = ?",
+            ("ngan.lecturer@example.edu",),
+        ).fetchone()
+        student = connection.execute(
+            "SELECT password_hash, role FROM user WHERE email = ?",
+            ("duc.student@example.edu",),
+        ).fetchone()
+        closed_quizzes = connection.execute(
+            "SELECT COUNT(*) FROM quiz WHERE status = 'closed'"
+        ).fetchone()[0]
+
+    assert lecturer["role"] == "lecturer"
+    assert student["role"] == "student"
+    assert check_password_hash(lecturer["password_hash"], "MiniLMS2026!")
+    assert check_password_hash(student["password_hash"], "MiniLMS2026!")
+    assert closed_quizzes == 1

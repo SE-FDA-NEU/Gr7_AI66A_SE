@@ -12,7 +12,7 @@ the seed CSV files are an external data source used once during setup.
 | Browser | Student's phone or laptop | Any modern browser | Sends HTTP requests and shows the HTML pages |
 | Flask web app (`src/app.py`, `src/routes/`) | Local Python process, port 5000 | Python 3.11, Flask 3 | Receives requests, calls the service, renders templates. No SQL and no business rules here. |
 | Quiz service (`src/services/quiz_service.py`) | Same Python process | Python | The one module that holds business rules BR1–BR6 |
-| Quiz repository (`src/repositories/quiz_repository.py`) | Same Python process | Python sqlite3 | The only module that contains SQL |
+| Repositories (`src/repositories/`) | Same Python process | Python sqlite3 | The only modules that contain SQL |
 | SQLite database (`data/minilms.db`) | File on disk | SQLite 3 | Stores the 6 tables of Section 2 |
 | Seed script (`src/init_db.py`) | Run once from the command line | Python | Creates the tables and loads the seed data |
 | Seed CSV files (`data/seed_*.csv`) | Files in the repository | CSV | 7 users, 15 quizzes, 15 questions, 60 choices |
@@ -27,8 +27,10 @@ the seed CSV files are an external data source used once during setup.
 
 Business rules live in one module so that every route enforces them the same
 way and they can be unit-tested without a browser (see ADR 2 in Section 5).
-Sign-in (US01) and the attempt timer (US06, US11) arrive in Sprint 3 as new
-routes and service functions; they do not add new containers.
+Sign-in (US01) uses Flask sessions, an authentication service, and dedicated
+repository queries for user lookup and persistent login lockouts. Authentication
+failures are stored in two SQLite support tables outside the six quiz-domain
+tables. The attempt timer (US06, US11) does not add new containers.
 
 ## 2. Data model
 
@@ -51,8 +53,10 @@ routes and service functions; they do not add new containers.
 ## 3. API design
 | Method | Path | Input | Success | Errors |
 | --- | --- | --- | --- | --- |
-| GET | /student/dashboard | — | 200 · published quiz listing page (walking skeleton, US05) | 302 → /login if not logged in (BR1, from Sprint 3) |
-| POST | /login | email, password | 302 → /lecturer/dashboard or /student/dashboard (US01) | 400 missing fields · 401 incorrect email/password · 429 incorrect 5 times within 10 minutes (US01) |
+| GET | /login | — | 200 · sign-in form (US01) | — |
+| POST | /login | email, password | 302 → role dashboard (US01) | 400 missing fields · 401 incorrect email/password · 429 five failed attempts within 10 minutes (15-minute lockout): "Too many failed attempts. Try again in 15 minutes." |
+| POST | /logout | — | 302 → /login; session cleared (US01) | — |
+| GET | /student/dashboard | — | 200 · published quiz listing page (walking skeleton, US05) | 302 → /login if not logged in · 403 wrong role (BR1) |
 | POST | /quiz/create | title, description, duration_minutes | 201 · quiz_id, status Draft (US02) | 400 "Quiz title is required" · 403 not a lecturer (BR1) · 422 duration ≤ 0 (US11) |
 | POST | /quiz/:id/questions | content, points, choices[], correct_index | 201 · question_id (US03) | 403 not the quiz owner (BR2) · 404 quiz not found · 422 "Please select one correct option" (BR3) |
 | POST | /lecturer/quiz/:id/publish | — | 200 · status published (US04) | 403 not the quiz owner (BR2) · 409 already published · 422 invalid quiz (BR3) |

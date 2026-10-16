@@ -13,4 +13,4 @@ quiz_id,lecturer_id,title,status,duration_minutes,start_at,end_at
 12,2,Software Maintenance,published,20,2026-10-12T08:00:00,2026-10-21T23:59:00
 13,1,Advanced Analytics,draft,30,2026-10-20T08:00:00,2026-10-30T23:59:00
 14,2,Quiz Security Review,draft,20,2026-10-21T08:00:00,2026-10-31T23:59:00
-15,1,Final Practice Quiz,draft,45,2026-10-22T08:00:00,2026-11-01T23:59:00
+15,1,Final Practice Quiz,closed,45,2026-10-22T08:00:00,2026-11-01T23:59:00

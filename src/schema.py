@@ -6,6 +6,8 @@ DROP TABLE IF EXISTS attempt;
 DROP TABLE IF EXISTS choice;
 DROP TABLE IF EXISTS question;
 DROP TABLE IF EXISTS quiz;
+DROP TABLE IF EXISTS login_lockout;
+DROP TABLE IF EXISTS login_failure;
 DROP TABLE IF EXISTS user;
 
 CREATE TABLE user (
@@ -14,6 +16,20 @@ CREATE TABLE user (
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL CHECK (role IN ('lecturer', 'student', 'ta'))
+);
+
+CREATE TABLE login_failure (
+    failure_id INTEGER PRIMARY KEY,
+    email TEXT NOT NULL,
+    failed_at INTEGER NOT NULL
+);
+
+CREATE INDEX login_failure_email_failed_at
+    ON login_failure(email, failed_at);
+
+CREATE TABLE login_lockout (
+    email TEXT PRIMARY KEY,
+    locked_until INTEGER NOT NULL
 );
 
 CREATE TABLE quiz (

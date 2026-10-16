@@ -15,6 +15,9 @@
 </head>
 <body>
     <h1>Available quizzes</h1>
+    <form method="post" action="{{ url_for('auth.logout') }}">
+        <button type="submit">Sign out</button>
+    </form>
     <table>
         <thead>
             <tr>

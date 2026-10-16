@@ -1,8 +1,8 @@
 user_id,name,email,password_hash,role
-1,Ngan,ngan.lecturer@example.edu,seed-only-hash-01,lecturer
-2,Nam,nam.lecturer@example.edu,seed-only-hash-02,lecturer
-3,Duc,duc.student@example.edu,seed-only-hash-03,student
-4,Lan,lan.student@example.edu,seed-only-hash-04,student
-5,Minh,minh.student@example.edu,seed-only-hash-05,student
-6,An,an.student@example.edu,seed-only-hash-06,student
-7,Mai,mai.ta@example.edu,seed-only-hash-07,ta
+1,Ngan,ngan.lecturer@example.edu,pbkdf2:sha256:1000000$BSU4xmrIjRBOgxyH$4856456d357cb095d726384163768a51945be34d08e0f702801d4b2ceb7fbd49,lecturer
+2,Nam,nam.lecturer@example.edu,pbkdf2:sha256:1000000$hEk94JRc3opPwHEz$d38a1c8511c373d5563a269833b1f2f552c670becec56b723e86146af47cc164,lecturer
+3,Duc,duc.student@example.edu,pbkdf2:sha256:1000000$0Jl1khf2JxBhbht1$fe2c09520b1eb6ce141b0714c55d68903c161789bc2e639452c65d24e1503727,student
+4,Lan,lan.student@example.edu,pbkdf2:sha256:1000000$CdvLN5GdOhaye7ra$7ad2fbba9ec57d8cbc5905268e11721b6cd3465c46af0b48a0ddca37e2ee2496,student
+5,Minh,minh.student@example.edu,pbkdf2:sha256:1000000$JtI7nGeX4MwQsJ6S$e08d65fbe8d55b9cb5a695c2a0909b09fd054dd9320dddd176305ca12edccbbb,student
+6,An,an.student@example.edu,pbkdf2:sha256:1000000$5DEezRQnDjhzBlCI$0c5a59be2fdbd913b1699666d2a0e92ffc5eb87b2bd35455c27410aace7094e5,student
+7,Mai,mai.ta@example.edu,pbkdf2:sha256:1000000$XAcqavnd3DAvN6qS$d877db2a856fe703cd7c69c498a2c028a2dbe3393027d9b7a08fd3d3bcac7a31,ta

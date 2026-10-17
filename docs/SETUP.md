@@ -60,7 +60,11 @@ The system uses an `.env` file to manage environment-specific variables without 
   copy .env.example .env
   ```
 
-> **Note:** The default variables in `.env` (`FLASK_ENV=development`, `PORT=5000`, `DATABASE_PATH=data/minilms.db`) are pre-configured for immediate local execution.
+> **Note:** Set `SECRET_KEY` in `.env` to a private random value before running
+> the application. Generate one with
+> `python -c "import secrets; print(secrets.token_hex(32))"`. Keep it out of Git.
+> `DATABASE_PATH` defaults to `data/minilms.db`; the Flask development server
+> uses port 5000.
 
 ---
 
@@ -75,13 +79,26 @@ python src/init_db.py
 
 **Expected Terminal Output:**
 ```text
-[INFO] Dropped existing tables if any.
-[INFO] Created tables: users, quizzes, questions, attempts, answers.
-[INFO] Successfully seeded 5 users (1 Lecturer, 4 Students).
-[INFO] Successfully seeded 12 quizzes.
-[INFO] Successfully seeded 24 quiz questions.
-[SUCCESS] Database initialized at data/minilms.db with 41 total rows.
+[INFO] Database: data/minilms.db
+[INFO] Created 6 tables: user, quiz, question, choice, attempt, answer
+[INFO] Seeded user: 7
+[INFO] Seeded quiz: 15
+[INFO] Seeded question: 15
+[INFO] Seeded choice: 60
+[DONE] 97 rows in total
 ```
+
+### Test accounts
+
+The checked-in seed data contains demo-only accounts for local testing:
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Lecturer | `ngan.lecturer@example.edu` | `MiniLMS2026!` |
+| Student | `duc.student@example.edu` | `MiniLMS2026!` |
+
+These credentials are only for the local sample database. Do not reuse this
+password for a real account.
 
 ---
 
@@ -95,7 +112,9 @@ python src/app.py
 The server will run locally at: `http://localhost:5000`
 
 ### Step 5.2: Test the Walking Skeleton Route
-Open your web browser and navigate to: `127.0.0.1:5000/student/dashboard`
+Open your web browser and navigate to: `http://127.0.0.1:5000/login`. Sign in
+with the student test account above; successful login redirects to the student
+dashboard.
 
 - **Verification Criteria:**
   - The webpage displays a table containing **at least 12 quizzes** fetched directly from `data/minilms.db`.

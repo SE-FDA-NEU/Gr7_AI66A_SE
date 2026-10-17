@@ -49,6 +49,33 @@ QUESTION_NOT_FOUND = (
     "Use the question numbers on the quiz page to move between questions."
 )
 
+# Quiz publication and ownership messages (US04, BR2, BR3)
+NOT_QUIZ_OWNER = (
+    "Bạn không có quyền sửa quiz này vì nó thuộc giảng viên khác. "
+    "Hãy quay lại danh sách quiz của bạn. (You do not have permission to edit this quiz.)"
+)
+QUIZ_NO_QUESTIONS = (
+    "Chưa thể publish: bài quiz phải có ít nhất 1 câu hỏi. "
+    "(A quiz must contain at least 1 question.)"
+)
+QUIZ_ALREADY_PUBLISHED = (
+    "Bài quiz này đã được publish trước đó. "
+    "Không thể publish lại bài quiz đang hoạt động."
+)
+
+
+def quiz_question_missing_correct_choice(position: int) -> str:
+    return (
+        f"Chưa thể publish: câu {position} chưa có đáp án đúng. "
+        "Hãy chọn đúng 1 đáp án cho mỗi câu. (Please select one correct option.)"
+    )
+
+
+def quiz_question_insufficient_choices(position: int) -> str:
+    return (
+        f"Chưa thể publish: câu {position} phải có ít nhất 2 đáp án lựa chọn."
+    )
+
 
 def error_message(status_code: int) -> str:
     return ERROR_MESSAGES.get(status_code, "Something went wrong. Please try again.")

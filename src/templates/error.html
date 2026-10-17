@@ -11,6 +11,8 @@
         <p role="alert">{{ message }}</p>
         {% if session.get('role') == 'student' %}
         <a href="{{ url_for('student.student_dashboard') }}">Back to dashboard</a>
+        {% elif session.get('role') == 'lecturer' %}
+        <a href="{{ url_for('lecturer.lecturer_dashboard') }}">Back to dashboard</a>
         {% else %}
         <a href="{{ url_for('auth.login') }}">Back to sign in</a>
         {% endif %}

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Publish Quiz - {{ quiz.title }} - Mini LMS</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 24px;
+        }
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-draft { background-color: #fef3c7; color: #b45309; }
+        .badge-published { background-color: #dcfce7; color: #15803d; }
+        .badge-closed { background-color: #fee2e2; color: #b91c1c; }
+        .badge-correct { background-color: #dcfce7; color: #15803d; font-size: 11px; margin-left: 8px; }
+        .badge-missing { background-color: #fee2e2; color: #b91c1c; font-size: 11px; margin-left: 8px; }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .alert {
+            padding: 14px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .alert-error { background-color: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+        .alert-success { background-color: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+        .alert-warning { background-color: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+        .alert-info { background-color: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-top: 12px;
+        }
+        .summary-item {
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 6px;
+        }
+        .summary-item .label { font-size: 12px; color: var(--text-muted); }
+        .summary-item .value { font-size: 16px; font-weight: 600; margin-top: 4px; }
+
+        .question-card {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: #ffffff;
+        }
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .choice-list {
+            list-style: none;
+            padding-left: 0;
+            margin: 8px 0 0 0;
+        }
+        .choice-item {
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            background: #f8fafc;
+            border: 1px solid #edf2f7;
+            display: flex;
+            align-items: center;
+        }
+        .choice-item.correct {
+            background: #f0fdf4;
+            border-color: #86efac;
+            font-weight: 500;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            border: none;
+            font-size: 14px;
+        }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-danger { background-color: var(--danger); color: white; }
+        .btn-danger:hover { background-color: #b91c1c; }
+        .btn-secondary { background-color: #e2e8f0; color: #334155; }
+        .btn-secondary:hover { background-color: #cbd5e1; }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .actions-bar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <a href="{{ url_for('lecturer.lecturer_dashboard') }}" style="color: var(--primary); text-decoration: none; font-size: 14px;">&larr; Back to Dashboard</a>
+                <h1 style="margin: 6px 0 0 0; font-size: 24px;">Publish Quiz</h1>
+            </div>
+            <div>
+                <form method="post" action="{{ url_for('auth.logout') }}" style="margin: 0;">
+                    <button type="submit" class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;">Sign out</button>
+                </form>
+            </div>
+        </header>
+
+        {% if validation_error %}
+        <div role="alert" class="alert alert-error">
+            <strong>Không thể publish bài quiz:</strong><br>
+            {{ validation_error }}
+        </div>
+        {% elif quiz.status == 'draft' %}
+        <div role="status" class="alert alert-success">
+            <strong>Sẵn sàng:</strong> Bài quiz đã đủ điều kiện để công bố cho sinh viên làm bài.
+        </div>
+        {% elif quiz.status == 'published' %}
+        <div role="status" class="alert alert-info">
+            <strong>Đang hoạt động:</strong> Bài quiz hiện đã được công bố. Sinh viên có thể bắt đầu làm bài.
+        </div>
+        {% elif quiz.status == 'closed' %}
+        <div role="status" class="alert alert-warning">
+            <strong>Đã đóng:</strong> Bài quiz đã kết thúc. Sinh viên không thể làm mới, nhưng vẫn có thể xem lại kết quả bài nộp cũ.
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; font-size: 20px;">{{ quiz.title }}</h2>
+                <span class="badge badge-{{ quiz.status }}">{{ quiz.status }}</span>
+            </div>
+
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="label">Thời lượng làm bài</div>
+                    <div class="value">{{ quiz.duration_minutes }} phút</div>
+                </div>
+                <div class="summary-item">
+                    <div class="label">Số câu hỏi hiện có</div>
+                    <div class="value">{{ questions|length }} câu</div>
+                </div>
+                <div class="summary-item">
+                    <div class="label">Giảng viên phụ trách</div>
+                    <div class="value">{{ quiz.lecturer_name }}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="label">Trạng thái phát hành</div>
+                    <div class="value" id="quiz-status-text">{{ quiz.status|capitalize }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-top: 0;">Danh sách câu hỏi kiểm tra ({{ questions|length }})</h3>
+            {% if questions|length == 0 %}
+            <div class="alert alert-warning">
+                Quiz hiện chưa có câu hỏi nào. Bạn cần thêm ít nhất 1 câu hỏi hợp lệ trước khi có thể publish.
+            </div>
+            {% else %}
+                {% for q in questions %}
+                <div class="question-card">
+                    <div class="question-header">
+                        <span>Câu {{ q.position }}: {{ q.content }}</span>
+                        <span>
+                            {% if q.has_valid_correct %}
+                            <span class="badge badge-published">&#10003; Có đáp án đúng</span>
+                            {% else %}
+                            <span class="badge badge-missing">&#9888; Thiếu đáp án đúng</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <ul class="choice-list">
+                        {% for c in q.choices %}
+                        <li class="choice-item {% if c.is_correct %}correct{% endif %}">
+                            <span style="margin-right: 8px;">{{ loop.index }}.</span>
+                            <span>{{ c.content }}</span>
+                            {% if c.is_correct %}
+                            <span class="badge badge-correct">&#10003; ĐÁP ÁN ĐÚNG</span>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="actions-bar">
+                {% if quiz.status == 'draft' %}
+                <form method="post" action="{{ url_for('lecturer.handle_publish_quiz', quiz_id=quiz.quiz_id) }}" style="margin: 0;">
+                    <button type="submit" id="btn-publish" class="btn btn-primary" {% if not is_publishable %}disabled{% endif %}>
+                        Publish bài Quiz
+                    </button>
+                </form>
+                {% elif quiz.status == 'published' %}
+                <form method="post" action="{{ url_for('lecturer.handle_close_quiz', quiz_id=quiz.quiz_id) }}" style="margin: 0;">
+                    <button type="submit" id="btn-close" class="btn btn-danger">
+                        Đóng bài Quiz (Close Quiz)
+                    </button>
+                </form>
+                {% endif %}
+
+                <a href="{{ url_for('lecturer.lecturer_dashboard') }}" class="btn btn-secondary">
+                    Quay lại Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -25,6 +25,7 @@
                 <th>Lecturer</th>
                 <th>Duration (min)</th>
                 <th>Closes at</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -34,10 +35,15 @@
                 <td>{{ quiz.lecturer_name }}</td>
                 <td>{{ quiz.duration_minutes }}</td>
                 <td>{{ quiz.end_at }}</td>
+                <td>
+                    <form method="post" action="{{ url_for('student.start_quiz', quiz_id=quiz.quiz_id) }}">
+                        <button type="submit">Take quiz</button>
+                    </form>
+                </td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="4">No published quizzes available.</td>
+                <td colspan="5">No published quizzes available.</td>
             </tr>
             {% endfor %}
         </tbody>

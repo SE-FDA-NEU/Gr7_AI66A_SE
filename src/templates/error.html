@@ -9,7 +9,11 @@
     <main>
         <h1>{{ status_code }}</h1>
         <p role="alert">{{ message }}</p>
+        {% if session.get('role') == 'student' %}
+        <a href="{{ url_for('student.student_dashboard') }}">Back to dashboard</a>
+        {% else %}
         <a href="{{ url_for('auth.login') }}">Back to sign in</a>
+        {% endif %}
     </main>
 </body>
 </html>

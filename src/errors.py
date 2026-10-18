@@ -36,9 +36,17 @@ NOT_YOUR_ATTEMPT = (
     "This quiz attempt belongs to another student, so you can't view or change it. "
     "Go back to the dashboard and open your own quiz."
 )
-TIME_IS_UP = (
-    "Time is up for this quiz, so your answer was not saved. "
-    "Contact your lecturer if you think this is a mistake."
+AUTO_SUBMITTED = (
+    "Time ran out, so your attempt was submitted automatically with the answers "
+    "saved before the deadline. Contact your lecturer if you think this is a mistake."
+)
+UNANSWERED_NOT_CONFIRMED = (
+    "Some questions are still unanswered, so the quiz was not submitted. "
+    "Answer them, or tick the confirmation box to submit anyway."
+)
+ATTEMPT_NOT_SUBMITTED = (
+    "You haven't submitted this quiz yet, so there is no submission to show. "
+    "Go back to the dashboard to continue the quiz."
 )
 INVALID_CHOICE = (
     "The selected option does not belong to this question, so it was not saved. "

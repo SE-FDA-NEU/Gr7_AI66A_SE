@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quiz submitted - Mini LMS</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f9f9f9; }
+        h1 { color: #333; }
+        .notice { background-color: #fff3cd; padding: 12px; }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Quiz submitted</h1>
+        <p><strong>{{ quiz.title }}</strong></p>
+        {% if notice %}
+        <p class="notice" role="status">{{ notice }}</p>
+        {% endif %}
+        <p>Submitted at {{ submitted_at_display }}</p>
+        <p><a href="{{ url_for('student.student_dashboard') }}">Back to dashboard</a></p>
+    </main>
+</body>
+</html>

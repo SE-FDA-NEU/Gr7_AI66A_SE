@@ -13,6 +13,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 load_dotenv(PROJECT_ROOT / ".env")
 
 from src.errors import render_error
+from src.routes.api_routes import api_bp
 from src.routes.auth_routes import auth_bp
 from src.routes.lecturer_routes import lecturer_bp
 from src.routes.quiz_routes import quiz_bp
@@ -36,6 +37,7 @@ def create_app(test_config=None):
     app.register_blueprint(lecturer_bp)
     app.register_blueprint(quiz_bp)
     app.register_blueprint(student_bp)
+    app.register_blueprint(api_bp)
 
     @app.errorhandler(HTTPException)
     def handle_http_error(error):

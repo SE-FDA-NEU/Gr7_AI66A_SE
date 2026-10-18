@@ -83,7 +83,42 @@ flowchart TD
 
 ## 2. Wireframes
 
-*(Mục này tổng hợp thiết kế khung giao diện của các màn hình P0. Mỗi màn hình mô tả mục đích người dùng, các endpoint API được gọi và hình ảnh wireframe tương ứng).*
+### Màn hình sinh viên
+
+#### /student/dashboard: bốn trạng thái
+
+Người dùng vào đây để tìm quiz đang mở và bắt đầu làm bài.
+
+API gọi: `GET /student/dashboard` (khung trang), `GET /api/student/quizzes` (danh sách quiz và trạng thái của sinh viên với từng quiz), `POST /student/quiz/<id>/start` (nút Take quiz / Continue quiz).
+
+Màn hình này được vẽ đủ bốn trạng thái:
+- **Empty**: chưa có quiz nào được publish, có nút Refresh.
+- **Loading**: biểu tượng xoay và các dòng giữ chỗ.
+- **Error**: gọi API thất bại, có nút Try again.
+- **Data**: bảng quiz; cột Action hiện "Take quiz", "Continue quiz" hoặc "Submitted".
+
+![Dashboard sinh viên với bốn trạng thái](images/ui/student-dashboard-4-states.png)
+
+#### /student/quiz/<id>/take
+
+Người dùng vào đây để trả lời từng câu hỏi của quiz trước khi hết giờ.
+
+API gọi:
+- `GET /student/quiz/<id>/take?q=<n>`: hiện câu thứ n, kèm đáp án đã chọn và thời gian còn lại.
+- `POST /student/quiz/<id>/take`: lưu đáp án vừa chọn, rồi chuyển sang câu trước, câu sau, câu được chọn, hoặc sang trang review.
+
+![Trang làm bài](images/ui/student-take.png)
+
+#### /student/quiz/<id>/review → nộp bài
+
+Người dùng vào đây để kiểm tra các câu chưa làm và xác nhận nộp bài.
+
+API gọi:
+- `GET /student/quiz/<id>/review`: số câu đã làm và danh sách câu chưa làm.
+- `POST /student/quiz/<id>/submit`: nộp bài; nếu còn câu chưa làm thì phải tick ô xác nhận.
+- `GET /student/quiz/<id>/submitted`: trang xác nhận đã nộp, kèm thời gian nộp.
+
+![Xem lại và nộp bài](images/ui/student-submit.png)
 
 ### 2.1 Màn hình Đăng nhập — `/login` (US01)
 - **The user comes here to:** Xác thực danh tính bằng email và mật khẩu, nhận phiên làm việc bảo mật (session) và tự động chuyển về Dashboard tương ứng với vai trò của mình.
@@ -164,7 +199,41 @@ Bảng dưới đây trích xuất chính xác từ hệ thống mã lỗi trong
 
 ## 4. What changed since M2
 
-*(Mục này ghi nhận các điều chỉnh về mặt Kiến trúc, API Design và Luồng dữ liệu trong `docs/design.md` nảy sinh trong quá trình xây dựng giao diện thực tế ở Milestone 3).*
+### Thay đổi 1: Luồng làm bài của sinh viên được tách thành nhiều route
+
+**Trước (M2):** bảng API chỉ có một `POST /student/quiz/:id/take` để bắt đầu làm bài và một `POST /student/quiz/:id/submit` trả về điểm.
+
+**Sau (M3):**
+- `POST /student/quiz/:id/start`: bắt đầu hoặc làm tiếp bài cũ.
+- `GET /student/quiz/:id/take?q=n`: mỗi trang một câu hỏi.
+- `POST /student/quiz/:id/take`: lưu từng câu trả lời.
+- `GET /student/quiz/:id/review`: xem lại trước khi nộp.
+- `POST /student/quiz/:id/submit`: nộp bài.
+- `GET /student/quiz/:id/submitted`: trang xác nhận đã nộp.
+
+**Lý do:** khi vẽ màn hình làm bài, nhóm thấy US06 yêu cầu tải lại trang (F5) vẫn giữ đúng câu đang làm, đáp án đã chọn và thời gian còn lại. Một endpoint duy nhất không làm được việc này. Vì vậy:
+- mỗi câu trả lời được lưu ngay khi sinh viên chuyển sang câu khác;
+- bài chưa nộp được mở lại thay vì tạo bài mới;
+- thời gian còn lại được server tính lại từ `started_at`.
+
+Đã cập nhật ở mục 3 của `design.md` (PR #88 và #87).
+
+### Thay đổi 2: Thêm endpoint `GET /api/student/quizzes` cho dashboard
+
+**Trước (M2):** `/student/dashboard` được server dựng bảng quiz một lần duy nhất, nên trang không bao giờ có trạng thái Loading hay Error thật sự.
+
+**Sau (M3):** trang hiện Loading trước, rồi gọi `GET /api/student/quizzes`, sau đó chuyển sang Empty, Error hoặc Data. API này trả về:
+- 200 kèm danh sách quiz và trạng thái của từng quiz;
+- 302 chuyển về `/login` nếu chưa đăng nhập;
+- 403 nếu là giảng viên.
+
+**Lý do:** wireframe bốn trạng thái cho thấy muốn có Loading và Error thật thì dữ liệu phải được tải riêng sau khi trang hiện ra. Đã cập nhật ở mục 3 của `design.md` (PR #85).
+
+### Thay đổi 3: Thống nhất ý nghĩa của `attempt.score`
+
+`score` lưu dưới dạng tỉ lệ từ 0 đến 1 (số câu đúng / tổng số câu; ví dụ 8/10 = 0.8). Khi hiển thị thì làm tròn: phần trăm là `round(score × 100)`.
+
+Nhóm chốt điều này khi làm phần nộp bài (#87), để các story xem kết quả và thống kê (US09, US10) đọc cùng một giá trị.
 
 ### 4.1 Tách biệt Endpoint Bắt đầu, Làm bài và Lưu đáp án (US06, BR4, BR5)
 - **Tình trạng tại M2:** Ban đầu trong bản thiết kế M2, route làm bài dự kiến dùng chung một endpoint dạng `/student/quiz/:id/take` xử lý cả việc khởi tạo lượt thi và nộp câu trả lời.

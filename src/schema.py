@@ -1,3 +1,4 @@
+
 """SQLite schema for the MiniLMS data model."""
 
 SCHEMA_SQL = """
@@ -36,6 +37,7 @@ CREATE TABLE quiz (
     quiz_id INTEGER PRIMARY KEY,
     lecturer_id INTEGER NOT NULL REFERENCES user(user_id),
     title TEXT NOT NULL,
+    description TEXT,
     status TEXT NOT NULL DEFAULT 'draft'
         CHECK (status IN ('draft', 'published', 'closed')),
     duration_minutes INTEGER NOT NULL CHECK (duration_minutes > 0),

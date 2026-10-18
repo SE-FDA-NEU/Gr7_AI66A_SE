@@ -147,7 +147,7 @@ dashboard.
 
 This setup guide has been independently tested on a clean machine not owned by the primary author:
 
-- **Tested by:** `@khangtrannf` (Team Member 7)
+- **Tested by:** `@ngthanhlan06-droid` (Team Member 7)
 - **Tested on:** Clean Laptop (macOS / Clean Python Environment)
-- **Date of test:** 03/10/2026
-- **Total time taken:** 8 minutes 30 seconds.
+- **Date of test:** 18/10/2026
+- **Total time taken:** 9 minutes 10 seconds.

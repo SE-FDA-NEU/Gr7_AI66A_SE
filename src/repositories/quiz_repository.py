@@ -31,6 +31,132 @@ def list_published_quizzes(conn):
     return quizzes
 
 
+def get_quiz_by_id(conn, quiz_id: int) -> dict | None:
+    """Truy vấn thông tin chi tiết một quiz theo quiz_id."""
+    cursor = conn.cursor()
+    query = """
+        SELECT 
+            q.quiz_id, 
+            q.lecturer_id, 
+            q.title, 
+            q.status, 
+            q.duration_minutes, 
+            q.start_at, 
+            q.end_at,
+            u.name AS lecturer_name
+        FROM quiz q
+        JOIN user u ON u.user_id = q.lecturer_id
+        WHERE q.quiz_id = ?;
+    """
+    cursor.execute(query, (quiz_id,))
+    row = cursor.fetchone()
+    if not row:
+        return None
+    return {
+        "quiz_id": row["quiz_id"],
+        "lecturer_id": row["lecturer_id"],
+        "title": row["title"],
+        "status": row["status"],
+        "duration_minutes": row["duration_minutes"],
+        "start_at": row["start_at"],
+        "end_at": row["end_at"],
+        "lecturer_name": row["lecturer_name"],
+    }
+
+
+def get_quiz_questions_with_choices(conn, quiz_id: int) -> list[dict]:
+    """
+    Lấy danh sách các câu hỏi và các lựa chọn đi kèm của một quiz.
+    Sắp xếp theo position tăng dần.
+    """
+    cursor = conn.cursor()
+    query_q = """
+        SELECT question_id, quiz_id, content, points, position
+        FROM question
+        WHERE quiz_id = ?
+        ORDER BY position ASC;
+    """
+    cursor.execute(query_q, (quiz_id,))
+    q_rows = cursor.fetchall()
+    
+    questions = []
+    for q in q_rows:
+        q_id = q["question_id"]
+        query_c = """
+            SELECT choice_id, question_id, content, is_correct
+            FROM choice
+            WHERE question_id = ?
+            ORDER BY choice_id ASC;
+        """
+        cursor.execute(query_c, (q_id,))
+        c_rows = cursor.fetchall()
+        
+        choices = []
+        correct_count = 0
+        for c in c_rows:
+            is_cor = bool(c["is_correct"])
+            if is_cor:
+                correct_count += 1
+            choices.append({
+                "choice_id": c["choice_id"],
+                "content": c["content"],
+                "is_correct": is_cor,
+            })
+            
+        questions.append({
+            "question_id": q["question_id"],
+            "quiz_id": q["quiz_id"],
+            "content": q["content"],
+            "points": q["points"],
+            "position": q["position"],
+            "choices": choices,
+            "correct_count": correct_count,
+            "has_valid_correct": correct_count == 1,
+            "has_minimum_choices": len(choices) >= 2,
+        })
+        
+    return questions
+
+
+def update_quiz_status(conn, quiz_id: int, new_status: str) -> None:
+    """Cập nhật trạng thái quiz (draft, published, closed)."""
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE quiz SET status = ? WHERE quiz_id = ?",
+        (new_status, quiz_id),
+    )
+    conn.commit()
+
+
+def list_quizzes_by_lecturer(conn, lecturer_id: int) -> list[dict]:
+    """Truy vấn danh sách quiz thuộc sở hữu của một giảng viên."""
+    cursor = conn.cursor()
+    query = """
+        SELECT 
+            q.quiz_id, 
+            q.title, 
+            q.status, 
+            q.duration_minutes, 
+            q.end_at,
+            (SELECT COUNT(*) FROM attempt a WHERE a.quiz_id = q.quiz_id) AS attempt_count
+        FROM quiz q
+        WHERE q.lecturer_id = ?
+        ORDER BY q.quiz_id ASC;
+    """
+    cursor.execute(query, (lecturer_id,))
+    rows = cursor.fetchall()
+    
+    quizzes = []
+    for row in rows:
+        quizzes.append({
+            "quiz_id": row["quiz_id"],
+            "title": row["title"],
+            "status": row["status"],
+            "duration_minutes": row["duration_minutes"],
+            "end_at": row["end_at"],
+            "attempt_count": row["attempt_count"],
+        })
+    return quizzes
 def list_published_quizzes_with_question_count(conn):
     """
     Truy vấn các quiz có status = 'published' kèm số câu hỏi của mỗi quiz

@@ -9,6 +9,43 @@
     <main>
         <h1>Lecturer dashboard</h1>
         <p>Welcome, {{ name }}.</p>
+
+        <section style="margin: 24px 0;">
+            <h2>My Quizzes</h2>
+            {% if quizzes and quizzes|length > 0 %}
+            <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; max-width: 800px;">
+                <thead>
+                    <tr style="background: #f1f5f9;">
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Attempts</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for q in quizzes %}
+                    <tr>
+                        <td>{{ q.quiz_id }}</td>
+                        <td>{{ q.title }}</td>
+                        <td>{{ q.duration_minutes }} mins</td>
+                        <td><strong>{{ q.status }}</strong></td>
+                        <td>{{ q.attempt_count }}</td>
+                        <td>
+                            <a href="{{ url_for('lecturer.publish_page', quiz_id=q.quiz_id) }}" class="btn">
+                                {% if q.status == 'draft' %}Publish{% elif q.status == 'published' %}Manage / Close{% else %}Review{% endif %}
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>You have no quizzes yet.</p>
+            {% endif %}
+        </section>
+
         <form method="post" action="{{ url_for('auth.logout') }}">
             <button type="submit">Sign out</button>
         </form>

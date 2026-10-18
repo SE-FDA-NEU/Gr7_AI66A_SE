@@ -11,7 +11,8 @@ from src.errors import (
     NOT_YOUR_ATTEMPT,
     QUIZ_CLOSED,
     QUIZ_NOT_PUBLISHED,
-    TIME_IS_UP,
+    AUTO_SUBMITTED,
+    UNANSWERED_NOT_CONFIRMED,
 )
 from src.init_db import init_db
 
@@ -108,6 +109,22 @@ def answer(client, db_path, question_id, choice_id, go):
             "go": go,
         },
     )
+
+
+def submitted_row(db_path, student_id=DUC_ID, quiz_id=PUBLISHED_QUIZ):
+    with get_connection(db_path) as connection:
+        row = connection.execute(
+            "SELECT submitted_at, score FROM attempt WHERE student_id = ? AND quiz_id = ?",
+            (student_id, quiz_id),
+        ).fetchone()
+    return tuple(row)
+
+
+def submit(client, db_path, confirm=False):
+    data = {"attempt_id": open_attempt_id(db_path)}
+    if confirm:
+        data["confirm"] = "yes"
+    return client.post(f"/student/quiz/{PUBLISHED_QUIZ}/submit", data=data)
 
 
 def checked_value(choice_id):
@@ -285,7 +302,7 @@ def test_take_page_without_starting_shows_404(client):
     assert "Take quiz" in response.get_data(as_text=True)
 
 
-def test_answer_is_rejected_after_time_is_up(client, db_path, monkeypatch):
+def test_late_answer_is_not_saved_and_attempt_is_auto_submitted(client, db_path, monkeypatch):
     start = datetime(2026, 10, 17, 8, 0, 0)
     monkeypatch.setattr(attempt_service, "_now", lambda: start)
     login(client)
@@ -296,9 +313,10 @@ def test_answer_is_rejected_after_time_is_up(client, db_path, monkeypatch):
     monkeypatch.setattr(attempt_service, "_now", lambda: start + timedelta(minutes=20))
     response = answer(client, db_path, question_id, choice_ids(db_path, question_id)[0], go=1)
 
-    assert response.status_code == 403
-    assert shows_message(response, TIME_IS_UP)
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith(f"/student/quiz/{PUBLISHED_QUIZ}/submitted?timeout=1")
     assert count_rows(db_path, "SELECT COUNT(*) FROM answer") == 0
+    assert submitted_row(db_path) == ("2026-10-17T08:20:00", 0.0)
 
 
 def test_remaining_seconds_counts_down_from_duration():
@@ -318,7 +336,7 @@ def test_next_and_previous_keep_the_saved_answer(multi_question_client, db_path)
 
     page = client.get(f"/student/quiz/{PUBLISHED_QUIZ}/take?q=1").get_data(as_text=True)
     assert "Question 1 / 3" in page
-    assert page.count('name="go"') == 4  # Next + jump buttons 1..3
+    assert page.count('name="go"') == 5  # Next + jump buttons 1..3 + Review & submit
 
     response = answer(client, db_path, first_question, chosen, go=2)
     assert response.headers["Location"].endswith("take?q=2")
@@ -361,3 +379,230 @@ def test_question_number_out_of_range_shows_404(multi_question_client, db_path):
     client.post(f"/student/quiz/{PUBLISHED_QUIZ}/start")
 
     assert client.get(f"/student/quiz/{PUBLISHED_QUIZ}/take?q=4").status_code == 404
+
+
+# US08: review and submit
+
+
+def start_and_answer(client, db_path, answers):
+    """Start quiz 1 and answer {question_number: choice_index}."""
+    login(client)
+    client.post(f"/student/quiz/{PUBLISHED_QUIZ}/start")
+    ids = question_ids(db_path)
+    for number, choice_index in answers.items():
+        question_id = ids[number - 1]
+        answer(client, db_path, question_id, choice_ids(db_path, question_id)[choice_index], go=1)
+
+
+def test_review_lists_unanswered_questions(multi_question_client, db_path):
+    client = multi_question_client
+    start_and_answer(client, db_path, {1: 0, 3: 0})
+
+    response = client.get(f"/student/quiz/{PUBLISHED_QUIZ}/review")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "You answered 2 of 3 questions" in html
+    assert "Question 2" in html
+    assert f'href="/student/quiz/{PUBLISHED_QUIZ}/take?q=2"' in html
+    assert "Question 1" not in html
+    assert "Question 3" not in html
+    assert 'name="confirm"' in html
+
+
+def test_review_without_unanswered_questions_needs_no_confirmation(client, db_path):
+    start_and_answer(client, db_path, {1: 0})
+
+    html = client.get(f"/student/quiz/{PUBLISHED_QUIZ}/review").get_data(as_text=True)
+
+    assert "You answered 1 of 1 questions" in html
+    assert "Unanswered questions" not in html
+    assert 'name="confirm"' not in html
+
+
+def test_review_and_submit_button_saves_answer_then_opens_review(client, db_path):
+    login(client)
+    client.post(f"/student/quiz/{PUBLISHED_QUIZ}/start")
+    question_id = question_ids(db_path)[0]
+
+    response = answer(client, db_path, question_id, choice_ids(db_path, question_id)[0], go="review")
+
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith(f"/student/quiz/{PUBLISHED_QUIZ}/review")
+    assert count_rows(db_path, "SELECT COUNT(*) FROM answer") == 1
+    take_page = client.get(f"/student/quiz/{PUBLISHED_QUIZ}/take?q=1").get_data(as_text=True)
+    assert "Review &amp; submit" in take_page
+
+
+def test_submit_stores_submission_time_and_score(client, db_path):
+    start_and_answer(client, db_path, {1: 0})  # first choice is the correct one
+
+    response = submit(client, db_path)
+
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith(f"/student/quiz/{PUBLISHED_QUIZ}/submitted")
+    submitted_at, score = submitted_row(db_path)
+    assert submitted_at is not None
+    assert score == 1.0
+    page = client.get(response.headers["Location"]).get_data(as_text=True)
+    assert "Quiz submitted" in page
+    assert "Submitted at" in page
+    assert "Back to dashboard" in page
+
+
+def test_submitted_page_shows_vietnam_time(client, db_path, monkeypatch):
+    monkeypatch.setattr(attempt_service, "_now", lambda: datetime(2026, 10, 18, 8, 0, 0))
+    start_and_answer(client, db_path, {1: 0})
+    monkeypatch.setattr(attempt_service, "_now", lambda: datetime(2026, 10, 18, 8, 15, 0))
+
+    response = submit(client, db_path)
+
+    assert submitted_row(db_path)[0] == "2026-10-18T08:15:00"
+    page = client.get(response.headers["Location"]).get_data(as_text=True)
+    assert "Submitted at 18 Oct 2026, 15:15 (UTC+7)" in page
+
+
+def test_vietnam_time_crosses_midnight():
+    assert attempt_service.format_vietnam_time("2026-10-18T20:30:00") == "19 Oct 2026, 03:30 (UTC+7)"
+
+
+def test_score_is_correct_answers_over_total_questions(multi_question_client, db_path):
+    client = multi_question_client
+    start_and_answer(client, db_path, {1: 0, 2: 1, 3: 0})  # Q2 wrong
+
+    submit(client, db_path)
+
+    assert submitted_row(db_path)[1] == pytest.approx(2 / 3)
+
+
+def test_unanswered_questions_require_confirmation(multi_question_client, db_path):
+    client = multi_question_client
+    start_and_answer(client, db_path, {1: 0, 3: 0})
+
+    response = submit(client, db_path)
+
+    assert response.status_code == 422
+    assert shows_message(response, UNANSWERED_NOT_CONFIRMED)
+    assert "Question 2" in response.get_data(as_text=True)
+    assert submitted_row(db_path)[0] is None
+
+    response = submit(client, db_path, confirm=True)
+
+    assert response.status_code == 302
+    assert submitted_row(db_path)[1] == pytest.approx(2 / 3)
+
+
+def test_second_submission_is_rejected(client, db_path):
+    start_and_answer(client, db_path, {1: 0})
+    attempt_id = open_attempt_id(db_path)
+    submit(client, db_path)
+    first = submitted_row(db_path)
+
+    response = client.post(f"/student/quiz/{PUBLISHED_QUIZ}/submit", data={"attempt_id": attempt_id})
+
+    assert response.status_code == 409
+    assert shows_message(response, ALREADY_SUBMITTED)
+    assert submitted_row(db_path) == first
+    assert count_rows(db_path, "SELECT COUNT(*) FROM attempt WHERE submitted_at IS NOT NULL") == 1
+
+
+def test_answers_cannot_change_after_submission(client, db_path):
+    start_and_answer(client, db_path, {1: 0})
+    attempt_id = open_attempt_id(db_path)
+    submit(client, db_path)
+    question_id = question_ids(db_path)[0]
+    original, other = choice_ids(db_path, question_id)[:2]
+
+    response = client.post(
+        f"/student/quiz/{PUBLISHED_QUIZ}/take",
+        data={"attempt_id": attempt_id, "question_id": question_id, "choice_id": other, "go": 1},
+    )
+
+    assert response.status_code == 409
+    assert shows_message(response, ALREADY_SUBMITTED)
+    with get_connection(db_path) as connection:
+        stored = connection.execute("SELECT choice_id FROM answer").fetchall()
+    assert [row[0] for row in stored] == [original]
+    assert submitted_row(db_path)[1] == 1.0
+    assert client.get(f"/student/quiz/{PUBLISHED_QUIZ}/take?q=1").status_code == 409
+
+
+@pytest.mark.parametrize("page", ["take?q=1", "review"])
+def test_expired_attempt_is_auto_submitted_when_page_is_opened(client, db_path, monkeypatch, page):
+    start = datetime(2026, 10, 18, 8, 0, 0)
+    monkeypatch.setattr(attempt_service, "_now", lambda: start)
+    start_and_answer(client, db_path, {1: 0})
+
+    # Quiz 1 lasts 20 minutes; the student comes back 5 minutes after it ran out.
+    monkeypatch.setattr(attempt_service, "_now", lambda: start + timedelta(minutes=25))
+    response = client.get(f"/student/quiz/{PUBLISHED_QUIZ}/{page}")
+
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith(f"/student/quiz/{PUBLISHED_QUIZ}/submitted?timeout=1")
+    assert submitted_row(db_path) == ("2026-10-18T08:20:00", 1.0)
+    result = client.get(response.headers["Location"])
+    assert shows_message(result, AUTO_SUBMITTED)
+    assert "Submitted at 18 Oct 2026, 15:20 (UTC+7)" in result.get_data(as_text=True)
+
+
+def test_expired_attempt_is_auto_submitted_on_submit_without_confirmation(
+    multi_question_client, db_path, monkeypatch
+):
+    client = multi_question_client
+    start = datetime(2026, 10, 18, 8, 0, 0)
+    monkeypatch.setattr(attempt_service, "_now", lambda: start)
+    start_and_answer(client, db_path, {1: 0})
+
+    monkeypatch.setattr(attempt_service, "_now", lambda: start + timedelta(minutes=20))
+    response = submit(client, db_path)
+
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("submitted?timeout=1")
+    assert submitted_row(db_path)[1] == pytest.approx(1 / 3)
+
+
+def test_submitted_page_before_submitting_shows_404(client, db_path):
+    login(client)
+    client.post(f"/student/quiz/{PUBLISHED_QUIZ}/start")
+
+    assert client.get(f"/student/quiz/{PUBLISHED_QUIZ}/submitted").status_code == 404
+
+
+US08_ROUTES = [
+    ("get", f"/student/quiz/{PUBLISHED_QUIZ}/review"),
+    ("post", f"/student/quiz/{PUBLISHED_QUIZ}/submit"),
+    ("get", f"/student/quiz/{PUBLISHED_QUIZ}/submitted"),
+]
+
+
+@pytest.mark.parametrize(("method", "path"), US08_ROUTES)
+def test_unauthenticated_review_and_submit_redirect_to_login(client, method, path):
+    response = getattr(client, method)(path)
+
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/login")
+
+
+@pytest.mark.parametrize(("method", "path"), US08_ROUTES)
+def test_lecturer_cannot_review_or_submit(client, method, path):
+    login(client, "ngan.lecturer@example.edu")
+
+    assert getattr(client, method)(path).status_code == 403
+
+
+def test_student_cannot_submit_another_students_attempt(client, db_path):
+    with get_connection(db_path) as connection:
+        lan_attempt = connection.execute(
+            "INSERT INTO attempt (student_id, quiz_id, started_at) VALUES (?, ?, ?)",
+            (LAN_ID, PUBLISHED_QUIZ, attempt_service._now().strftime("%Y-%m-%dT%H:%M:%S")),
+        ).lastrowid
+    login(client)
+
+    response = client.post(
+        f"/student/quiz/{PUBLISHED_QUIZ}/submit",
+        data={"attempt_id": lan_attempt, "confirm": "yes"},
+    )
+
+    assert response.status_code == 403
+    assert shows_message(response, NOT_YOUR_ATTEMPT)
+    assert submitted_row(db_path, student_id=LAN_ID)[0] is None

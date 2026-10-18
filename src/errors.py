@@ -1,5 +1,3 @@
-"""Shared user-facing messages for HTTP errors."""
-
 from flask import render_template
 
 
@@ -11,7 +9,6 @@ ERROR_MESSAGES = {
     429: "Too many failed attempts. Try again in 15 minutes.",
 }
 
-# Quiz attempt messages (US06): what happened, why, and what to do next.
 QUIZ_NOT_FOUND = (
     "This quiz could not be found. It may have been removed. "
     "Go back to the dashboard to choose another quiz."
@@ -36,9 +33,17 @@ NOT_YOUR_ATTEMPT = (
     "This quiz attempt belongs to another student, so you can't view or change it. "
     "Go back to the dashboard and open your own quiz."
 )
-TIME_IS_UP = (
-    "Time is up for this quiz, so your answer was not saved. "
-    "Contact your lecturer if you think this is a mistake."
+AUTO_SUBMITTED = (
+    "Time ran out, so your attempt was submitted automatically with the answers "
+    "saved before the deadline. Contact your lecturer if you think this is a mistake."
+)
+UNANSWERED_NOT_CONFIRMED = (
+    "Some questions are still unanswered, so the quiz was not submitted. "
+    "Answer them, or tick the confirmation box to submit anyway."
+)
+ATTEMPT_NOT_SUBMITTED = (
+    "You haven't submitted this quiz yet, so there is no submission to show. "
+    "Go back to the dashboard to continue the quiz."
 )
 INVALID_CHOICE = (
     "The selected option does not belong to this question, so it was not saved. "
@@ -48,6 +53,14 @@ QUESTION_NOT_FOUND = (
     "This question number does not exist in the quiz. "
     "Use the question numbers on the quiz page to move between questions."
 )
+NOT_QUIZ_OWNER = (
+    "This quiz belongs to another lecturer, so you cannot edit it. "
+    "Go back to your quiz list."
+)
+QUESTION_CONTENT_REQUIRED = "Please enter a question."
+CHOICES_REQUIRED = "Please enter all four options."
+SELECT_CORRECT_OPTION = "Please select one correct option."
+INVALID_POINTS = "Points must be a positive whole number within the supported range."
 
 # Quiz publication and ownership messages (US04, BR2, BR3)
 NOT_QUIZ_OWNER = (

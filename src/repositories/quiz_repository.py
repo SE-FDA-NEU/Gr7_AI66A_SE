@@ -157,3 +157,29 @@ def list_quizzes_by_lecturer(conn, lecturer_id: int) -> list[dict]:
             "attempt_count": row["attempt_count"],
         })
     return quizzes
+def list_published_quizzes_with_question_count(conn):
+    """
+    Truy vấn các quiz có status = 'published' kèm số câu hỏi của mỗi quiz
+    Trả về danh sách dạng dict gồm: quiz_id, title, duration_minutes, question_count
+    """
+    query = """
+        SELECT
+            q.quiz_id,
+            q.title,
+            q.duration_minutes,
+            COUNT(qu.question_id) AS question_count
+        FROM quiz q
+        LEFT JOIN question qu ON qu.quiz_id = q.quiz_id
+        WHERE q.status = 'published'
+        GROUP BY q.quiz_id
+        ORDER BY q.end_at ASC;
+    """
+    return [
+        {
+            "quiz_id": row[0],
+            "title": row[1],
+            "duration_minutes": row[2],
+            "question_count": row[3],
+        }
+        for row in conn.execute(query)
+    ]

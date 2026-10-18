@@ -1,17 +1,10 @@
 from src.app import create_app
-from src.db import get_connection
 from src.init_db import init_db
 
 
-def test_student_dashboard_shows_published_quizzes(tmp_path):
+def test_student_dashboard_has_all_four_ui_states(tmp_path):
     db_path = tmp_path / "minilms.db"
     init_db(db_path)
-
-    with get_connection(db_path) as connection:
-        connection.execute(
-            "UPDATE quiz SET title = ? WHERE quiz_id = 1",
-            ("Updated title from database",),
-        )
 
     app = create_app({"TESTING": True, "DATABASE_PATH": db_path})
     client = app.test_client()
@@ -28,10 +21,24 @@ def test_student_dashboard_shows_published_quizzes(tmp_path):
     assert login.status_code == 302
     assert login.headers["Location"].endswith("/student/dashboard")
     assert response.status_code == 200
-    assert "Updated title from database" in html
-    assert html.count("<tr>") == 13
-    assert html.count("<td>") == 60
-    assert html.count("Take quiz") == 12
-    assert "Advanced Analytics" not in html
-    assert "Quiz Security Review" not in html
-    assert "Final Practice Quiz" not in html
+    assert "Available quizzes" in html
+    assert "Duc (student)" in html
+
+    # Loading is visible first; the other three wait for the API response.
+    assert '<section id="state-loading" class="state">' in html
+    assert "Loading quizzes..." in html
+    assert 'id="state-empty" class="state state-empty" hidden' in html
+    assert "No quizzes are open for you yet." in html
+    assert "New quizzes appear here as soon as your lecturer publishes them." in html
+    assert "Refresh" in html
+    assert 'id="state-error" class="state state-error" role="alert" hidden' in html
+    assert "We can't reach the server." in html
+    assert "Your quizzes could not be loaded. Check your connection and try again." in html
+    assert "Try again" in html
+    assert '<section id="state-data" hidden>' in html
+    for heading in ("Quiz", "Duration", "Questions", "Action"):
+        assert f"<th>{heading}</th>" in html
+
+    assert "/api/student/quizzes" in html
+    assert "<noscript>" in html
+    assert "Turn on JavaScript" in html

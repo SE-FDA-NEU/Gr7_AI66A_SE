@@ -3,50 +3,172 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Available quizzes - Mini LMS</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f9f9f9; }
-        h1 { color: #333; }
+        body { font-family: Arial, sans-serif; margin: 0; background-color: #f9f9f9; color: #333; }
+        header { display: flex; justify-content: space-between; align-items: center;
+                 padding: 12px 40px; background-color: #eee; border-bottom: 1px solid #ccc; }
+        header form { display: inline; }
+        header button { background: none; border: none; color: #007bff; cursor: pointer; font: inherit; padding: 0; }
+        main { margin: 24px 40px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #fff; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         th { background-color: #007bff; color: white; }
         tr:nth-child(even) { background-color: #f2f2f2; }
+        .state { margin-top: 20px; padding: 32px; text-align: center; }
+        .state[hidden] { display: none; }
+        .state-empty { border: 2px dashed #bbb; background: #fafafa; }
+        .state-error { border: 2px solid #c0392b; background: #fdecea; }
+        .state-error h2 { color: #c0392b; }
+        .hint { color: #777; }
+        .spinner { width: 40px; height: 40px; margin: 0 auto 12px; border: 4px solid #ddd;
+                   border-top-color: #007bff; border-radius: 50%; animation: spin 1s linear infinite; }
+        .skeleton { height: 28px; margin: 10px 0; background: #eee; border-radius: 4px; }
+        .submitted { color: #2e7d32; font-weight: bold; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
+    <noscript>
+        <style>#state-loading { display: none; }</style>
+    </noscript>
 </head>
 <body>
-    <h1>Available quizzes</h1>
-    <form method="post" action="{{ url_for('auth.logout') }}">
-        <button type="submit">Sign out</button>
-    </form>
-    <table>
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Lecturer</th>
-                <th>Duration (min)</th>
-                <th>Closes at</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for quiz in quizzes %}
-            <tr>
-                <td><strong>{{ quiz.title }}</strong></td>
-                <td>{{ quiz.lecturer_name }}</td>
-                <td>{{ quiz.duration_minutes }}</td>
-                <td>{{ quiz.end_at }}</td>
-                <td>
-                    <form method="post" action="{{ url_for('student.start_quiz', quiz_id=quiz.quiz_id) }}">
-                        <button type="submit">Take quiz</button>
-                    </form>
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="5">No published quizzes available.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <header>
+        <strong>Mini LMS</strong>
+        <span>
+            {{ session.get('name', 'Student') }} (student) |
+            <form method="post" action="{{ url_for('auth.logout') }}">
+                <button type="submit">Sign out</button>
+            </form>
+        </span>
+    </header>
+
+    <main>
+        <h1>Available quizzes</h1>
+
+        <noscript>
+            <p class="state state-error" role="alert">
+                JavaScript is turned off, so your quizzes can't be loaded.
+                Turn on JavaScript in your browser and reload this page.
+            </p>
+        </noscript>
+
+        <div id="status" aria-live="polite">
+            <section id="state-loading" class="state">
+                <div class="spinner" aria-hidden="true"></div>
+                <p class="hint">Loading quizzes...</p>
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
+            </section>
+
+            <section id="state-empty" class="state state-empty" hidden>
+                <h2>No quizzes are open for you yet.</h2>
+                <p class="hint">New quizzes appear here as soon as your lecturer publishes them.</p>
+                <button type="button" data-reload>Refresh</button>
+            </section>
+
+            <section id="state-error" class="state state-error" role="alert" hidden>
+                <h2>We can't reach the server.</h2>
+                <p>Your quizzes could not be loaded. Check your connection and try again.</p>
+                <button type="button" data-reload>Try again</button>
+            </section>
+
+            <section id="state-data" hidden>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Quiz</th>
+                            <th>Duration</th>
+                            <th>Questions</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="quiz-rows"></tbody>
+                </table>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        (function () {
+            var API_URL = "{{ url_for('api.student_quizzes') }}";
+            var states = ["loading", "empty", "error", "data"];
+
+            function show(name) {
+                states.forEach(function (state) {
+                    document.getElementById("state-" + state).hidden = state !== name;
+                });
+            }
+
+            function cell(text) {
+                var td = document.createElement("td");
+                td.textContent = text;
+                return td;
+            }
+
+            function actionCell(quiz) {
+                var td = document.createElement("td");
+                if (quiz.status === "submitted") {
+                    var label = document.createElement("span");
+                    label.className = "submitted";
+                    label.textContent = "Submitted";
+                    td.appendChild(label);
+                    return td;
+                }
+                // Take and Continue both POST to /start, which resumes an open attempt.
+                var form = document.createElement("form");
+                form.method = "post";
+                form.action = quiz.start_url;
+                var button = document.createElement("button");
+                button.type = "submit";
+                button.textContent = quiz.status === "in_progress" ? "Continue quiz" : "Take quiz";
+                form.appendChild(button);
+                td.appendChild(form);
+                return td;
+            }
+
+            function render(quizzes) {
+                var rows = document.getElementById("quiz-rows");
+                rows.replaceChildren();
+                quizzes.forEach(function (quiz) {
+                    var tr = document.createElement("tr");
+                    tr.appendChild(cell(quiz.title));
+                    tr.appendChild(cell(quiz.duration_minutes + " min"));
+                    tr.appendChild(cell(quiz.question_count));
+                    tr.appendChild(actionCell(quiz));
+                    rows.appendChild(tr);
+                });
+            }
+
+            function load() {
+                show("loading");
+                fetch(API_URL, { headers: { Accept: "application/json" }, credentials: "same-origin" })
+                    .then(function (response) {
+                        if (response.status !== 200) {
+                            throw new Error("HTTP " + response.status);
+                        }
+                        // An expired session redirects to the HTML login page, so parsing fails here.
+                        return response.json();
+                    })
+                    .then(function (body) {
+                        if (!body.quizzes.length) {
+                            show("empty");
+                            return;
+                        }
+                        render(body.quizzes);
+                        show("data");
+                    })
+                    .catch(function () {
+                        show("error");
+                    });
+            }
+
+            document.querySelectorAll("[data-reload]").forEach(function (button) {
+                button.addEventListener("click", load);
+            });
+            load();
+        })();
+    </script>
 </body>
 </html>

@@ -56,7 +56,8 @@ tables. The attempt timer (US06, US11) does not add new containers.
 | GET | /login | — | 200 · sign-in form (US01) | — |
 | POST | /login | email, password | 302 → role dashboard (US01) | 400 missing fields · 401 incorrect email/password · 429 five failed attempts within 10 minutes (15-minute lockout): "Too many failed attempts. Try again in 15 minutes." |
 | POST | /logout | — | 302 → /login; session cleared (US01) | — |
-| GET | /student/dashboard | — | 200 · published quiz listing page (walking skeleton, US05) | 302 → /login if not logged in · 403 wrong role (BR1) |
+| GET | /student/dashboard | — | 200 · page shell that loads quizzes from `/api/student/quizzes` and shows one of 4 states: Loading, Empty, Error, Data (US05, #85) | 302 → /login if not logged in · 403 wrong role (BR1) |
+| GET | /api/student/quizzes | — | 200 · JSON `{"quizzes": [{quiz_id, title, duration_minutes, question_count, status, start_url}]}` for published quizzes; status is `not_started`, `in_progress` (open attempt) or `submitted`; empty list when nothing is published (#85) | 302 → /login if not logged in · 403 wrong role (BR1) |
 | POST | /quiz/create | title, description, duration_minutes | 201 · quiz_id, status Draft (US02) | 400 "Quiz title is required" · 403 not a lecturer (BR1) · 422 duration ≤ 0 (US11) |
 | POST | /quiz/:id/questions | content, points, choices[], correct_index | 201 · question_id (US03) | 403 not the quiz owner (BR2) · 404 quiz not found · 422 "Please select one correct option" (BR3) |
 | POST | /lecturer/quiz/:id/publish | — | 200 · status published (US04) | 403 not the quiz owner (BR2) · 409 already published · 422 invalid quiz (BR3) |
@@ -215,4 +216,4 @@ published. Our Definition of Done requires an automated test for every story.
 | 2026-09-27 | Anh Thu | Updated US03 criteria to allow at least 2 choices per question, aligning with BR3 and ERD | US03, BR3 | #29 |
 | 2026-09-28 | Anh Thu | Added new persona - Mai (TA) and audit-reading permission | US12 | #37 |
 | 2026-10-17 | Dao Ngoc Hien | Split the US06 take route into start / take (GET) / save answer (POST); added `attempt_service` for BR4/BR5. BR4 currently checks quiz status only; the start_at/end_at window is a follow-up | US06, BR4, BR5 | #88 |
-| 2026-10-18 | Dao Ngoc Hien | Added review, submit and submitted routes; score stored as ratio 0–1; expired attempts are auto-submitted at the deadline when the student opens take/review or saves; times stored in UTC and shown in UTC+7 | US08, US11, US13, BR5, BR6 | #87 |
+| 2026-10-18 | Dao Ngoc Hien | Student dashboard loads quizzes from the new `GET /api/student/quizzes` and shows Loading / Empty / Error / Data states per the wireframe; columns are now Quiz, Duration, Questions, Action (Take quiz / Continue quiz / Submitted) | US05, US06 | #85 |

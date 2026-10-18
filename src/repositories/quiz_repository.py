@@ -183,3 +183,35 @@ def list_published_quizzes_with_question_count(conn):
         }
         for row in conn.execute(query)
     ]
+
+
+def create_quiz(
+    conn,
+    lecturer_id,
+    title,
+    duration_minutes,
+    description="",
+):
+    """Create a new draft quiz with an optional description."""
+
+    cursor = conn.execute(
+        """
+        INSERT INTO quiz (
+            lecturer_id,
+            title,
+            description,
+            status,
+            duration_minutes
+        )
+        VALUES (?, ?, ?, 'draft', ?)
+        """,
+        (
+            lecturer_id,
+            title,
+            description,
+            duration_minutes,
+        ),
+    )
+
+    conn.commit()
+    return cursor.lastrowid

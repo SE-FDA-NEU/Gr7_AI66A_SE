@@ -182,3 +182,154 @@ def test_student_cannot_access_publish_page_br1(tmp_path):
     _login_as(client, "duc.student@example.edu", "MiniLMS2026!")
     response = client.get("/lecturer/quiz/1/publish")
     assert response.status_code == 403
+
+
+def test_cannot_publish_closed_quiz_prevent_unintended_transition(tmp_path):
+    """Test state machine: Closed -> Published is forbidden."""
+    db_path = tmp_path / "minilms.db"
+    init_db(db_path)
+    app = create_app({"TESTING": True, "DATABASE_PATH": db_path})
+    client = app.test_client()
+
+    _login_as(client, "ngan.lecturer@example.edu", "MiniLMS2026!")
+
+    # Close quiz 1 first
+    close_res = client.post("/lecturer/quiz/1/close", follow_redirects=True)
+    assert close_res.status_code == 200
+
+    # Try to re-publish the closed quiz
+    response = client.post("/lecturer/quiz/1/publish")
+    assert response.status_code == 400
+    html = response.get_data(as_text=True)
+    assert "Bài quiz đã đóng không thể publish lại" in html or "closed quiz cannot be published" in html
+
+    with get_connection(db_path) as conn:
+        row = conn.execute("SELECT status FROM quiz WHERE quiz_id = 1").fetchone()
+        assert row["status"] == "closed"
+
+
+def test_cannot_close_draft_quiz_must_be_published_first(tmp_path):
+    """Test state machine: Draft -> Closed is forbidden (must be published first)."""
+    db_path = tmp_path / "minilms.db"
+    init_db(db_path)
+    app = create_app({"TESTING": True, "DATABASE_PATH": db_path})
+    client = app.test_client()
+
+    _login_as(client, "ngan.lecturer@example.edu", "MiniLMS2026!")
+
+    # Quiz 13 is Draft
+    response = client.post("/lecturer/quiz/13/close")
+    assert response.status_code == 400
+    html = response.get_data(as_text=True)
+    assert "phải được publish trước khi đóng" in html or "must be published before it can be closed" in html
+
+    with get_connection(db_path) as conn:
+        row = conn.execute("SELECT status FROM quiz WHERE quiz_id = 13").fetchone()
+        assert row["status"] == "draft"
+
+
+def test_cannot_close_already_closed_quiz(tmp_path):
+    """Test state machine: Closed -> Closed returns 409 conflict."""
+    db_path = tmp_path / "minilms.db"
+    init_db(db_path)
+    app = create_app({"TESTING": True, "DATABASE_PATH": db_path})
+    client = app.test_client()
+
+    _login_as(client, "ngan.lecturer@example.edu", "MiniLMS2026!")
+
+    # Close quiz 1
+    client.post("/lecturer/quiz/1/close")
+
+    # Try to close it again
+    response = client.post("/lecturer/quiz/1/close")
+    assert response.status_code == 409
+    html = response.get_data(as_text=True)
+    assert "Bài quiz này đã được đóng trước đó" in html or "already closed" in html
+
+
+def test_closed_quiz_behavior_preserves_submitted_attempts_and_blocks_new_ones(tmp_path):
+    """
+    Test that closing a quiz:
+    1. Blocks new student attempts (BR4).
+    2. Completely preserves previously submitted attempts and scores.
+    """
+    db_path = tmp_path / "minilms.db"
+    init_db(db_path)
+
+    # Student 3 (Duc) has submitted an attempt on Quiz 1
+    with get_connection(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO attempt (student_id, quiz_id, started_at, submitted_at, score)
+            VALUES (?, ?, '2026-10-18T09:00:00', '2026-10-18T09:15:00', 9.5)
+            """,
+            (3, 1),
+        )
+        attempt_id = cursor.lastrowid
+        conn.commit()
+
+    app = create_app({"TESTING": True, "DATABASE_PATH": db_path})
+    client = app.test_client()
+
+    # Lecturer closes Quiz 1
+    _login_as(client, "ngan.lecturer@example.edu", "MiniLMS2026!")
+    res_close = client.post("/lecturer/quiz/1/close")
+    assert res_close.status_code in (200, 302)
+
+    # Verify Quiz 1 status is closed
+    with get_connection(db_path) as conn:
+        row = conn.execute("SELECT status FROM quiz WHERE quiz_id = 1").fetchone()
+        assert row["status"] == "closed"
+
+    # Verify previously submitted attempt is untouched
+    with get_connection(db_path) as conn:
+        attempt_row = conn.execute(
+            "SELECT attempt_id, student_id, score, submitted_at FROM attempt WHERE attempt_id = ?",
+            (attempt_id,),
+        ).fetchone()
+        assert attempt_row is not None
+        assert attempt_row["score"] == 9.5
+        assert attempt_row["submitted_at"] == "2026-10-18T09:15:00"
+
+    # Another student (User 4: Lan) tries to start the closed quiz -> blocked with 403
+    _login_as(client, "lan.student@example.edu", "MiniLMS2026!")
+    res_start = client.post("/student/quiz/1/start")
+    assert res_start.status_code == 403
+    html = res_start.get_data(as_text=True)
+    assert "This quiz is closed" in html or "closed" in html
+
+
+def test_friendly_ui_error_messages_rendered_on_br3_and_br2(tmp_path):
+    """Verify BR2 and BR3 display human-readable error messages on the UI, not just raw HTTP codes."""
+    db_path = tmp_path / "minilms.db"
+    init_db(db_path)
+
+    # Insert a draft quiz with 0 questions
+    with get_connection(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO quiz (lecturer_id, title, status, duration_minutes) VALUES (?, ?, ?, ?)",
+            (1, "Empty Demo Quiz", "draft", 25),
+        )
+        empty_id = cursor.lastrowid
+        conn.commit()
+
+    app = create_app({"TESTING": True, "DATABASE_PATH": db_path})
+    client = app.test_client()
+
+    # Test BR3: Friendly error message in alert banner on page
+    _login_as(client, "ngan.lecturer@example.edu", "MiniLMS2026!")
+    post_res = client.post(f"/lecturer/quiz/{empty_id}/publish")
+    assert post_res.status_code == 422
+    html_br3 = post_res.get_data(as_text=True)
+    assert "Chưa thể publish: bài quiz phải có ít nhất 1 câu hỏi" in html_br3
+    assert 'role="alert"' in html_br3
+
+    # Test BR2: Non-owner gets friendly UI with navigation button
+    _login_as(client, "nam.lecturer@example.edu", "MiniLMS2026!")
+    get_res = client.get(f"/lecturer/quiz/{empty_id}/publish")
+    assert get_res.status_code == 403
+    html_br2 = get_res.get_data(as_text=True)
+    assert "Bạn không có quyền sửa quiz này vì nó thuộc giảng viên khác" in html_br2
+    assert "Dashboard Giảng viên" in html_br2

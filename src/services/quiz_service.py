@@ -110,6 +110,10 @@ def publish_quiz(db_path: str | Path, lecturer_id: int, quiz_id: int) -> dict:
             conn.rollback()
             raise QuizServiceError(409, errors.QUIZ_ALREADY_PUBLISHED)
 
+        if quiz["status"] == "closed":
+            conn.rollback()
+            raise QuizServiceError(400, errors.QUIZ_CANNOT_REPUBLISH_CLOSED)
+
         # BR3: Kiểm tra quiz có ít nhất 1 câu hỏi
         questions = get_quiz_questions_with_choices(conn, quiz_id)
         if len(questions) < 1:
@@ -142,6 +146,8 @@ def close_quiz(db_path: str | Path, lecturer_id: int, quiz_id: int) -> dict:
     Đóng một bài quiz (US04, BR2):
     - Đổi trạng thái sang 'closed'.
     - Báo 403 nếu không phải chủ quiz (BR2).
+    - Báo 400 nếu quiz đang ở trạng thái 'draft' (chưa từng publish).
+    - Báo 409 nếu quiz đã ở trạng thái 'closed'.
     """
     conn = get_connection(db_path)
     try:
@@ -155,6 +161,15 @@ def close_quiz(db_path: str | Path, lecturer_id: int, quiz_id: int) -> dict:
         if quiz["lecturer_id"] != lecturer_id:
             conn.rollback()
             raise QuizServiceError(403, errors.NOT_QUIZ_OWNER)
+
+        # Kiểm tra trạng thái: chỉ quiz đang 'published' mới được đóng
+        if quiz["status"] == "draft":
+            conn.rollback()
+            raise QuizServiceError(400, errors.QUIZ_DRAFT_CANNOT_BE_CLOSED)
+
+        if quiz["status"] == "closed":
+            conn.rollback()
+            raise QuizServiceError(409, errors.QUIZ_ALREADY_CLOSED)
 
         update_quiz_status(conn, quiz_id, "closed")
         conn.commit()

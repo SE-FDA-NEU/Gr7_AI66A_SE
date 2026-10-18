@@ -71,7 +71,26 @@ def handle_publish_quiz(quiz_id: int):
     except QuizServiceError as error:
         if request.is_json:
             return jsonify({"error": error.message}), error.status_code
-        return render_error(error.status_code, error.message)
+        if error.status_code == 403:
+            return render_error(error.status_code, error.message)
+        try:
+            data = get_quiz_publish_details(
+                current_app.config["DATABASE_PATH"],
+                session["user_id"],
+                quiz_id,
+            )
+            return (
+                render_template(
+                    "publish_quiz.html",
+                    quiz=data["quiz"],
+                    questions=data["questions"],
+                    is_publishable=data["is_publishable"],
+                    validation_error=error.message,
+                ),
+                error.status_code,
+            )
+        except Exception:
+            return render_error(error.status_code, error.message)
 
     if request.is_json:
         return jsonify({"quiz_id": quiz["quiz_id"], "status": quiz["status"]}), 200
@@ -91,7 +110,26 @@ def handle_close_quiz(quiz_id: int):
     except QuizServiceError as error:
         if request.is_json:
             return jsonify({"error": error.message}), error.status_code
-        return render_error(error.status_code, error.message)
+        if error.status_code == 403:
+            return render_error(error.status_code, error.message)
+        try:
+            data = get_quiz_publish_details(
+                current_app.config["DATABASE_PATH"],
+                session["user_id"],
+                quiz_id,
+            )
+            return (
+                render_template(
+                    "publish_quiz.html",
+                    quiz=data["quiz"],
+                    questions=data["questions"],
+                    is_publishable=data["is_publishable"],
+                    validation_error=error.message,
+                ),
+                error.status_code,
+            )
+        except Exception:
+            return render_error(error.status_code, error.message)
 
     if request.is_json:
         return jsonify({"quiz_id": quiz["quiz_id"], "status": quiz["status"]}), 200

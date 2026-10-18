@@ -153,3 +153,33 @@ def upsert_answer(
         """,
         (attempt_id, question_id, choice_id),
     )
+
+
+def count_correct_answers(connection: sqlite3.Connection, attempt_id: int) -> int:
+    return connection.execute(
+        """
+        SELECT COUNT(*)
+        FROM answer a
+        JOIN choice c ON c.choice_id = a.choice_id
+        WHERE a.attempt_id = ? AND c.is_correct = 1
+        """,
+        (attempt_id,),
+    ).fetchone()[0]
+
+
+def mark_submitted(
+    connection: sqlite3.Connection,
+    attempt_id: int,
+    submitted_at: str,
+    score: float,
+) -> int:
+    """Submit an open attempt; returns 0 when it was already submitted (BR6)."""
+    cursor = connection.execute(
+        """
+        UPDATE attempt
+        SET submitted_at = ?, score = ?
+        WHERE attempt_id = ? AND submitted_at IS NULL
+        """,
+        (submitted_at, score, attempt_id),
+    )
+    return cursor.rowcount

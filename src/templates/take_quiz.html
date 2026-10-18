@@ -55,6 +55,8 @@
                         {% if number == question_number %}aria-current="step"{% endif %}>{{ number }}</button>
                 {% endfor %}
             </nav>
+
+            <p><button type="submit" name="go" value="review">Review &amp; submit</button></p>
         </form>
 
         <p><a href="{{ url_for('student.student_dashboard') }}">Back to dashboard</a></p>

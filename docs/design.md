@@ -11,7 +11,7 @@ the seed CSV files are an external data source used once during setup.
 |---|---|---|---|
 | Browser | Student's phone or laptop | Any modern browser | Sends HTTP requests and shows the HTML pages |
 | Flask web app (`src/app.py`, `src/routes/`) | Local Python process, port 5000 | Python 3.11, Flask 3 | Receives requests, calls the service, renders templates. No SQL and no business rules here. |
-| Quiz service (`src/services/quiz_service.py`) | Same Python process | Python | The one module that holds business rules BR1–BR6 |
+| Services (`src/services/quiz_service.py`, `src/services/attempt_service.py`) | Same Python process | Python | The only modules that hold business rules BR1–BR6; `attempt_service` enforces BR4/BR5 when starting an attempt and saving answers |
 | Repositories (`src/repositories/`) | Same Python process | Python sqlite3 | The only modules that contain SQL |
 | SQLite database (`data/minilms.db`) | File on disk | SQLite 3 | Stores the 6 tables of Section 2 |
 | Seed script (`src/init_db.py`) | Run once from the command line | Python | Creates the tables and loads the seed data |
@@ -60,7 +60,9 @@ tables. The attempt timer (US06, US11) does not add new containers.
 | POST | /quiz/create | title, description, duration_minutes | 201 · quiz_id, status Draft (US02) | 400 "Quiz title is required" · 403 not a lecturer (BR1) · 422 duration ≤ 0 (US11) |
 | POST | /quiz/:id/questions | content, points, choices[], correct_index | 201 · question_id (US03) | 403 not the quiz owner (BR2) · 404 quiz not found · 422 "Please select one correct option" (BR3) |
 | POST | /lecturer/quiz/:id/publish | — | 200 · status published (US04) | 403 not the quiz owner (BR2) · 409 already published · 422 invalid quiz (BR3) |
-| POST | /student/quiz/:id/take | — | 201 · attempt_id, remaining time (US06) | 403 quiz not published or already closed (US04) · 409 "You have already submitted this quiz" (BR5) |
+| POST | /student/quiz/:id/start | — | 302 → /student/quiz/:id/take?q=1; creates an attempt, or resumes the student's open attempt (US06) | 302 → /login if not logged in · 403 wrong role (BR1) · 403 quiz draft or closed (BR4) · 404 quiz not found · 409 already submitted (BR5) |
+| GET | /student/quiz/:id/take?q=n | q = question number (default 1) | 200 · one question with its choices, saved choice checked, "Question n / N", remaining seconds = duration − time since `started_at` (US06) | 302 → /login · 403 wrong role (BR1) · 404 quiz not started or q out of range · 409 already submitted (BR5) |
+| POST | /student/quiz/:id/take | attempt_id, question_id, choice_id (optional), go | 302 → take?q=go (Post/Redirect/Get); answer upserted on (attempt_id, question_id) (US06) | 302 → /login · 400 choice not in this question · 403 wrong role (BR1) · 403 attempt belongs to another student · 403 time is up · 409 already submitted (BR5) |
 | POST | /student/quiz/:id/submit | attempt_id, answers[], confirm | 200 · score, submission time (US08) | 409 already submitted (BR5, US13) · 422 unanswered questions remain without confirmation (US08) |
 | GET | /lecturer/dashboard | — | 200 · lecturer's quiz list (US14) | 403 not a lecturer (BR1) |
 
@@ -210,3 +212,4 @@ published. Our Definition of Done requires an automated test for every story.
 | 2026-09-27 | Anh Thu | Added US14 (Lecturer Dashboard) to list owned quizzes and attempt counts | US14, BR1 | #49 |
 | 2026-09-27 | Anh Thu | Updated US03 criteria to allow at least 2 choices per question, aligning with BR3 and ERD | US03, BR3 | #29 |
 | 2026-09-28 | Anh Thu | Added new persona - Mai (TA) and audit-reading permission | US12 | #37 |
+| 2026-10-17 | Dao Ngoc Hien | Split the US06 take route into start / take (GET) / save answer (POST); added `attempt_service` for BR4/BR5. BR4 currently checks quiz status only; the start_at/end_at window is a follow-up | US06, BR4, BR5 | #88 |

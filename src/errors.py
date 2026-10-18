@@ -62,16 +62,71 @@ CHOICES_REQUIRED = "Please enter all four options."
 SELECT_CORRECT_OPTION = "Please select one correct option."
 INVALID_POINTS = "Points must be a positive whole number within the supported range."
 
+# Quiz publication and ownership messages (US04, BR2, BR3)
+NOT_QUIZ_OWNER = (
+    "Bạn không có quyền sửa quiz này vì nó thuộc giảng viên khác. "
+    "Hãy quay lại danh sách quiz của bạn. (You do not have permission to edit this quiz.)"
+)
+QUIZ_NO_QUESTIONS = (
+    "Chưa thể publish: bài quiz phải có ít nhất 1 câu hỏi. "
+    "(A quiz must contain at least 1 question.)"
+)
+QUIZ_ALREADY_PUBLISHED = (
+    "Bài quiz này đã được publish trước đó. "
+    "Không thể publish lại bài quiz đang hoạt động."
+)
+QUIZ_CANNOT_REPUBLISH_CLOSED = (
+    "Bài quiz đã đóng không thể publish lại. "
+    "(A closed quiz cannot be published again.)"
+)
+QUIZ_DRAFT_CANNOT_BE_CLOSED = (
+    "Bài quiz đang ở trạng thái bản nháp (Draft), phải được publish trước khi đóng. "
+    "(A quiz must be published before it can be closed.)"
+)
+QUIZ_ALREADY_CLOSED = (
+    "Bài quiz này đã được đóng trước đó. "
+    "(This quiz is already closed.)"
+)
+
+
+def quiz_question_missing_correct_choice(position: int) -> str:
+    return (
+        f"Chưa thể publish: câu {position} chưa có đáp án đúng. "
+        "Hãy chọn đúng 1 đáp án cho mỗi câu. (Please select one correct option.)"
+    )
+
+
+def quiz_question_insufficient_choices(position: int) -> str:
+    return (
+        f"Chưa thể publish: câu {position} phải có ít nhất 2 đáp án lựa chọn."
+    )
+
+
+ERROR_TITLES = {
+    400: "Yêu cầu không hợp lệ (Bad Request)",
+    401: "Chưa đăng nhập (Unauthorized)",
+    403: "Không có quyền truy cập (Access Denied)",
+    404: "Không tìm thấy trang (Not Found)",
+    409: "Xung đột trạng thái (Conflict)",
+    422: "Không thể xử lý yêu cầu (Validation Error)",
+    429: "Quá nhiều yêu cầu (Too Many Requests)",
+}
+
+
+def error_title(status_code: int) -> str:
+    return ERROR_TITLES.get(status_code, "Thông báo lỗi (Error)")
+
 
 def error_message(status_code: int) -> str:
     return ERROR_MESSAGES.get(status_code, "Something went wrong. Please try again.")
 
 
-def render_error(status_code: int, message: str | None = None):
+def render_error(status_code: int, message: str | None = None, title: str | None = None):
     return (
         render_template(
             "error.html",
             status_code=status_code,
+            title=title or error_title(status_code),
             message=message or error_message(status_code),
         ),
         status_code,

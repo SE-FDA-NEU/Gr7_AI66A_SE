@@ -1,19 +1,101 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ status_code }} - Mini LMS</title>
+    <title>{{ status_code }} - {{ title or 'Thông báo lỗi' }} - Mini LMS</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --danger: #dc2626;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 24px;
+            box-sizing: border-box;
+        }
+        .error-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            max-width: 540px;
+            width: 100%;
+            padding: 32px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+        .error-code-badge {
+            display: inline-block;
+            background: #fee2e2;
+            color: var(--danger);
+            font-size: 13px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+        h1 {
+            font-size: 22px;
+            margin: 0 0 16px 0;
+            color: #1e293b;
+        }
+        .error-message-box {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 15px;
+            line-height: 1.5;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+        .btn {
+            display: inline-block;
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+    </style>
 </head>
 <body>
-    <main>
-        <h1>{{ status_code }}</h1>
-        <p role="alert">{{ message }}</p>
-        {% if session.get('role') == 'student' %}
-        <a href="{{ url_for('student.student_dashboard') }}">Back to dashboard</a>
-        {% else %}
-        <a href="{{ url_for('auth.login') }}">Back to sign in</a>
-        {% endif %}
+    <main class="error-card">
+        <span class="error-code-badge">Mã phản hồi: {{ status_code }}</span>
+        <h1>{{ title or 'Thông báo lỗi' }}</h1>
+        <div class="error-message-box" role="alert">
+            {{ message }}
+        </div>
+        <div>
+            {% if session.get('role') == 'student' %}
+            <a href="{{ url_for('student.student_dashboard') }}" class="btn">&larr; Quay lại Trang chủ Sinh viên</a>
+            {% elif session.get('role') == 'lecturer' %}
+            <a href="{{ url_for('lecturer.lecturer_dashboard') }}" class="btn">&larr; Quay lại Dashboard Giảng viên</a>
+            {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn">&larr; Quay lại trang Đăng nhập</a>
+            {% endif %}
+        </div>
     </main>
 </body>
 </html>

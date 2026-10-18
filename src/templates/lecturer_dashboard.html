@@ -4,21 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Lecturer dashboard - Mini LMS</title>
+    <style>
+        :root { font-family: Arial, sans-serif; color: #172b4d; background: #f8fafc; }
+        * { box-sizing: border-box; }
+        body { margin: 0; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; background: #fff; border-bottom: 1px solid #cbd5e1; }
+        header strong { color: #111827; font-size: 20px; }
+        a { color: #1d4ed8; }
+        .layout { display: grid; grid-template-columns: 210px minmax(0, 1fr); min-height: calc(100vh - 70px); }
+        nav { padding: 28px 14px; border-right: 1px solid #cbd5e1; background: #fff; }
+        nav a { display: block; padding: 12px 14px; margin-bottom: 8px; text-decoration: none; color: #1e293b; }
+        nav a[aria-current="page"] { background: #dbeafe; font-weight: 700; }
+        main { padding: 36px; overflow: auto; }
+        .title-row { display: flex; justify-content: space-between; align-items: start; gap: 20px; }
+        h1 { margin: 0 0 8px; }
+        .muted { color: #64748b; }
+        .button { display: inline-block; padding: 12px 18px; border-radius: 6px; background: #2563eb; color: #fff; text-decoration: none; font-weight: 700; }
+        .table-wrap { margin-top: 28px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; background: #fff; }
+        th, td { padding: 14px; border: 1px solid #cbd5e1; text-align: left; }
+        th { background: #e2e8f0; }
+        .status { font-weight: 600; }
+        .actions { white-space: nowrap; }
+        .actions a { margin-right: 10px; }
+        .empty { min-height: 400px; margin-top: 28px; display: grid; place-content: center; text-align: center; gap: 16px; background: #fff; border: 1px solid #cbd5e1; border-radius: 30px; }
+        @media (max-width: 700px) { .layout { grid-template-columns: 1fr; } nav { display: flex; gap: 8px; border-right: 0; border-bottom: 1px solid #cbd5e1; padding: 10px; } nav a { margin: 0; } main { padding: 22px 14px; } .title-row { flex-direction: column; } }
+    </style>
 </head>
 <body>
-    <main>
-        <h1>Lecturer dashboard</h1>
-        <p>Welcome, {{ name }}.</p>
+    <header>
+        <strong>Mini LMS</strong>
+        <span>{{ name }} · <a href="{{ url_for('auth.logout') }}">Log out</a></span>
+    </header>
+    <div class="layout">
+        <nav aria-label="Lecturer navigation">
+            <a href="{{ url_for('lecturer.lecturer_dashboard') }}" aria-current="page">Dashboard</a>
+            <a href="{{ url_for('lecturer.lecturer_dashboard') }}">My Quizzes</a>
+            <a href="{{ url_for('quiz.create_quiz_page') }}">Create Quiz</a>
+        </nav>
+        <main>
+            <div class="title-row">
+                <div>
+                    <h1>My Quizzes</h1>
+                    <p class="muted">Manage your quizzes, create new ones, and track student attempts.</p>
+                </div>
+                <a class="button" href="{{ url_for('quiz.create_quiz_page') }}">+ Create Quiz</a>
+            </div>
 
-        <section style="margin: 24px 0;">
-            <h2>My Quizzes</h2>
-            {% if quizzes and quizzes|length > 0 %}
-            <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; max-width: 800px;">
+            {% if quizzes %}
+            <div class="table-wrap">
+            <table>
                 <thead>
                     <tr style="background: #f1f5f9;">
                         <th>ID</th>
-                        <th>Title</th>
-                        <th>Duration</th>
+                        <th>Quiz Title</th>
                         <th>Status</th>
                         <th>Attempts</th>
                         <th>Actions</th>
@@ -29,26 +68,30 @@
                     <tr>
                         <td>{{ q.quiz_id }}</td>
                         <td>{{ q.title }}</td>
-                        <td>{{ q.duration_minutes }} mins</td>
-                        <td><strong>{{ q.status }}</strong></td>
-                        <td>{{ q.attempt_count }}</td>
-                        <td>
-                            <a href="{{ url_for('lecturer.publish_page', quiz_id=q.quiz_id) }}" class="btn">
-                                {% if q.status == 'draft' %}Publish{% elif q.status == 'published' %}Manage / Close{% else %}Review{% endif %}
-                            </a>
+                        <td class="status">{{ q.status|capitalize }}</td>
+                        <td>{{ q.attempt_count }} attempts</td>
+                        <td class="actions">
+                            <a href="{{ url_for('quiz.questions_page', quiz_id=q.quiz_id) }}">Edit Questions</a>
+                            {% if q.status == 'draft' %}
+                            <a href="{{ url_for('lecturer.publish_page', quiz_id=q.quiz_id) }}">Publish</a>
+                            {% elif q.status == 'published' %}
+                            <a href="{{ url_for('lecturer.publish_page', quiz_id=q.quiz_id) }}">Manage</a>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
             {% else %}
-            <p>You have no quizzes yet.</p>
+            <section class="empty">
+                <div aria-hidden="true" style="font-size: 36px;">▤</div>
+                <h2>You have no quizzes yet</h2>
+                <p class="muted">Create your first quiz to get started.</p>
+                <a class="button" href="{{ url_for('quiz.create_quiz_page') }}">+ Create Quiz</a>
+            </section>
             {% endif %}
-        </section>
-
-        <form method="post" action="{{ url_for('auth.logout') }}">
-            <button type="submit">Sign out</button>
-        </form>
-    </main>
+        </main>
+    </div>
 </body>
 </html>

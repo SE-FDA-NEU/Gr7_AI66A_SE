@@ -26,6 +26,52 @@ def test_lecturer_can_view_publish_page(tmp_path):
     assert "Advanced Analytics" in html
     assert "Draft" in html or "draft" in html
     assert "Publish bài Quiz" in html or "Publish" in html
+    assert 'name="start_at"' in html
+    assert 'name="end_at"' in html
+
+
+def test_lecturer_can_save_quiz_schedule_in_hanoi_time(tmp_path):
+    db_path = tmp_path / "minilms.db"
+    init_db(db_path)
+    app = create_app({"TESTING": True, "DATABASE_PATH": db_path})
+    client = app.test_client()
+    _login_as(client, "ngan.lecturer@example.edu", "MiniLMS2026!")
+
+    response = client.post(
+        "/lecturer/quiz/13/schedule",
+        data={"start_at": "2026-10-20T11:00", "end_at": "2026-10-20T12:00"},
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert "Quiz schedule saved successfully." in response.get_data(as_text=True)
+    with get_connection(db_path) as connection:
+        schedule = connection.execute(
+            "SELECT start_at, end_at FROM quiz WHERE quiz_id = 13"
+        ).fetchone()
+    assert tuple(schedule) == ("2026-10-20T04:00:00", "2026-10-20T05:00:00")
+
+
+def test_invalid_schedule_is_rejected_and_other_lecturers_cannot_change_it(tmp_path):
+    db_path = tmp_path / "minilms.db"
+    init_db(db_path)
+    app = create_app({"TESTING": True, "DATABASE_PATH": db_path})
+    client = app.test_client()
+
+    _login_as(client, "ngan.lecturer@example.edu", "MiniLMS2026!")
+    invalid = client.post(
+        "/lecturer/quiz/13/schedule",
+        data={"start_at": "2026-10-20T11:00", "end_at": ""},
+    )
+    assert invalid.status_code == 422
+    assert "Enter both a start time and an end time" in invalid.get_data(as_text=True)
+
+    _login_as(client, "nam.lecturer@example.edu", "MiniLMS2026!")
+    forbidden = client.post(
+        "/lecturer/quiz/13/schedule",
+        data={"start_at": "", "end_at": ""},
+    )
+    assert forbidden.status_code == 403
 
 
 def test_publish_valid_quiz_updates_status_to_published(tmp_path):
@@ -184,10 +230,22 @@ def test_student_cannot_access_publish_page_br1(tmp_path):
     assert response.status_code == 403
 
 
-def test_cannot_publish_closed_quiz_prevent_unintended_transition(tmp_path):
-    """Test state machine: Closed -> Published is forbidden."""
+def test_lecturer_can_republish_closed_quiz(tmp_path):
+    """A valid closed quiz can be reopened by its owner."""
     db_path = tmp_path / "minilms.db"
     init_db(db_path)
+    with get_connection(db_path) as conn:
+        conn.execute("UPDATE quiz SET start_at = NULL, end_at = NULL WHERE quiz_id = 1")
+        cursor = conn.execute(
+            """
+            INSERT INTO attempt (student_id, quiz_id, started_at, submitted_at, score)
+            VALUES (?, ?, '2026-10-18T09:00:00', '2026-10-18T09:15:00', ?)
+            """,
+            (3, 1, 9.5),
+        )
+        submitted_attempt_id = cursor.lastrowid
+        conn.commit()
+
     app = create_app({"TESTING": True, "DATABASE_PATH": db_path})
     client = app.test_client()
 
@@ -197,15 +255,30 @@ def test_cannot_publish_closed_quiz_prevent_unintended_transition(tmp_path):
     close_res = client.post("/lecturer/quiz/1/close", follow_redirects=True)
     assert close_res.status_code == 200
 
-    # Try to re-publish the closed quiz
-    response = client.post("/lecturer/quiz/1/publish")
-    assert response.status_code == 400
+    publish_page = client.get("/lecturer/quiz/1/publish")
+    assert publish_page.status_code == 200
+    assert "Publish Quiz Again" in publish_page.get_data(as_text=True)
+
+    response = client.post("/lecturer/quiz/1/publish", follow_redirects=True)
+    assert response.status_code == 200
     html = response.get_data(as_text=True)
-    assert "Bài quiz đã đóng không thể publish lại" in html or "closed quiz cannot be published" in html
+    assert "Opening" in html
+    assert "Close Quiz" in html
 
     with get_connection(db_path) as conn:
         row = conn.execute("SELECT status FROM quiz WHERE quiz_id = 1").fetchone()
-        assert row["status"] == "closed"
+        assert row["status"] == "published"
+        attempt = conn.execute(
+            "SELECT submitted_at, score FROM attempt WHERE attempt_id = ?",
+            (submitted_attempt_id,),
+        ).fetchone()
+        assert attempt["submitted_at"] == "2026-10-18T09:15:00"
+        assert attempt["score"] == 9.5
+
+    _login_as(client, "lan.student@example.edu", "MiniLMS2026!")
+    start_response = client.post("/student/quiz/1/start")
+    assert start_response.status_code == 302
+    assert start_response.headers["Location"].endswith("/take?q=1")
 
 
 def test_cannot_close_draft_quiz_must_be_published_first(tmp_path):

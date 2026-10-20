@@ -4,15 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Questions - {{ quiz.title }} - Mini LMS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/hig.css') }}">
 </head>
 <body>
     <main>
         <p>Mini LMS | Quiz: {{ quiz.title }} ({{ question_count }} question{{ '' if question_count == 1 else 's' }})</p>
-        <form method="post" action="{{ url_for('auth.logout') }}">
-            <button type="submit">Sign out</button>
-        </form>
-        <p><a href="{{ url_for('lecturer.lecturer_dashboard') }}">Back to dashboard</a></p>
-
         <h1>Add multiple-choice question</h1>
 
         {% if question_count == 0 and not messages %}
@@ -20,7 +16,7 @@
         {% endif %}
 
         {% if messages %}
-        <div role="alert">
+        <div class="alert alert-error" role="alert">
             <ul>
                 {% for message in messages %}
                 <li>{{ message }}</li>
@@ -32,7 +28,7 @@
         <form method="post" action="{{ url_for('quiz.add_quiz_question', quiz_id=quiz.quiz_id) }}">
             <p>
                 <label for="content">Question (*)</label><br>
-                <textarea id="content" name="content" rows="3" cols="60">{{ form.content }}</textarea>
+                <textarea id="content" name="content" rows="3" cols="60" required>{{ form.content }}</textarea>
             </p>
 
             <fieldset>
@@ -40,10 +36,12 @@
                 {% for letter in choice_labels %}
                 <p>
                     <input type="radio" name="correct_index" value="{{ loop.index0 }}"
+                           {% if loop.first %}required{% endif %}
                            aria-label="Option {{ letter }} is the correct answer"
                            {% if form.correct_index == loop.index0|string %}checked{% endif %}>
                     <label for="choice-{{ loop.index0 }}">{{ letter }}.</label>
                     <input id="choice-{{ loop.index0 }}" type="text" name="choices" size="50"
+                           required
                            value="{{ form.choices[loop.index0] }}">
                 </p>
                 {% endfor %}
@@ -51,7 +49,7 @@
 
             <p>
                 <label for="points">Points</label>
-                <input id="points" type="number" name="points" min="1" max="{{ max_points }}" value="{{ form.points }}">
+                <input id="points" type="number" name="points" min="1" max="{{ max_points }}" step="1" required value="{{ form.points }}">
             </p>
 
             <button type="submit">Save question</button>
@@ -68,7 +66,11 @@
         <p>No questions yet.</p>
         {% endif %}
 
-        <p><a href="/lecturer/quiz/{{ quiz.quiz_id }}/publish">Next: Publish</a></p>
+        <nav class="question-page-actions" aria-label="Quiz creation navigation">
+            <a class="btn btn-secondary" href="{{ url_for('lecturer.lecturer_dashboard') }}">Back to dashboard</a>
+            <a class="btn btn-primary" href="{{ url_for('lecturer.publish_page', quiz_id=quiz.quiz_id) }}">Next: Publish</a>
+        </nav>
     </main>
+    {% include "_toasts.html" %}
 </body>
 </html>

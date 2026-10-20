@@ -1,14 +1,17 @@
 """Business rules for taking and submitting a quiz attempt (US06, US08, BR4, BR5, BR6)."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from src import errors
 from src.db import get_connection
 from src.repositories import attempt_repository as repo
-
-TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S"
-VIETNAM_TIME = timezone(timedelta(hours=7))
+from src.time_utils import (
+    TIMESTAMP_FORMAT,
+    format_vietnam_time as format_vietnam_timestamp,
+    parse_utc_timestamp,
+    utc_now_naive,
+)
 
 
 class AttemptError(Exception):
@@ -38,24 +41,28 @@ class UnansweredNotConfirmed(Exception):
 
 def _now() -> datetime:
     """Current UTC time; tests monkeypatch this to control the clock."""
-    return datetime.now(timezone.utc).replace(microsecond=0, tzinfo=None)
+    return utc_now_naive()
 
 
 def remaining_seconds(
     started_at: str,
     duration_minutes: int,
     now: datetime | None = None,
+    end_at: str | None = None,
 ) -> int:
-    """Seconds left in the attempt: quiz duration minus time elapsed since start."""
+    """Seconds left, capped by both the attempt duration and quiz closing time."""
     now = now or _now()
-    elapsed = (now - datetime.strptime(started_at, TIMESTAMP_FORMAT)).total_seconds()
-    return max(0, int(duration_minutes * 60 - elapsed))
+    attempt_deadline = datetime.strptime(started_at, TIMESTAMP_FORMAT) + timedelta(
+        minutes=duration_minutes
+    )
+    if end_at:
+        attempt_deadline = min(attempt_deadline, parse_utc_timestamp(end_at))
+    return max(0, int((attempt_deadline - now).total_seconds()))
 
 
 def format_vietnam_time(utc_text: str) -> str:
     """Show a stored UTC timestamp in Vietnam time, e.g. '18 Oct 2026, 15:15 (UTC+7)'."""
-    utc_time = datetime.strptime(utc_text, TIMESTAMP_FORMAT).replace(tzinfo=timezone.utc)
-    return utc_time.astimezone(VIETNAM_TIME).strftime("%d %b %Y, %H:%M (UTC+7)")
+    return format_vietnam_timestamp(utc_text)
 
 
 def _check_quiz_can_start(quiz) -> None:
@@ -66,6 +73,22 @@ def _check_quiz_can_start(quiz) -> None:
         raise AttemptError(403, errors.QUIZ_CLOSED)
     if quiz["status"] != "published":
         raise AttemptError(403, errors.QUIZ_NOT_PUBLISHED)
+
+
+def _check_schedule_allows_start(quiz, now: datetime) -> None:
+    if quiz["start_at"] and now < parse_utc_timestamp(quiz["start_at"]):
+        raise AttemptError(403, "This quiz is not open yet.")
+    if quiz["end_at"] and now >= parse_utc_timestamp(quiz["end_at"]):
+        raise AttemptError(403, "The scheduled time for this quiz has ended.")
+
+
+def _attempt_deadline(attempt, quiz) -> datetime:
+    deadline = datetime.strptime(attempt["started_at"], TIMESTAMP_FORMAT) + timedelta(
+        minutes=quiz["duration_minutes"]
+    )
+    if quiz["end_at"]:
+        deadline = min(deadline, parse_utc_timestamp(quiz["end_at"]))
+    return deadline
 
 
 def _finalize(connection, attempt, submitted_at: datetime) -> bool:
@@ -84,12 +107,10 @@ def _finalize(connection, attempt, submitted_at: datetime) -> bool:
 
 def _auto_submit_if_expired(connection, attempt, quiz) -> None:
     """Submit an attempt whose time is up, stamped at the moment time ran out."""
-    if remaining_seconds(attempt["started_at"], quiz["duration_minutes"]) > 0:
+    deadline = _attempt_deadline(attempt, quiz)
+    if _now() < deadline:
         return
 
-    deadline = datetime.strptime(attempt["started_at"], TIMESTAMP_FORMAT) + timedelta(
-        minutes=quiz["duration_minutes"]
-    )
     _finalize(connection, attempt, deadline)
     connection.commit()
     raise AutoSubmitted(quiz["quiz_id"])
@@ -132,7 +153,7 @@ def _review_data(connection, quiz, attempt) -> dict:
             number for number in range(1, len(questions) + 1) if number not in answered
         ],
         "remaining_seconds": remaining_seconds(
-            attempt["started_at"], quiz["duration_minutes"]
+            attempt["started_at"], quiz["duration_minutes"], end_at=quiz["end_at"]
         ),
     }
 
@@ -143,7 +164,8 @@ def start_attempt(db_path: str | Path, student_id: int, quiz_id: int) -> dict:
     try:
         # Lock before checking so two simultaneous starts cannot both create an attempt.
         connection.execute("BEGIN IMMEDIATE")
-        _check_quiz_can_start(repo.get_quiz(connection, quiz_id))
+        quiz = repo.get_quiz(connection, quiz_id)
+        _check_quiz_can_start(quiz)
 
         # BR5: one submission per student and quiz.
         if repo.get_submitted_attempt(connection, student_id, quiz_id) is not None:
@@ -151,6 +173,7 @@ def start_attempt(db_path: str | Path, student_id: int, quiz_id: int) -> dict:
 
         attempt = repo.get_open_attempt(connection, student_id, quiz_id)
         if attempt is None:
+            _check_schedule_allows_start(quiz, _now())
             attempt_id = repo.create_attempt(
                 connection,
                 student_id,
@@ -194,7 +217,7 @@ def get_take_page_data(
             "selected_choice_id": selected.get(question["question_id"]),
             "answered_numbers": _answered_numbers(questions, selected),
             "remaining_seconds": remaining_seconds(
-                attempt["started_at"], quiz["duration_minutes"]
+                attempt["started_at"], quiz["duration_minutes"], end_at=quiz["end_at"]
             ),
         }
     finally:

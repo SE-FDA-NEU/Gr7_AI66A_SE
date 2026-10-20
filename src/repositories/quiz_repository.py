@@ -167,6 +167,8 @@ def list_published_quizzes_with_question_count(conn):
             q.quiz_id,
             q.title,
             q.duration_minutes,
+            q.start_at,
+            q.end_at,
             COUNT(qu.question_id) AS question_count
         FROM quiz q
         LEFT JOIN question qu ON qu.quiz_id = q.quiz_id
@@ -179,7 +181,9 @@ def list_published_quizzes_with_question_count(conn):
             "quiz_id": row[0],
             "title": row[1],
             "duration_minutes": row[2],
-            "question_count": row[3],
+            "start_at": row[3],
+            "end_at": row[4],
+            "question_count": row[5],
         }
         for row in conn.execute(query)
     ]
@@ -191,6 +195,8 @@ def create_quiz(
     title,
     duration_minutes,
     description="",
+    start_at=None,
+    end_at=None,
 ):
     """Create a new draft quiz with an optional description."""
 
@@ -201,17 +207,30 @@ def create_quiz(
             title,
             description,
             status,
-            duration_minutes
+            duration_minutes,
+            start_at,
+            end_at
         )
-        VALUES (?, ?, ?, 'draft', ?)
+        VALUES (?, ?, ?, 'draft', ?, ?, ?)
         """,
         (
             lecturer_id,
             title,
             description,
             duration_minutes,
+            start_at,
+            end_at,
         ),
     )
 
     conn.commit()
     return cursor.lastrowid
+
+
+def update_quiz_schedule(conn, quiz_id: int, start_at: str | None, end_at: str | None) -> None:
+    """Save the quiz's UTC start and end timestamps."""
+    conn.execute(
+        "UPDATE quiz SET start_at = ?, end_at = ? WHERE quiz_id = ?",
+        (start_at, end_at, quiz_id),
+    )
+    conn.commit()

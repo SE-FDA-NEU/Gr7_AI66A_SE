@@ -84,6 +84,9 @@ def test_questions_page_shows_form_and_current_count(client):
     assert "(1 question)" in html
     assert html.count('type="radio"') == 4
     assert html.count('name="choices"') == 4
+    assert "Sign out" not in html
+    assert 'class="question-page-actions"' in html
+    assert 'textarea id="content" name="content" rows="3" cols="60" required' in html
     assert f"/lecturer/quiz/{NGAN_QUIZ}/publish" in html
 
 
@@ -97,7 +100,9 @@ def test_adding_first_question_makes_the_count_1(client, db_path):
     assert response.status_code == 302
     assert response.headers["Location"].endswith(f"/quiz/{quiz_id}/questions")
     assert question_count(db_path, quiz_id) == 1
-    assert "(1 question)" in client.get(response.headers["Location"]).get_data(as_text=True)
+    page = client.get(response.headers["Location"]).get_data(as_text=True)
+    assert "(1 question)" in page
+    assert "Question added successfully." in page
 
 
 def test_saved_question_has_exactly_4_options_and_1_correct(client, db_path):

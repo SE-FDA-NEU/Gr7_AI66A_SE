@@ -27,6 +27,8 @@ LAN_ID = 4
 def db_path(tmp_path):
     path = tmp_path / "minilms.db"
     init_db(path)
+    with get_connection(path) as connection:
+        connection.execute("UPDATE quiz SET start_at = NULL, end_at = NULL")
     return path
 
 
@@ -319,12 +321,64 @@ def test_late_answer_is_not_saved_and_attempt_is_auto_submitted(client, db_path,
     assert submitted_row(db_path) == ("2026-10-17T08:20:00", 0.0)
 
 
+def test_starting_before_the_scheduled_window_is_rejected(client, db_path, monkeypatch):
+    with get_connection(db_path) as connection:
+        connection.execute(
+            "UPDATE quiz SET start_at = ?, end_at = ? WHERE quiz_id = ?",
+            ("2026-10-17T04:00:00", "2026-10-17T05:00:00", PUBLISHED_QUIZ),
+        )
+    monkeypatch.setattr(attempt_service, "_now", lambda: datetime(2026, 10, 17, 3, 59, 0))
+    login(client)
+
+    response = client.post(f"/student/quiz/{PUBLISHED_QUIZ}/start")
+
+    assert response.status_code == 403
+    assert shows_message(response, "This quiz is not open yet.")
+    assert count_rows(db_path, "SELECT COUNT(*) FROM attempt") == 0
+
+
+def test_quiz_end_time_caps_attempt_and_auto_submits_at_the_schedule_deadline(
+    client, db_path, monkeypatch
+):
+    start = datetime(2026, 10, 17, 4, 30, 0)
+    with get_connection(db_path) as connection:
+        connection.execute(
+            "UPDATE quiz SET duration_minutes = 60, start_at = ?, end_at = ? WHERE quiz_id = ?",
+            ("2026-10-17T04:00:00", "2026-10-17T05:00:00", PUBLISHED_QUIZ),
+        )
+    monkeypatch.setattr(attempt_service, "_now", lambda: start)
+    login(client)
+    client.post(f"/student/quiz/{PUBLISHED_QUIZ}/start")
+
+    take_page = client.get(f"/student/quiz/{PUBLISHED_QUIZ}/take?q=1")
+    take_html = take_page.get_data(as_text=True)
+    assert 'data-remaining="1800"' in take_html
+    assert '<div class="quiz-heading-row">' in take_html
+    assert '<p class="timer">Time left:' in take_html
+
+    monkeypatch.setattr(attempt_service, "_now", lambda: datetime(2026, 10, 17, 5, 0, 0))
+    question_id = question_ids(db_path)[0]
+    response = answer(client, db_path, question_id, choice_ids(db_path, question_id)[0], go=1)
+
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith(
+        f"/student/quiz/{PUBLISHED_QUIZ}/submitted?timeout=1"
+    )
+    assert submitted_row(db_path) == ("2026-10-17T05:00:00", 0.0)
+
+
 def test_remaining_seconds_counts_down_from_duration():
     start = "2026-10-17T08:00:00"
 
     assert attempt_service.remaining_seconds(start, 20, datetime(2026, 10, 17, 8, 0, 0)) == 1200
     assert attempt_service.remaining_seconds(start, 20, datetime(2026, 10, 17, 8, 5, 30)) == 870
     assert attempt_service.remaining_seconds(start, 20, datetime(2026, 10, 17, 9, 0, 0)) == 0
+    assert attempt_service.remaining_seconds(
+        start,
+        60,
+        datetime(2026, 10, 17, 8, 30, 0),
+        end_at="2026-10-17T08:30:00",
+    ) == 0
 
 
 def test_next_and_previous_keep_the_saved_answer(multi_question_client, db_path):
@@ -408,6 +462,7 @@ def test_review_lists_unanswered_questions(multi_question_client, db_path):
     assert "Question 1" not in html
     assert "Question 3" not in html
     assert 'name="confirm"' in html
+    assert 'data-confirm="Are you sure you want to submit this quiz?' in html
 
 
 def test_review_without_unanswered_questions_needs_no_confirmation(client, db_path):
@@ -432,6 +487,11 @@ def test_review_and_submit_button_saves_answer_then_opens_review(client, db_path
     assert count_rows(db_path, "SELECT COUNT(*) FROM answer") == 1
     take_page = client.get(f"/student/quiz/{PUBLISHED_QUIZ}/take?q=1").get_data(as_text=True)
     assert "Review &amp; submit" in take_page
+    assert 'class="quiz-controls"' in take_page
+    assert 'class="quiz-submit-actions"' in take_page
+    assert 'class="quiz-heading-row"' in take_page
+    assert 'class="timer"' in take_page
+    assert 'class="btn btn-secondary" href="/student/dashboard">Back to dashboard</a>' in take_page
 
 
 def test_submit_stores_submission_time_and_score(client, db_path):
@@ -446,6 +506,7 @@ def test_submit_stores_submission_time_and_score(client, db_path):
     assert score == 1.0
     page = client.get(response.headers["Location"]).get_data(as_text=True)
     assert "Quiz submitted" in page
+    assert "Your quiz was submitted successfully." in page
     assert "Submitted at" in page
     assert "Back to dashboard" in page
 

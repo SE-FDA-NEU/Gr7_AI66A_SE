@@ -97,7 +97,7 @@ def test_create_quiz_success(test_db):
 
     quiz = conn.execute(
         """
-        SELECT title, status, duration_minutes, lecturer_id
+        SELECT title, status, duration_minutes, lecturer_id, start_at, end_at
         FROM quiz
         WHERE quiz_id = ?
         """,
@@ -111,6 +111,8 @@ def test_create_quiz_success(test_db):
         "draft",
         30,
         1,
+        None,
+        None,
     )
 
 
@@ -177,6 +179,44 @@ def test_create_quiz_title_is_trimmed(test_db):
     assert title == "Software Engineering"
 
 
+def test_create_quiz_converts_hanoi_schedule_to_utc(test_db):
+    quiz_id = create_new_quiz(
+        test_db,
+        lecturer_id=1,
+        title="Scheduled Quiz",
+        duration="60",
+        start_at="2026-10-20T11:00",
+        end_at="2026-10-20T12:00",
+    )
+    with sqlite3.connect(test_db) as connection:
+        schedule = connection.execute(
+            "SELECT start_at, end_at FROM quiz WHERE quiz_id = ?",
+            (quiz_id,),
+        ).fetchone()
+
+    assert schedule == ("2026-10-20T04:00:00", "2026-10-20T05:00:00")
+
+
+@pytest.mark.parametrize(
+    ("start_at", "end_at", "message"),
+    [
+        ("2026-10-20T11:00", "", "Enter both a start time and an end time"),
+        ("2026-10-20T12:00", "2026-10-20T11:00", "end time must be later"),
+        ("not-a-time", "2026-10-20T12:00", "Enter valid start and end times"),
+    ],
+)
+def test_create_quiz_rejects_invalid_schedule(test_db, start_at, end_at, message):
+    with pytest.raises(InvalidQuiz, match=message):
+        create_new_quiz(
+            test_db,
+            lecturer_id=1,
+            title="Scheduled Quiz",
+            duration="60",
+            start_at=start_at,
+            end_at=end_at,
+        )
+
+
 # ==========================================
 # ROUTE TESTS
 # ==========================================
@@ -216,6 +256,11 @@ def test_lecturer_can_open_create_quiz(client):
 
     assert response.status_code == 200
     assert b"Create New Quiz" in response.data
+    assert b'data-confirm="Are you sure you want to create this quiz?"' in response.data
+    assert b'name="title"' in response.data
+    assert b'name="start_at"' in response.data
+    assert b'name="end_at"' in response.data
+    assert b'required' in response.data
 
 
 def test_student_cannot_open_create_quiz(client):
@@ -269,6 +314,8 @@ def test_lecturer_create_quiz_post_success(client, test_db):
     assert quiz[1:] == ("Midterm Quiz 1", "draft", 30, 1)
 
     assert f"/quiz/{quiz[0]}/questions" in response.headers["Location"]
+    with client.session_transaction() as session:
+        assert ("success", "Quiz created successfully.") in session["_flashes"]
 
 
 def test_lecturer_create_quiz_missing_title(client, test_db):

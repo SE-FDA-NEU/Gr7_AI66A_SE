@@ -144,17 +144,18 @@
             margin-top: 24px;
         }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/hig.css') }}">
 </head>
 <body>
     <div class="container">
         <header>
             <div>
-                <a href="{{ url_for('lecturer.lecturer_dashboard') }}" style="color: var(--primary); text-decoration: none; font-size: 14px;">&larr; Back to Dashboard</a>
-                <h1 style="margin: 6px 0 0 0; font-size: 24px;">Publish Quiz</h1>
+                <a href="{{ url_for('lecturer.lecturer_dashboard') }}">&larr; Back to Dashboard</a>
+                <h1>Publish Quiz</h1>
             </div>
             <div>
-                <form method="post" action="{{ url_for('auth.logout') }}" style="margin: 0;">
-                    <button type="submit" class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;">Sign out</button>
+                <form method="post" action="{{ url_for('auth.logout') }}" data-confirm="Are you sure you want to sign out?" data-confirm-title="Sign out" data-confirm-label="Sign out">
+                    <button type="submit" class="btn btn-secondary">Sign out</button>
                 </form>
             </div>
         </header>
@@ -174,13 +175,13 @@
         </div>
         {% elif quiz.status == 'closed' %}
         <div role="status" class="alert alert-warning">
-            <strong>Closed:</strong> The quiz has ended. Students cannot retake, but can review their old submissions.
+            <strong>Closed:</strong> Students cannot start new attempts. You can publish this quiz again to reopen it.
         </div>
         {% endif %}
 
         <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2 style="margin: 0; font-size: 20px;">{{ quiz.title }}</h2>
+            <div class="quiz-title-row">
+                <h2>{{ quiz.title }}</h2>
                 <span class="badge badge-{{ quiz.status }}">{{ quiz.status }}</span>
             </div>
 
@@ -205,7 +206,7 @@
         </div>
 
         <div class="card">
-            <h3 style="margin-top: 0;">Question List ({{ questions|length }})</h3>
+            <h3>Question List ({{ questions|length }})</h3>
             {% if questions|length == 0 %}
             <div class="alert alert-warning">
                 This quiz currently has no questions. You need to add at least 1 valid question before publishing.
@@ -226,7 +227,7 @@
                     <ul class="choice-list">
                         {% for c in q.choices %}
                         <li class="choice-item {% if c.is_correct %}correct{% endif %}">
-                            <span style="margin-right: 8px;">{{ loop.index }}.</span>
+                            <span class="choice-number">{{ loop.index }}.</span>
                             <span>{{ c.content }}</span>
                             {% if c.is_correct %}
                             <span class="badge badge-correct">&#10003; Correct Answer</span>
@@ -237,18 +238,47 @@
                 </div>
                 {% endfor %}
             {% endif %}
+        </div>
 
+        <div class="card">
+            <h3>Quiz availability</h3>
+            <p class="hint">Times use Hanoi time (UTC+7). Leave both fields empty for no schedule.</p>
+            {% if schedule_error %}
+            <div role="alert" class="alert alert-error">{{ schedule_error }}</div>
+            {% endif %}
+            <form method="post" action="{{ url_for('lecturer.handle_quiz_schedule', quiz_id=quiz.quiz_id) }}">
+                <div class="schedule-grid">
+                    <div class="form-group">
+                        <label for="start_at">Start time</label>
+                        <input type="datetime-local" id="start_at" name="start_at" value="{{ start_at_local }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="end_at">End time</label>
+                        <input type="datetime-local" id="end_at" name="end_at" value="{{ end_at_local }}">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-secondary">Save schedule</button>
+            </form>
+        </div>
+
+        <div class="card">
             <div class="actions-bar">
                 {% if quiz.status == 'draft' %}
-                <form method="post" action="{{ url_for('lecturer.handle_publish_quiz', quiz_id=quiz.quiz_id) }}" style="margin: 0;">
+                <form method="post" action="{{ url_for('lecturer.handle_publish_quiz', quiz_id=quiz.quiz_id) }}" data-confirm="Are you sure you want to publish this quiz?" data-confirm-title="Publish quiz" data-confirm-label="Publish">
                     <button type="submit" id="btn-publish" class="btn btn-primary" {% if not is_publishable %}disabled{% endif %}>
                         Publish Quiz
                     </button>
                 </form>
                 {% elif quiz.status == 'published' %}
-                <form method="post" action="{{ url_for('lecturer.handle_close_quiz', quiz_id=quiz.quiz_id) }}" style="margin: 0;">
+                <form method="post" action="{{ url_for('lecturer.handle_close_quiz', quiz_id=quiz.quiz_id) }}" data-confirm="Are you sure you want to close this quiz?" data-confirm-title="Close quiz" data-confirm-label="Close quiz">
                     <button type="submit" id="btn-close" class="btn btn-danger">
                         Close Quiz
+                    </button>
+                </form>
+                {% elif quiz.status == 'closed' %}
+                <form method="post" action="{{ url_for('lecturer.handle_publish_quiz', quiz_id=quiz.quiz_id) }}" data-confirm="Are you sure you want to reopen this quiz?" data-confirm-title="Publish quiz again" data-confirm-label="Publish again">
+                    <button type="submit" id="btn-publish" class="btn btn-primary" {% if not is_publishable %}disabled{% endif %}>
+                        Publish Quiz Again
                     </button>
                 </form>
                 {% endif %}
@@ -259,5 +289,6 @@
             </div>
         </div>
     </div>
+    {% include "_toasts.html" %}
 </body>
 </html>

@@ -2,6 +2,7 @@
 from flask import (
     Blueprint,
     current_app,
+    flash,
     redirect,
     render_template,
     request,
@@ -46,6 +47,8 @@ def create_quiz_page():
         title="",
         description="",
         duration="30",
+        start_at="",
+        end_at="",
     )
 
 
@@ -57,6 +60,8 @@ def submit_create_quiz():
     title = request.form.get("title", "")
     description = request.form.get("description", "")
     duration = request.form.get("duration", "")
+    start_at = request.form.get("start_at", "")
+    end_at = request.form.get("end_at", "")
 
     try:
         quiz_id = create_new_quiz(
@@ -65,6 +70,8 @@ def submit_create_quiz():
             title,
             duration,
             description,
+            start_at,
+            end_at,
         )
 
     except InvalidQuiz as error:
@@ -75,13 +82,14 @@ def submit_create_quiz():
                 title=title,
                 description=description,
                 duration=duration,
+                start_at=start_at,
+                end_at=end_at,
             ),
             422,
         )
 
-    return redirect(
-        url_for("quiz.questions_page", quiz_id=quiz_id)
-    )
+    flash("Quiz created successfully.", "success")
+    return redirect(url_for("quiz.questions_page", quiz_id=quiz_id))
 
 
 # ==========================================
@@ -179,6 +187,5 @@ def add_quiz_question(quiz_id: int):
             422,
         )
 
-    return redirect(
-        url_for("quiz.questions_page", quiz_id=quiz_id)
-    )
+    flash("Question added successfully.", "success")
+    return redirect(url_for("quiz.questions_page", quiz_id=quiz_id))

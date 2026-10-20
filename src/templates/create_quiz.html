@@ -157,6 +157,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/hig.css') }}">
 </head>
 
 <body>
@@ -183,7 +184,9 @@
             <form
                 action="{{ url_for('quiz.submit_create_quiz') }}"
                 method="POST"
-                novalidate
+                data-confirm="Are you sure you want to create this quiz?"
+                data-confirm-title="Create quiz"
+                data-confirm-label="Create quiz"
             >
 
                 <!-- QUIZ TITLE -->
@@ -200,6 +203,7 @@
                         placeholder="Enter quiz title"
                         value="{{ title }}"
                         aria-required="true"
+                        required
                         {% if error == "Quiz title is required." %}
                         aria-invalid="true"
                         {% endif %}
@@ -239,12 +243,42 @@
                         step="1"
                         value="{{ duration }}"
                         aria-required="true"
+                        required
+                        {% if error == "Duration must be a positive number." %}
+                        aria-invalid="true"
+                        {% endif %}
                     >
 
                     <p class="hint">
                         The duration must be greater than 0 minutes.
                     </p>
                 </div>
+
+                <fieldset class="schedule-fields">
+                    <legend>Quiz availability (Hanoi time, UTC+7)</legend>
+                    <p class="hint">Leave both fields empty to keep the quiz available at any time.</p>
+                    <div class="schedule-grid">
+                        <div class="form-group">
+                            <label for="start_at">Start time</label>
+                            <input
+                                type="datetime-local"
+                                id="start_at"
+                                name="start_at"
+                                value="{{ start_at }}"
+                            >
+                        </div>
+                        <div class="form-group">
+                            <label for="end_at">End time</label>
+                            <input
+                                type="datetime-local"
+                                id="end_at"
+                                name="end_at"
+                                value="{{ end_at }}"
+                            >
+                        </div>
+                    </div>
+                    <p class="hint">Students can start only during this window. Their timer ends at the earlier of the quiz duration or the scheduled end time.</p>
+                </fieldset>
 
                 <!-- ACTIONS -->
                 <div class="actions">
@@ -266,5 +300,6 @@
             </form>
         </div>
     </main>
+    {% include "_toasts.html" %}
 </body>
 </html>

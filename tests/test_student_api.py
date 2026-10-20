@@ -3,6 +3,7 @@ import pytest
 from src.app import create_app
 from src.db import get_connection
 from src.init_db import init_db
+import src.services.quiz_service as quiz_service
 
 DUC_ID = 3
 LAN_ID = 4
@@ -13,6 +14,8 @@ API_URL = "/api/student/quizzes"
 def db_path(tmp_path):
     path = tmp_path / "minilms.db"
     init_db(path)
+    with get_connection(path) as connection:
+        connection.execute("UPDATE quiz SET start_at = NULL, end_at = NULL")
     return path
 
 
@@ -62,6 +65,10 @@ def test_api_lists_published_quizzes_from_the_database(client, db_path):
         "duration_minutes": 20,
         "question_count": 1,
         "status": "not_started",
+        "start_at": None,
+        "end_at": None,
+        "schedule_display": "No schedule",
+        "start_at_display": "",
         "start_url": "/student/quiz/1/start",
     }
 
@@ -88,6 +95,27 @@ def test_api_shows_the_students_status_for_each_quiz(client, db_path):
     assert quizzes[2]["status"] == "in_progress"
     assert quizzes[3]["status"] == "submitted"
     assert quizzes[4]["status"] == "not_started"
+
+
+def test_api_marks_quizzes_outside_the_schedule_window(client, db_path, monkeypatch):
+    with get_connection(db_path) as connection:
+        connection.execute(
+            "UPDATE quiz SET start_at = ?, end_at = ? WHERE quiz_id = 1",
+            ("2026-10-20T04:00:00", "2026-10-20T05:00:00"),
+        )
+    monkeypatch.setattr(
+        quiz_service,
+        "utc_now_naive",
+        lambda: quiz_service.parse_utc_timestamp("2026-10-20T03:00:00"),
+    )
+    login(client)
+
+    quiz = quizzes_by_id(client)[1]
+
+    assert quiz["status"] == "scheduled"
+    assert quiz["schedule_display"] == (
+        "20 Oct 2026, 11:00 (UTC+7) – 20 Oct 2026, 12:00 (UTC+7)"
+    )
 
 
 def test_started_quiz_shows_in_progress(client):

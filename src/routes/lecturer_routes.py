@@ -3,6 +3,7 @@
 from flask import (
     Blueprint,
     current_app,
+    flash,
     jsonify,
     redirect,
     render_template,
@@ -14,11 +15,18 @@ from flask import (
 from src.auth import role_required
 from src.errors import render_error
 from src.services.quiz_service import (
+    InvalidQuiz,
     QuizServiceError,
     close_quiz,
     get_lecturer_dashboard_data,
     get_quiz_publish_details,
     publish_quiz,
+    update_quiz_schedule,
+)
+from src.services.lecturer_attempt_service import (
+    LecturerAttemptError,
+    get_quiz_attempt_detail,
+    get_quiz_attempts,
 )
 
 lecturer_bp = Blueprint("lecturer", __name__)
@@ -36,6 +44,37 @@ def lecturer_dashboard():
         name=session.get("name", "Lecturer"),
         quizzes=quizzes,
     )
+
+
+@lecturer_bp.get("/lecturer/quiz/<int:quiz_id>/attempts")
+@role_required("lecturer")
+def quiz_attempts(quiz_id: int):
+    try:
+        data = get_quiz_attempts(
+            current_app.config["DATABASE_PATH"],
+            session["user_id"],
+            quiz_id,
+        )
+    except LecturerAttemptError as error:
+        return render_error(error.status_code, error.message)
+
+    return render_template("lecturer_attempts.html", **data)
+
+
+@lecturer_bp.get("/lecturer/quiz/<int:quiz_id>/attempts/<int:attempt_id>")
+@role_required("lecturer")
+def quiz_attempt_detail(quiz_id: int, attempt_id: int):
+    try:
+        data = get_quiz_attempt_detail(
+            current_app.config["DATABASE_PATH"],
+            session["user_id"],
+            quiz_id,
+            attempt_id,
+        )
+    except LecturerAttemptError as error:
+        return render_error(error.status_code, error.message)
+
+    return render_template("lecturer_attempt_detail.html", **data)
 
 
 @lecturer_bp.get("/lecturer/quiz/<int:quiz_id>/publish")
@@ -56,7 +95,49 @@ def publish_page(quiz_id: int):
         questions=data["questions"],
         is_publishable=data["is_publishable"],
         validation_error=data["validation_error"],
+        start_at_local=data["start_at_local"],
+        end_at_local=data["end_at_local"],
+        schedule_error=None,
     )
+
+
+@lecturer_bp.post("/lecturer/quiz/<int:quiz_id>/schedule")
+@role_required("lecturer")
+def handle_quiz_schedule(quiz_id: int):
+    db_path = current_app.config["DATABASE_PATH"]
+    start_at_local = request.form.get("start_at", "")
+    end_at_local = request.form.get("end_at", "")
+    try:
+        update_quiz_schedule(
+            db_path,
+            session["user_id"],
+            quiz_id,
+            start_at_local,
+            end_at_local,
+        )
+    except InvalidQuiz as error:
+        try:
+            data = get_quiz_publish_details(db_path, session["user_id"], quiz_id)
+        except QuizServiceError as page_error:
+            return render_error(page_error.status_code, page_error.message)
+        return (
+            render_template(
+                "publish_quiz.html",
+                quiz=data["quiz"],
+                questions=data["questions"],
+                is_publishable=data["is_publishable"],
+                validation_error=data["validation_error"],
+                start_at_local=start_at_local,
+                end_at_local=end_at_local,
+                schedule_error=str(error),
+            ),
+            422,
+        )
+    except QuizServiceError as error:
+        return render_error(error.status_code, error.message)
+
+    flash("Quiz schedule saved successfully.", "success")
+    return redirect(url_for("lecturer.publish_page", quiz_id=quiz_id))
 
 
 @lecturer_bp.post("/lecturer/quiz/<int:quiz_id>/publish")
@@ -86,6 +167,9 @@ def handle_publish_quiz(quiz_id: int):
                     questions=data["questions"],
                     is_publishable=data["is_publishable"],
                     validation_error=error.message,
+                    start_at_local=data["start_at_local"],
+                    end_at_local=data["end_at_local"],
+                    schedule_error=None,
                 ),
                 error.status_code,
             )
@@ -95,6 +179,7 @@ def handle_publish_quiz(quiz_id: int):
     if request.is_json:
         return jsonify({"quiz_id": quiz["quiz_id"], "status": quiz["status"]}), 200
 
+    flash("Quiz published successfully.", "success")
     return redirect(url_for("lecturer.publish_page", quiz_id=quiz_id))
 
 
@@ -125,6 +210,9 @@ def handle_close_quiz(quiz_id: int):
                     questions=data["questions"],
                     is_publishable=data["is_publishable"],
                     validation_error=error.message,
+                    start_at_local=data["start_at_local"],
+                    end_at_local=data["end_at_local"],
+                    schedule_error=None,
                 ),
                 error.status_code,
             )
@@ -134,4 +222,5 @@ def handle_close_quiz(quiz_id: int):
     if request.is_json:
         return jsonify({"quiz_id": quiz["quiz_id"], "status": quiz["status"]}), 200
 
+    flash("Quiz closed successfully.", "success")
     return redirect(url_for("lecturer.publish_page", quiz_id=quiz_id))

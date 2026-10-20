@@ -3,11 +3,19 @@ from pathlib import Path
 
 from src import errors
 from src.db import get_connection
+from src.time_utils import (
+    format_vietnam_time,
+    local_input_to_utc,
+    parse_utc_timestamp,
+    utc_now_naive,
+    utc_timestamp_to_local_input,
+)
 from src.repositories.quiz_repository import (
     get_quiz_by_id,
     get_quiz_questions_with_choices,
     list_published_quizzes,
     list_quizzes_by_lecturer,
+    update_quiz_schedule as save_quiz_schedule,
     update_quiz_status,
 )
 
@@ -19,6 +27,30 @@ class QuizServiceError(Exception):
         super().__init__(message)
         self.status_code = status_code
         self.message = message
+
+
+class InvalidQuiz(Exception):
+    """Raised when quiz creation or schedule data is invalid."""
+
+
+def _parse_schedule(start_local: str, end_local: str) -> tuple[str | None, str | None]:
+    start_local = (start_local or "").strip()
+    end_local = (end_local or "").strip()
+
+    if bool(start_local) != bool(end_local):
+        raise InvalidQuiz("Enter both a start time and an end time, or leave both empty.")
+    if not start_local:
+        return None, None
+
+    try:
+        start_at = local_input_to_utc(start_local)
+        end_at = local_input_to_utc(end_local)
+    except ValueError as error:
+        raise InvalidQuiz("Enter valid start and end times.") from error
+
+    if parse_utc_timestamp(end_at) <= parse_utc_timestamp(start_at):
+        raise InvalidQuiz("The end time must be later than the start time.")
+    return start_at, end_at
 from src.repositories.attempt_repository import get_open_attempt, get_submitted_attempt
 from src.repositories.quiz_repository import (
     create_quiz,
@@ -95,6 +127,8 @@ def get_quiz_publish_details(db_path: str | Path, lecturer_id: int, quiz_id: int
             "questions": questions,
             "is_publishable": is_publishable,
             "validation_error": validation_error,
+            "start_at_local": utc_timestamp_to_local_input(quiz["start_at"]),
+            "end_at_local": utc_timestamp_to_local_input(quiz["end_at"]),
         }
     finally:
         conn.close()
@@ -105,7 +139,8 @@ def publish_quiz(db_path: str | Path, lecturer_id: int, quiz_id: int) -> dict:
     Publish một bài quiz (US04, BR2, BR3):
     - Đổi trạng thái sang 'published'.
     - Báo 403 nếu không phải chủ quiz (BR2).
-    - Báo 409 nếu quiz đã được publish trước đó.
+    - Báo 409 nếu quiz hiện đang được publish.
+    - Cho phép publish lại quiz đã đóng sau khi vượt qua kiểm tra BR3.
     - Báo 422 nếu quiz không đủ điều kiện (BR3: 0 câu hỏi hoặc câu hỏi chưa có đáp án đúng).
     """
     conn = get_connection(db_path)
@@ -124,10 +159,6 @@ def publish_quiz(db_path: str | Path, lecturer_id: int, quiz_id: int) -> dict:
         if quiz["status"] == "published":
             conn.rollback()
             raise QuizServiceError(409, errors.QUIZ_ALREADY_PUBLISHED)
-
-        if quiz["status"] == "closed":
-            conn.rollback()
-            raise QuizServiceError(400, errors.QUIZ_CANNOT_REPUBLISH_CLOSED)
 
         # BR3: Kiểm tra quiz có ít nhất 1 câu hỏi
         questions = get_quiz_questions_with_choices(conn, quiz_id)
@@ -208,8 +239,18 @@ def get_student_quiz_statuses(db_path: str | Path, student_id: int):
     try:
         quizzes = list_published_quizzes_with_question_count(conn)
 
+        now = utc_now_naive()
         for quiz in quizzes:
             quiz_id = quiz["quiz_id"]
+            quiz["schedule_display"] = (
+                f"{format_vietnam_time(quiz['start_at'])} – "
+                f"{format_vietnam_time(quiz['end_at'])}"
+                if quiz["start_at"] and quiz["end_at"]
+                else "No schedule"
+            )
+            quiz["start_at_display"] = (
+                format_vietnam_time(quiz["start_at"]) if quiz["start_at"] else ""
+            )
 
             if get_submitted_attempt(
                 conn, student_id, quiz_id
@@ -220,6 +261,12 @@ def get_student_quiz_statuses(db_path: str | Path, student_id: int):
                 conn, student_id, quiz_id
             ) is not None:
                 quiz["status"] = "in_progress"
+
+            elif quiz["start_at"] and now < parse_utc_timestamp(quiz["start_at"]):
+                quiz["status"] = "scheduled"
+
+            elif quiz["end_at"] and now >= parse_utc_timestamp(quiz["end_at"]):
+                quiz["status"] = "ended"
 
             else:
                 quiz["status"] = "not_started"
@@ -234,16 +281,14 @@ def get_student_quiz_statuses(db_path: str | Path, student_id: int):
 # US02 - CREATE QUIZ
 # ==========================================
 
-class InvalidQuiz(Exception):
-    """Raised when quiz creation data is invalid."""
-
-
 def create_new_quiz(
     db_path: str | Path,
     lecturer_id: int,
     title: str,
     duration: str,
     description: str = "",
+    start_at: str = "",
+    end_at: str = "",
 ) -> int:
     """
     Validate input and create a draft quiz.
@@ -272,6 +317,7 @@ def create_new_quiz(
             "Duration must be a positive number."
         )
 
+    start_utc, end_utc = _parse_schedule(start_at, end_at)
     conn = get_connection(db_path)
 
     try:
@@ -281,9 +327,34 @@ def create_new_quiz(
             title,
             duration_minutes,
             description,
+            start_utc,
+            end_utc,
         )
 
         return quiz_id
 
+    finally:
+        conn.close()
+
+
+def update_quiz_schedule(
+    db_path: str | Path,
+    lecturer_id: int,
+    quiz_id: int,
+    start_local: str,
+    end_local: str,
+) -> dict:
+    """Update a quiz schedule after confirming the lecturer owns the quiz."""
+    conn = get_connection(db_path)
+    try:
+        quiz = get_quiz_by_id(conn, quiz_id)
+        if quiz is None:
+            raise QuizServiceError(404, errors.QUIZ_NOT_FOUND)
+        if quiz["lecturer_id"] != lecturer_id:
+            raise QuizServiceError(403, errors.NOT_QUIZ_OWNER)
+
+        start_utc, end_utc = _parse_schedule(start_local, end_local)
+        save_quiz_schedule(conn, quiz_id, start_utc, end_utc)
+        return get_quiz_by_id(conn, quiz_id)
     finally:
         conn.close()

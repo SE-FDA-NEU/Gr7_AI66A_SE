@@ -79,6 +79,7 @@
                     <thead>
                         <tr>
                             <th>Quiz</th>
+                            <th>Due date</th>
                             <th>Duration</th>
                             <th>Questions</th>
                             <th>Action</th>
@@ -134,6 +135,7 @@
                 quizzes.forEach(function (quiz) {
                     var tr = document.createElement("tr");
                     tr.appendChild(cell(quiz.title));
+                    tr.appendChild(cell(quiz.end_at ? quiz.end_at.slice(0, 10) : "No due date"));
                     tr.appendChild(cell(quiz.duration_minutes + " min"));
                     tr.appendChild(cell(quiz.question_count));
                     tr.appendChild(actionCell(quiz));

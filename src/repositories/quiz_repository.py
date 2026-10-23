@@ -167,6 +167,7 @@ def list_published_quizzes_with_question_count(conn):
             q.quiz_id,
             q.title,
             q.duration_minutes,
+            q.end_at,
             COUNT(qu.question_id) AS question_count
         FROM quiz q
         LEFT JOIN question qu ON qu.quiz_id = q.quiz_id
@@ -179,7 +180,8 @@ def list_published_quizzes_with_question_count(conn):
             "quiz_id": row[0],
             "title": row[1],
             "duration_minutes": row[2],
-            "question_count": row[3],
+            "end_at": row[3],
+            "question_count": row[4],
         }
         for row in conn.execute(query)
     ]

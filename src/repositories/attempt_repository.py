@@ -6,7 +6,14 @@ import sqlite3
 def get_quiz(connection: sqlite3.Connection, quiz_id: int) -> sqlite3.Row | None:
     return connection.execute(
         """
-        SELECT quiz_id, title, status, duration_minutes, start_at, end_at
+        SELECT
+            quiz_id,
+            title,
+            status,
+            duration_minutes,
+            duration_unlimited,
+            start_at,
+            end_at
         FROM quiz
         WHERE quiz_id = ?
         """,

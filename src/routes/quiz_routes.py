@@ -26,6 +26,7 @@ from src.services.question_service import (
 from src.services.quiz_service import (
     InvalidQuiz,
     create_new_quiz,
+    get_quiz_publish_details,
 )
 
 
@@ -47,6 +48,7 @@ def create_quiz_page():
         title="",
         description="",
         duration="30",
+        duration_unlimited=False,
         start_at="",
         end_at="",
     )
@@ -60,6 +62,7 @@ def submit_create_quiz():
     title = request.form.get("title", "")
     description = request.form.get("description", "")
     duration = request.form.get("duration", "")
+    duration_unlimited = request.form.get("duration_unlimited") == "yes"
     start_at = request.form.get("start_at", "")
     end_at = request.form.get("end_at", "")
 
@@ -72,6 +75,7 @@ def submit_create_quiz():
             description,
             start_at,
             end_at,
+            duration_unlimited,
         )
 
     except InvalidQuiz as error:
@@ -82,6 +86,7 @@ def submit_create_quiz():
                 title=title,
                 description=description,
                 duration=duration,
+                duration_unlimited=duration_unlimited,
                 start_at=start_at,
                 end_at=end_at,
             ),
@@ -89,27 +94,14 @@ def submit_create_quiz():
         )
 
     flash("Quiz created successfully.", "success")
-    return redirect(url_for("quiz.questions_page", quiz_id=quiz_id))
-
-
-# ==========================================
-# US03 - ADD QUESTIONS
-# ==========================================
-
-def _empty_form() -> dict[str, str | list[str]]:
-    return {
-        "content": "",
-        "choices": [""] * CHOICE_COUNT,
-        "correct_index": "",
-        "points": "1",
-    }
+    return redirect(url_for("lecturer.publish_page", quiz_id=quiz_id))
 
 
 @quiz_bp.get("/quiz/<int:quiz_id>/questions")
 @role_required("lecturer")
 def questions_page(quiz_id: int):
     try:
-        data = get_questions_page_data(
+        get_questions_page_data(
             current_app.config["DATABASE_PATH"],
             session["user_id"],
             quiz_id,
@@ -121,14 +113,7 @@ def questions_page(quiz_id: int):
             error.message,
         )
 
-    return render_template(
-        "questions.html",
-        messages=[],
-        form=_empty_form(),
-        choice_labels=CHOICE_LABELS,
-        max_points=MAX_POINTS,
-        **data,
-    )
+    return redirect(url_for("lecturer.publish_page", quiz_id=quiz_id))
 
 
 @quiz_bp.post("/quiz/<int:quiz_id>/questions")
@@ -163,7 +148,7 @@ def add_quiz_question(quiz_id: int):
 
     except InvalidQuestion as error:
         try:
-            data = get_questions_page_data(
+            data = get_quiz_publish_details(
                 db_path,
                 session["user_id"],
                 quiz_id,
@@ -177,15 +162,17 @@ def add_quiz_question(quiz_id: int):
 
         return (
             render_template(
-                "questions.html",
+                "publish_quiz.html",
+                **data,
                 messages=error.messages,
                 form=form,
                 choice_labels=CHOICE_LABELS,
                 max_points=MAX_POINTS,
-                **data,
+                schedule_error=None,
+                show_add_form=True,
             ),
             422,
         )
 
     flash("Question added successfully.", "success")
-    return redirect(url_for("quiz.questions_page", quiz_id=quiz_id))
+    return redirect(url_for("lecturer.publish_page", quiz_id=quiz_id))

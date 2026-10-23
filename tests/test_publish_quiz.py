@@ -28,6 +28,8 @@ def test_lecturer_can_view_publish_page(tmp_path):
     assert "Publish bài Quiz" in html or "Publish" in html
     assert 'name="start_at"' in html
     assert 'name="end_at"' in html
+    assert 'name="duration"' in html
+    assert 'name="duration_unlimited"' in html
 
 
 def test_lecturer_can_save_quiz_schedule_in_hanoi_time(tmp_path):
@@ -52,6 +54,69 @@ def test_lecturer_can_save_quiz_schedule_in_hanoi_time(tmp_path):
     assert tuple(schedule) == ("2026-10-20T04:00:00", "2026-10-20T05:00:00")
 
 
+def test_lecturer_can_set_a_deadline_without_a_start_time(tmp_path):
+    db_path = tmp_path / "minilms.db"
+    init_db(db_path)
+    app = create_app({"TESTING": True, "DATABASE_PATH": db_path})
+    client = app.test_client()
+    _login_as(client, "ngan.lecturer@example.edu", "MiniLMS2026!")
+
+    response = client.post(
+        "/lecturer/quiz/13/schedule",
+        data={"start_at": "", "end_at": "2026-10-20T12:00"},
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    with get_connection(db_path) as connection:
+        schedule = connection.execute(
+            "SELECT start_at, end_at FROM quiz WHERE quiz_id = 13"
+        ).fetchone()
+    assert tuple(schedule) == (None, "2026-10-20T05:00:00")
+
+
+def test_lecturer_can_update_quiz_time_limit_from_schedule(tmp_path):
+    db_path = tmp_path / "minilms.db"
+    init_db(db_path)
+    app = create_app({"TESTING": True, "DATABASE_PATH": db_path})
+    client = app.test_client()
+    _login_as(client, "ngan.lecturer@example.edu", "MiniLMS2026!")
+
+    response = client.post(
+        "/lecturer/quiz/13/schedule",
+        data={
+            "start_at": "2026-10-20T11:00",
+            "end_at": "",
+            "duration": "45",
+        },
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    with get_connection(db_path) as connection:
+        settings = connection.execute(
+            "SELECT start_at, end_at, duration_minutes, duration_unlimited "
+            "FROM quiz WHERE quiz_id = 13"
+        ).fetchone()
+    assert tuple(settings) == ("2026-10-20T04:00:00", None, 45, 0)
+
+    unlimited = client.post(
+        "/lecturer/quiz/13/schedule",
+        data={
+            "start_at": "2026-10-20T11:00",
+            "end_at": "",
+            "duration_unlimited": "yes",
+        },
+        follow_redirects=True,
+    )
+    assert unlimited.status_code == 200
+    with get_connection(db_path) as connection:
+        duration = connection.execute(
+            "SELECT duration_unlimited FROM quiz WHERE quiz_id = 13"
+        ).fetchone()[0]
+    assert duration == 1
+
+
 def test_invalid_schedule_is_rejected_and_other_lecturers_cannot_change_it(tmp_path):
     db_path = tmp_path / "minilms.db"
     init_db(db_path)
@@ -61,10 +126,10 @@ def test_invalid_schedule_is_rejected_and_other_lecturers_cannot_change_it(tmp_p
     _login_as(client, "ngan.lecturer@example.edu", "MiniLMS2026!")
     invalid = client.post(
         "/lecturer/quiz/13/schedule",
-        data={"start_at": "2026-10-20T11:00", "end_at": ""},
+        data={"start_at": "2026-10-20T12:00", "end_at": "2026-10-20T11:00"},
     )
     assert invalid.status_code == 422
-    assert "Enter both a start time and an end time" in invalid.get_data(as_text=True)
+    assert "end time must be later" in invalid.get_data(as_text=True)
 
     _login_as(client, "nam.lecturer@example.edu", "MiniLMS2026!")
     forbidden = client.post(
@@ -262,7 +327,8 @@ def test_lecturer_can_republish_closed_quiz(tmp_path):
     response = client.post("/lecturer/quiz/1/publish", follow_redirects=True)
     assert response.status_code == 200
     html = response.get_data(as_text=True)
-    assert "Opening" in html
+    assert "Published" in html
+    assert "Quiz published successfully." in html
     assert "Close Quiz" in html
 
     with get_connection(db_path) as conn:

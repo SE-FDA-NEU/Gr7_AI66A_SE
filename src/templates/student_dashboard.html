@@ -145,7 +145,9 @@
                 quizzes.forEach(function (quiz) {
                     var tr = document.createElement("tr");
                     tr.appendChild(cell(quiz.title));
-                    tr.appendChild(cell(quiz.duration_minutes + " min"));
+                    tr.appendChild(cell(
+                        quiz.duration_unlimited ? "No time limit" : quiz.duration_minutes + " min"
+                    ));
                     tr.appendChild(cell(quiz.schedule_display));
                     tr.appendChild(cell(quiz.question_count));
                     tr.appendChild(actionCell(quiz));

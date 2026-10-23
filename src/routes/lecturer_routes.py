@@ -98,6 +98,8 @@ def publish_page(quiz_id: int):
         start_at_local=data["start_at_local"],
         end_at_local=data["end_at_local"],
         schedule_error=None,
+        messages=[],
+        show_add_form=False,
     )
 
 
@@ -107,6 +109,12 @@ def handle_quiz_schedule(quiz_id: int):
     db_path = current_app.config["DATABASE_PATH"]
     start_at_local = request.form.get("start_at", "")
     end_at_local = request.form.get("end_at", "")
+    duration = request.form.get("duration")
+    duration_unlimited = (
+        request.form.get("duration_unlimited") == "yes"
+        if "duration" in request.form or "duration_unlimited" in request.form
+        else None
+    )
     try:
         update_quiz_schedule(
             db_path,
@@ -114,6 +122,8 @@ def handle_quiz_schedule(quiz_id: int):
             quiz_id,
             start_at_local,
             end_at_local,
+            duration,
+            duration_unlimited,
         )
     except InvalidQuiz as error:
         try:
@@ -130,6 +140,18 @@ def handle_quiz_schedule(quiz_id: int):
                 start_at_local=start_at_local,
                 end_at_local=end_at_local,
                 schedule_error=str(error),
+                duration=(
+                    duration
+                    if duration is not None
+                    else data["quiz"]["duration_minutes"]
+                ),
+                duration_unlimited=(
+                    bool(duration_unlimited)
+                    if duration_unlimited is not None
+                    else data["quiz"]["duration_unlimited"]
+                ),
+                messages=[],
+                show_add_form=False,
             ),
             422,
         )
@@ -170,6 +192,8 @@ def handle_publish_quiz(quiz_id: int):
                     start_at_local=data["start_at_local"],
                     end_at_local=data["end_at_local"],
                     schedule_error=None,
+                    messages=[],
+                    show_add_form=False,
                 ),
                 error.status_code,
             )
@@ -213,6 +237,8 @@ def handle_close_quiz(quiz_id: int):
                     start_at_local=data["start_at_local"],
                     end_at_local=data["end_at_local"],
                     schedule_error=None,
+                    messages=[],
+                    show_add_form=False,
                 ),
                 error.status_code,
             )

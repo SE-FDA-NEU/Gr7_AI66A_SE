@@ -63,6 +63,7 @@ def test_api_lists_published_quizzes_from_the_database(client, db_path):
         "quiz_id": 1,
         "title": "Updated title from database",
         "duration_minutes": 20,
+        "duration_unlimited": False,
         "question_count": 1,
         "status": "not_started",
         "start_at": None,
@@ -116,6 +117,24 @@ def test_api_marks_quizzes_outside_the_schedule_window(client, db_path, monkeypa
     assert quiz["schedule_display"] == (
         "20 Oct 2026, 11:00 (UTC+7) – 20 Oct 2026, 12:00 (UTC+7)"
     )
+
+
+def test_api_formats_partial_schedule_and_unlimited_duration(client, db_path):
+    with get_connection(db_path) as connection:
+        connection.execute(
+            """
+            UPDATE quiz
+            SET duration_unlimited = 1, start_at = ?, end_at = NULL
+            WHERE quiz_id = 1
+            """,
+            ("2026-10-20T04:00:00",),
+        )
+    login(client)
+
+    quiz = quizzes_by_id(client)[1]
+
+    assert quiz["duration_unlimited"] is True
+    assert quiz["schedule_display"] == "20 Oct 2026, 11:00 (UTC+7) – No deadline"
 
 
 def test_started_quiz_shows_in_progress(client):

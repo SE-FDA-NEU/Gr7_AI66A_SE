@@ -70,14 +70,7 @@
                         </td>
                         <td class="actions">
                             <div class="table-actions">
-                                <a class="table-action" href="{{ url_for('quiz.questions_page', quiz_id=q.quiz_id) }}">Edit Questions</a>
-                                {% if q.status == 'draft' %}
-                                <a class="table-action table-action-primary" href="{{ url_for('lecturer.publish_page', quiz_id=q.quiz_id) }}">Publish</a>
-                                {% elif q.status == 'published' %}
-                                <a class="table-action" href="{{ url_for('lecturer.publish_page', quiz_id=q.quiz_id) }}">Manage</a>
-                                {% elif q.status == 'closed' %}
-                                <a class="table-action table-action-primary" href="{{ url_for('lecturer.publish_page', quiz_id=q.quiz_id) }}">Publish again</a>
-                                {% endif %}
+                                <a class="table-action" href="{{ url_for('lecturer.publish_page', quiz_id=q.quiz_id) }}">Manage Quiz</a>
                             </div>
                         </td>
                     </tr>

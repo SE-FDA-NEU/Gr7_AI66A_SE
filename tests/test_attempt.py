@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import re
 
 import pytest
 from markupsafe import escape
@@ -130,7 +131,7 @@ def submit(client, db_path, confirm=False):
 
 
 def checked_value(choice_id):
-    return f'value="{choice_id}"\n                           checked'
+    return rf'value="{choice_id}"\s+checked'
 
 
 def test_start_published_quiz_creates_attempt_and_shows_first_question(client, db_path):
@@ -209,7 +210,7 @@ def test_saved_answer_is_checked_when_question_is_reopened(client, db_path):
     assert response.status_code == 302
     assert response.headers["Location"].endswith("take?q=1")
     html = client.get(response.headers["Location"]).get_data(as_text=True)
-    assert checked_value(choice_id) in html
+    assert re.search(checked_value(choice_id), html)
     assert html.count("checked") == 1
 
 
@@ -379,6 +380,63 @@ def test_remaining_seconds_counts_down_from_duration():
         datetime(2026, 10, 17, 8, 30, 0),
         end_at="2026-10-17T08:30:00",
     ) == 0
+    assert attempt_service.remaining_seconds(
+        start,
+        None,
+        datetime(2026, 10, 17, 8, 5, 0),
+    ) is None
+    assert attempt_service.remaining_seconds(
+        start,
+        None,
+        datetime(2026, 10, 17, 8, 5, 0),
+        end_at="2026-10-17T08:30:00",
+    ) == 1500
+
+
+def test_unlimited_attempt_without_deadline_has_no_timer_or_auto_submission(
+    client, db_path, monkeypatch
+):
+    start = datetime(2026, 10, 17, 8, 0, 0)
+    with get_connection(db_path) as connection:
+        connection.execute(
+            "UPDATE quiz SET duration_unlimited = 1, end_at = NULL WHERE quiz_id = ?",
+            (PUBLISHED_QUIZ,),
+        )
+    monkeypatch.setattr(attempt_service, "_now", lambda: start)
+    login(client)
+    client.post(f"/student/quiz/{PUBLISHED_QUIZ}/start")
+
+    monkeypatch.setattr(attempt_service, "_now", lambda: start + timedelta(days=30))
+    response = client.get(f"/student/quiz/{PUBLISHED_QUIZ}/take?q=1")
+
+    assert response.status_code == 200
+    assert "No time limit" in response.get_data(as_text=True)
+    assert 'id="timer"' not in response.get_data(as_text=True)
+    assert submitted_row(db_path)[0] is None
+
+
+def test_unlimited_duration_still_auto_submits_at_deadline(client, db_path, monkeypatch):
+    start = datetime(2026, 10, 17, 8, 0, 0)
+    with get_connection(db_path) as connection:
+        connection.execute(
+            "UPDATE quiz SET duration_unlimited = 1, end_at = ? WHERE quiz_id = ?",
+            ("2026-10-17T08:30:00", PUBLISHED_QUIZ),
+        )
+    monkeypatch.setattr(attempt_service, "_now", lambda: start)
+    login(client)
+    client.post(f"/student/quiz/{PUBLISHED_QUIZ}/start")
+
+    page = client.get(f"/student/quiz/{PUBLISHED_QUIZ}/take?q=1")
+    assert 'data-remaining="1800"' in page.get_data(as_text=True)
+    monkeypatch.setattr(attempt_service, "_now", lambda: start + timedelta(minutes=30))
+
+    response = client.get(f"/student/quiz/{PUBLISHED_QUIZ}/take?q=1")
+
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith(
+        f"/student/quiz/{PUBLISHED_QUIZ}/submitted?timeout=1"
+    )
+    assert submitted_row(db_path)[0] == "2026-10-17T08:30:00"
 
 
 def test_next_and_previous_keep_the_saved_answer(multi_question_client, db_path):
@@ -406,7 +464,7 @@ def test_next_and_previous_keep_the_saved_answer(multi_question_client, db_path)
     assert response.headers["Location"].endswith("take?q=1")
     page = client.get(response.headers["Location"]).get_data(as_text=True)
     assert "Question 1 / 3" in page
-    assert checked_value(chosen) in page
+    assert re.search(checked_value(chosen), page)
 
 
 def test_number_button_jumps_straight_to_question(multi_question_client, db_path):
@@ -492,6 +550,9 @@ def test_review_and_submit_button_saves_answer_then_opens_review(client, db_path
     assert 'class="quiz-heading-row"' in take_page
     assert 'class="timer"' in take_page
     assert 'class="btn btn-secondary" href="/student/dashboard">Back to dashboard</a>' in take_page
+    assert 'class="quiz-question-layout"' in take_page
+    assert 'class="question-prompt" id="question-prompt"' in take_page
+    assert 'class="jump" aria-label="Jump to question"' in take_page
 
 
 def test_submit_stores_submission_time_and_score(client, db_path):
@@ -508,7 +569,7 @@ def test_submit_stores_submission_time_and_score(client, db_path):
     assert "Quiz submitted" in page
     assert "Your quiz was submitted successfully." in page
     assert "Submitted at" in page
-    assert "Back to dashboard" in page
+    assert 'class="btn btn-secondary" href="/student/dashboard">Back to dashboard</a>' in page
 
 
 def test_submitted_page_shows_vietnam_time(client, db_path, monkeypatch):

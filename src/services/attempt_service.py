@@ -46,17 +46,23 @@ def _now() -> datetime:
 
 def remaining_seconds(
     started_at: str,
-    duration_minutes: int,
+    duration_minutes: int | None,
     now: datetime | None = None,
     end_at: str | None = None,
-) -> int:
-    """Seconds left, capped by both the attempt duration and quiz closing time."""
+) -> int | None:
+    """Return seconds until the earliest configured limit, or None if unlimited."""
     now = now or _now()
-    attempt_deadline = datetime.strptime(started_at, TIMESTAMP_FORMAT) + timedelta(
-        minutes=duration_minutes
-    )
+    deadlines = []
+    if duration_minutes is not None:
+        deadlines.append(
+            datetime.strptime(started_at, TIMESTAMP_FORMAT)
+            + timedelta(minutes=duration_minutes)
+        )
     if end_at:
-        attempt_deadline = min(attempt_deadline, parse_utc_timestamp(end_at))
+        deadlines.append(parse_utc_timestamp(end_at))
+    if not deadlines:
+        return None
+    attempt_deadline = min(deadlines)
     return max(0, int((attempt_deadline - now).total_seconds()))
 
 
@@ -82,13 +88,16 @@ def _check_schedule_allows_start(quiz, now: datetime) -> None:
         raise AttemptError(403, "The scheduled time for this quiz has ended.")
 
 
-def _attempt_deadline(attempt, quiz) -> datetime:
-    deadline = datetime.strptime(attempt["started_at"], TIMESTAMP_FORMAT) + timedelta(
-        minutes=quiz["duration_minutes"]
-    )
+def _attempt_deadline(attempt, quiz) -> datetime | None:
+    deadlines = []
+    if not quiz["duration_unlimited"]:
+        deadlines.append(
+            datetime.strptime(attempt["started_at"], TIMESTAMP_FORMAT)
+            + timedelta(minutes=quiz["duration_minutes"])
+        )
     if quiz["end_at"]:
-        deadline = min(deadline, parse_utc_timestamp(quiz["end_at"]))
-    return deadline
+        deadlines.append(parse_utc_timestamp(quiz["end_at"]))
+    return min(deadlines) if deadlines else None
 
 
 def _finalize(connection, attempt, submitted_at: datetime) -> bool:
@@ -108,7 +117,7 @@ def _finalize(connection, attempt, submitted_at: datetime) -> bool:
 def _auto_submit_if_expired(connection, attempt, quiz) -> None:
     """Submit an attempt whose time is up, stamped at the moment time ran out."""
     deadline = _attempt_deadline(attempt, quiz)
-    if _now() < deadline:
+    if deadline is None or _now() < deadline:
         return
 
     _finalize(connection, attempt, deadline)
@@ -153,7 +162,9 @@ def _review_data(connection, quiz, attempt) -> dict:
             number for number in range(1, len(questions) + 1) if number not in answered
         ],
         "remaining_seconds": remaining_seconds(
-            attempt["started_at"], quiz["duration_minutes"], end_at=quiz["end_at"]
+            attempt["started_at"],
+            None if quiz["duration_unlimited"] else quiz["duration_minutes"],
+            end_at=quiz["end_at"],
         ),
     }
 
@@ -217,7 +228,9 @@ def get_take_page_data(
             "selected_choice_id": selected.get(question["question_id"]),
             "answered_numbers": _answered_numbers(questions, selected),
             "remaining_seconds": remaining_seconds(
-                attempt["started_at"], quiz["duration_minutes"], end_at=quiz["end_at"]
+                attempt["started_at"],
+                None if quiz["duration_unlimited"] else quiz["duration_minutes"],
+                end_at=quiz["end_at"],
             ),
         }
     finally:

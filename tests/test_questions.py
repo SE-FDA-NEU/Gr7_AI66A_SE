@@ -73,35 +73,44 @@ def make_empty_quiz(db_path):
         ).lastrowid
 
 
-def test_questions_page_shows_form_and_current_count(client):
+def test_questions_route_redirects_to_integrated_manage_page(client):
     login(client)
 
     response = client.get(f"/quiz/{NGAN_QUIZ}/questions")
-    html = response.get_data(as_text=True)
 
-    assert response.status_code == 200
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith(f"/lecturer/quiz/{NGAN_QUIZ}/publish")
+
+    page = client.get(response.headers["Location"])
+    html = page.get_data(as_text=True)
+    assert page.status_code == 200
+    assert "Manage Quiz" in html
     assert "Advanced Analytics" in html
-    assert "(1 question)" in html
+    assert "Questions List" in html
+    assert "Add Questions" in html
     assert html.count('type="radio"') == 4
     assert html.count('name="choices"') == 4
+    assert 'class="correct-answer"' in html
+    assert "Correct answer" in html
     assert "Sign out" not in html
-    assert 'class="question-page-actions"' in html
-    assert 'textarea id="content" name="content" rows="3" cols="60" required' in html
-    assert f"/lecturer/quiz/{NGAN_QUIZ}/publish" in html
+    assert "Has correct answer" not in html
+    assert "Missing correct answer" not in html
+    assert '<details class="manage-disclosure card">' in html
 
 
 def test_adding_first_question_makes_the_count_1(client, db_path):
     quiz_id = make_empty_quiz(db_path)
     login(client)
-    assert "This quiz has no questions yet" in client.get(f"/quiz/{quiz_id}/questions").get_data(as_text=True)
+    manage_page = client.get(f"/lecturer/quiz/{quiz_id}/publish")
+    assert "No questions have been added yet." in manage_page.get_data(as_text=True)
 
     response = post_question(client, quiz_id)
 
     assert response.status_code == 302
-    assert response.headers["Location"].endswith(f"/quiz/{quiz_id}/questions")
+    assert response.headers["Location"].endswith(f"/lecturer/quiz/{quiz_id}/publish")
     assert question_count(db_path, quiz_id) == 1
     page = client.get(response.headers["Location"]).get_data(as_text=True)
-    assert "(1 question)" in page
+    assert "1 question in this quiz" in page
     assert "Question added successfully." in page
 
 
@@ -185,6 +194,7 @@ def test_form_keeps_what_the_lecturer_typed_after_an_error(client):
     html = response.get_data(as_text=True)
 
     assert response.status_code == 422
+    assert '<details class="manage-disclosure card" open>' in html
     assert "Which layer runs the SQL queries?" in html
     for text in ("Routes", "Services", "Repositories", "Templates"):
         assert f'value="{text}"' in html
@@ -301,7 +311,7 @@ def test_question_text_is_escaped_in_the_page(client):
     login(client)
 
     post_question(client, content="<script>alert(1)</script>")
-    html = client.get(f"/quiz/{NGAN_QUIZ}/questions").get_data(as_text=True)
+    html = client.get(f"/lecturer/quiz/{NGAN_QUIZ}/publish").get_data(as_text=True)
 
     assert "<script>alert(1)</script>" not in html
     assert "&lt;script&gt;alert(1)&lt;/script&gt;" in html

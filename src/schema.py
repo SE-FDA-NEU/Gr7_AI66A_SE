@@ -41,6 +41,8 @@ CREATE TABLE quiz (
     status TEXT NOT NULL DEFAULT 'draft'
         CHECK (status IN ('draft', 'published', 'closed')),
     duration_minutes INTEGER NOT NULL CHECK (duration_minutes > 0),
+    duration_unlimited INTEGER NOT NULL DEFAULT 0
+        CHECK (duration_unlimited IN (0, 1)),
     start_at TEXT,
     end_at TEXT,
     CHECK (start_at IS NULL OR end_at IS NULL OR end_at > start_at)

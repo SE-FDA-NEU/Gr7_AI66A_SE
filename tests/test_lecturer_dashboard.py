@@ -228,14 +228,13 @@ def test_dashboard_navigation_links_to_create_edit_and_publish(tmp_path):
     assert '<nav aria-label="Lecturer navigation">' not in html
     assert '<h1>My Quizzes</h1>' in html
     assert 'href="/quiz/create"' in html
-    assert f'href="/quiz/{draft_quiz_id}/questions"' in html
-    assert f'href="/lecturer/quiz/{draft_quiz_id}/publish"' in html
-    assert f'href="/quiz/{published_quiz_id}/questions"' in html
-    assert f'href="/lecturer/quiz/{closed_quiz_id}/publish"' in html
-    assert "Publish again" in html
+    assert html.count(f'href="/lecturer/quiz/{draft_quiz_id}/publish"') == 1
+    assert html.count(f'href="/lecturer/quiz/{published_quiz_id}/publish"') == 1
+    assert html.count(f'href="/lecturer/quiz/{closed_quiz_id}/publish"') == 1
+    assert ">Manage</a>" not in html
 
     create_page = client.get("/quiz/create")
-    edit_questions = client.get(f"/quiz/{draft_quiz_id}/questions")
+    edit_questions = client.get(f"/lecturer/quiz/{draft_quiz_id}/publish")
     publish_page = client.get(f"/lecturer/quiz/{draft_quiz_id}/publish")
     closed_publish_page = client.get(f"/lecturer/quiz/{closed_quiz_id}/publish")
     assert create_page.status_code == 200

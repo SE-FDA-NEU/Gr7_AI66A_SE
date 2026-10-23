@@ -37,20 +37,23 @@ def _parse_schedule(start_local: str, end_local: str) -> tuple[str | None, str |
     start_local = (start_local or "").strip()
     end_local = (end_local or "").strip()
 
-    if bool(start_local) != bool(end_local):
-        raise InvalidQuiz("Enter both a start time and an end time, or leave both empty.")
-    if not start_local:
-        return None, None
-
     try:
-        start_at = local_input_to_utc(start_local)
-        end_at = local_input_to_utc(end_local)
+        start_at = local_input_to_utc(start_local) if start_local else None
+        end_at = local_input_to_utc(end_local) if end_local else None
     except ValueError as error:
         raise InvalidQuiz("Enter valid start and end times.") from error
 
-    if parse_utc_timestamp(end_at) <= parse_utc_timestamp(start_at):
+    if start_at and end_at and parse_utc_timestamp(end_at) <= parse_utc_timestamp(start_at):
         raise InvalidQuiz("The end time must be later than the start time.")
     return start_at, end_at
+
+
+def _format_schedule(start_at: str | None, end_at: str | None) -> str:
+    if not start_at and not end_at:
+        return "No schedule"
+    start_display = format_vietnam_time(start_at) if start_at else "Available immediately"
+    end_display = format_vietnam_time(end_at) if end_at else "No deadline"
+    return f"{start_display} – {end_display}"
 from src.repositories.attempt_repository import get_open_attempt, get_submitted_attempt
 from src.repositories.quiz_repository import (
     create_quiz,
@@ -242,11 +245,8 @@ def get_student_quiz_statuses(db_path: str | Path, student_id: int):
         now = utc_now_naive()
         for quiz in quizzes:
             quiz_id = quiz["quiz_id"]
-            quiz["schedule_display"] = (
-                f"{format_vietnam_time(quiz['start_at'])} – "
-                f"{format_vietnam_time(quiz['end_at'])}"
-                if quiz["start_at"] and quiz["end_at"]
-                else "No schedule"
+            quiz["schedule_display"] = _format_schedule(
+                quiz["start_at"], quiz["end_at"]
             )
             quiz["start_at_display"] = (
                 format_vietnam_time(quiz["start_at"]) if quiz["start_at"] else ""
@@ -289,12 +289,13 @@ def create_new_quiz(
     description: str = "",
     start_at: str = "",
     end_at: str = "",
+    duration_unlimited: bool = False,
 ) -> int:
     """
     Validate input and create a draft quiz.
 
     - Title is required.
-    - Duration must be a positive integer.
+    - Duration must be a positive integer unless duration is unlimited.
     - Description is optional.
     - New quiz status is draft.
     """
@@ -305,17 +306,16 @@ def create_new_quiz(
     if not title:
         raise InvalidQuiz("Quiz title is required.")
 
-    try:
-        duration_minutes = int(duration)
-    except (ValueError, TypeError):
-        raise InvalidQuiz(
-            "Duration must be a positive number."
-        )
+    if duration_unlimited:
+        duration_minutes = 1
+    else:
+        try:
+            duration_minutes = int(duration)
+        except (ValueError, TypeError):
+            raise InvalidQuiz("Duration must be a positive number.")
 
-    if duration_minutes <= 0:
-        raise InvalidQuiz(
-            "Duration must be a positive number."
-        )
+        if duration_minutes <= 0:
+            raise InvalidQuiz("Duration must be a positive number.")
 
     start_utc, end_utc = _parse_schedule(start_at, end_at)
     conn = get_connection(db_path)
@@ -329,6 +329,7 @@ def create_new_quiz(
             description,
             start_utc,
             end_utc,
+            duration_unlimited,
         )
 
         return quiz_id
@@ -343,8 +344,10 @@ def update_quiz_schedule(
     quiz_id: int,
     start_local: str,
     end_local: str,
+    duration: str | None = None,
+    duration_unlimited: bool | None = None,
 ) -> dict:
-    """Update a quiz schedule after confirming the lecturer owns the quiz."""
+    """Update quiz scheduling settings after confirming the lecturer owns it."""
     conn = get_connection(db_path)
     try:
         quiz = get_quiz_by_id(conn, quiz_id)
@@ -354,7 +357,27 @@ def update_quiz_schedule(
             raise QuizServiceError(403, errors.NOT_QUIZ_OWNER)
 
         start_utc, end_utc = _parse_schedule(start_local, end_local)
-        save_quiz_schedule(conn, quiz_id, start_utc, end_utc)
+        if duration is None and duration_unlimited is None:
+            save_quiz_schedule(conn, quiz_id, start_utc, end_utc)
+        else:
+            if duration_unlimited:
+                duration_minutes = 1
+            else:
+                try:
+                    duration_minutes = int(duration or "")
+                except (ValueError, TypeError):
+                    raise InvalidQuiz("Duration must be a positive number.")
+                if duration_minutes <= 0:
+                    raise InvalidQuiz("Duration must be a positive number.")
+
+            save_quiz_schedule(
+                conn,
+                quiz_id,
+                start_utc,
+                end_utc,
+                duration_minutes,
+                bool(duration_unlimited),
+            )
         return get_quiz_by_id(conn, quiz_id)
     finally:
         conn.close()

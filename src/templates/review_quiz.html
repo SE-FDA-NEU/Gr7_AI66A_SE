@@ -18,9 +18,13 @@
     <main>
         <div class="quiz-heading-row">
             <h1>Review: {{ quiz.title }}</h1>
+            {% if remaining_seconds is none %}
+            <p class="timer">No time limit</p>
+            {% else %}
             <p class="timer">Time left:
                 <span id="timer" data-remaining="{{ remaining_seconds }}">{{ '%d:%02d' % (remaining_seconds // 60, remaining_seconds % 60) }}</span>
             </p>
+            {% endif %}
         </div>
         <div class="bar">
             <p>You answered {{ answered_count }} of {{ total_questions }} questions</p>
@@ -62,6 +66,9 @@
         // Display only: the server decides whether time is up.
         (function () {
             var timer = document.getElementById("timer");
+            if (!timer) {
+                return;
+            }
             var remaining = parseInt(timer.dataset.remaining, 10);
             function show() {
                 if (remaining <= 0) {

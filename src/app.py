@@ -5,7 +5,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from flask import Flask
+from flask import Flask, redirect, url_for
 from werkzeug.exceptions import HTTPException
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -13,6 +13,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 load_dotenv(PROJECT_ROOT / ".env")
 
 from src.errors import render_error
+from src.db import ensure_quiz_duration_unlimited_column, get_connection
 from src.routes.api_routes import api_bp
 from src.routes.auth_routes import auth_bp
 from src.routes.lecturer_routes import lecturer_bp
@@ -33,6 +34,14 @@ def create_app(test_config=None):
     if test_config:
         app.config.update(test_config)
 
+    database_path = Path(app.config["DATABASE_PATH"])
+    if database_path.exists():
+        connection = get_connection(database_path)
+        try:
+            ensure_quiz_duration_unlimited_column(connection)
+        finally:
+            connection.close()
+
     app.register_blueprint(auth_bp)
     app.register_blueprint(lecturer_bp)
     app.register_blueprint(quiz_bp)
@@ -45,7 +54,7 @@ def create_app(test_config=None):
 
     @app.route('/')
     def index():
-        return {"message": "Mini LMS API is running"}
+        return redirect(url_for("auth.login"))
 
     @app.route('/health')
     def health():

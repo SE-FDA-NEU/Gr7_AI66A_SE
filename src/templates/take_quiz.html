@@ -8,67 +8,87 @@
         body { font-family: Arial, sans-serif; margin: 40px; background-color: #f9f9f9; }
         h1 { color: #333; }
         .bar { display: flex; justify-content: space-between; align-items: center; }
-        .timer { font-size: 1.2em; font-weight: bold; }
         fieldset { background: #fff; border: 1px solid #ddd; padding: 16px; margin: 20px 0; }
         label { display: block; padding: 8px 0; }
-        .jump button { min-width: 36px; margin: 2px; }
         .jump button.answered { background-color: #d4edda; }
         .jump button[aria-current="step"] { font-weight: bold; outline: 2px solid #007bff; }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/hig.css') }}">
 </head>
 <body>
     <main>
-        <h1>{{ quiz.title }}</h1>
-        <div class="bar">
-            <p>Question {{ question_number }} / {{ total_questions }}</p>
+        <div class="quiz-heading-row">
+            <h1>{{ quiz.title }}</h1>
+            {% if remaining_seconds is none %}
+            <p class="timer">No time limit</p>
+            {% else %}
             <p class="timer">Time left:
                 <span id="timer" data-remaining="{{ remaining_seconds }}">{{ '%d:%02d' % (remaining_seconds // 60, remaining_seconds % 60) }}</span>
             </p>
+            {% endif %}
+        </div>
+        <div class="bar">
+            <p>Question {{ question_number }} / {{ total_questions }}</p>
         </div>
 
         <form method="post" action="{{ url_for('student.save_quiz_answer', quiz_id=quiz.quiz_id) }}">
             <input type="hidden" name="attempt_id" value="{{ attempt_id }}">
             <input type="hidden" name="question_id" value="{{ question.question_id }}">
 
-            <fieldset>
-                <legend>{{ question.content }}</legend>
-                {% for choice in question.choices %}
-                <label>
-                    <input type="radio" name="choice_id" value="{{ choice.choice_id }}"
-                           {% if choice.choice_id == selected_choice_id %}checked{% endif %}>
-                    {{ choice.content }}
-                </label>
-                {% endfor %}
-            </fieldset>
+            <div class="quiz-question-layout">
+                <section class="quiz-question-panel" aria-labelledby="question-prompt">
+                    <h2 class="question-prompt" id="question-prompt">{{ question.content }}</h2>
+                    <fieldset class="answer-options" aria-label="Answer choices">
+                        {% for choice in question.choices %}
+                        <label>
+                            <input type="radio" name="choice_id" value="{{ choice.choice_id }}"
+                                   {% if choice.choice_id == selected_choice_id %}checked{% endif %}>
+                            {{ choice.content }}
+                        </label>
+                        {% endfor %}
+                    </fieldset>
+                </section>
 
-            {% if question_number > 1 %}
-            <button type="submit" name="go" value="{{ question_number - 1 }}">Previous question</button>
-            {% endif %}
-            {% if question_number < total_questions %}
-            <button type="submit" name="go" value="{{ question_number + 1 }}">Next question</button>
-            {% endif %}
+                <nav class="jump" aria-label="Jump to question">
+                    {% for number in range(1, total_questions + 1) %}
+                    <button type="submit" name="go" value="{{ number }}"
+                            {% if number in answered_numbers %}class="answered"{% endif %}
+                            {% if number == question_number %}aria-current="step"{% endif %}>{{ number }}</button>
+                    {% endfor %}
+                </nav>
+            </div>
 
-            <nav class="jump" aria-label="Jump to question">
-                {% for number in range(1, total_questions + 1) %}
-                <button type="submit" name="go" value="{{ number }}"
-                        {% if number in answered_numbers %}class="answered"{% endif %}
-                        {% if number == question_number %}aria-current="step"{% endif %}>{{ number }}</button>
-                {% endfor %}
-            </nav>
+            <div class="quiz-controls">
+                <div class="quiz-movement">
+                    {% if question_number > 1 %}
+                    <button type="submit" name="go" value="{{ question_number - 1 }}">Previous question</button>
+                    {% endif %}
+                    {% if question_number < total_questions %}
+                    <button type="submit" name="go" value="{{ question_number + 1 }}">Next question</button>
+                    {% endif %}
+                </div>
+            </div>
 
-            <p><button type="submit" name="go" value="review">Review &amp; submit</button></p>
+            <div class="quiz-submit-actions">
+                <button type="submit" name="go" value="review">Review &amp; submit</button>
+            </div>
         </form>
 
-        <p><a href="{{ url_for('student.student_dashboard') }}">Back to dashboard</a></p>
+        <p class="quiz-dashboard-link">
+            <a class="btn btn-secondary" href="{{ url_for('student.student_dashboard') }}">Back to dashboard</a>
+        </p>
     </main>
     <script>
         // Display only: the server decides whether time is up.
         (function () {
             var timer = document.getElementById("timer");
+            if (!timer) {
+                return;
+            }
             var remaining = parseInt(timer.dataset.remaining, 10);
             function show() {
                 if (remaining <= 0) {
-                    timer.textContent = "Time is up";
+                    window.location.reload();
                     return;
                 }
                 var seconds = remaining % 60;

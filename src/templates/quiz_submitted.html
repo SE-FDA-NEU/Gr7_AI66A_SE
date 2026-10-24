@@ -4,21 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Quiz submitted - Mini LMS</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f9f9f9; }
-        h1 { color: #333; }
-        .notice { background-color: #fff3cd; padding: 12px; }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/hig.css') }}">
 </head>
 <body>
-    <main>
+    <main class="quiz-submitted-page">
         <h1>Quiz submitted</h1>
         <p><strong>{{ quiz.title }}</strong></p>
+        {% if submitted_successfully %}
+        <div class="toast-stack" aria-live="polite">
+            <div class="toast toast-success" role="status">
+                <span>Your quiz was submitted successfully.</span>
+                <button class="toast-dismiss" type="button" aria-label="Dismiss notification">&times;</button>
+            </div>
+        </div>
+        {% endif %}
         {% if notice %}
         <p class="notice" role="status">{{ notice }}</p>
         {% endif %}
         <p>Submitted at {{ submitted_at_display }}</p>
-        <p><a href="{{ url_for('student.student_dashboard') }}">Back to dashboard</a></p>
+        <p class="quiz-dashboard-link">
+            <a class="btn btn-secondary" href="{{ url_for('student.student_dashboard') }}">Back to dashboard</a>
+        </p>
     </main>
+    {% include "_toasts.html" %}
 </body>
 </html>

@@ -14,12 +14,12 @@ Bảng tổng hợp 6 User Story cốt lõi (P0) cùng màn hình hỗ trợ `/l
 | Story ID | Story Title & Persona | Screen(s) | Route(s) | Status | Issue | Ghi chú nghiệm thu / PR |
 | :--- | :--- | :--- | :--- | :---: | :---: | :--- |
 | **US01** | Sign in and receive the correct role *(Lecturer / Student)* | Màn hình Đăng nhập (Sign In) | `GET /login`<br>`POST /login`<br>`POST /logout` | **`works`** | [#17](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/17) / [#92](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/92) | Đã merge PR #93. Điều hướng đúng dashboard theo role (`lecturer` / `student`); khóa tài khoản 15 phút sau 5 lần sai mật khẩu (BR1); nút Đăng xuất xóa session sạch sẽ. |
-| **US02** | Lecturer creates a quiz *(Lecturer)* | Form tạo quiz mới & Dashboard Giảng viên | `POST /quiz/create`<br>`GET /lecturer/dashboard` | **`works`** | [#18](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/18) | Tạo quiz với tiêu đề, thời lượng (phút), trạng thái khởi tạo `draft`. Kiểm tra validation bắt buộc tiêu đề; tự chuyển hướng sang thêm câu hỏi. |
+| **US02** | Lecturer creates a quiz *(Lecturer)* | Form tạo quiz mới & Dashboard Giảng viên | `POST /quiz/create`<br>`GET /lecturer/dashboard` | **`works`** | [#18](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/18) | Tạo quiz với thời lượng tùy chọn (có thể không giới hạn) và giờ mở/deadline tùy chọn độc lập theo giờ Hà Nội UTC+7; trạng thái khởi tạo `draft`. Kiểm tra validation bắt buộc tiêu đề; tự chuyển hướng sang thêm câu hỏi. |
 | **US03** | Lecturer adds multiple-choice questions *(Lecturer)* | Quản lý câu hỏi & phương án trả lời | `POST /quiz/:id/questions` | **`works`** | [#19](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/19) | Thêm câu hỏi với các lựa chọn (ít nhất 2 choices), chọn 1 đáp án đúng duy nhất. Có nút chuyển tiếp sang trang Publish. |
-| **US04** | Lecturer publishes and closes a quiz *(Lecturer)* | Màn hình Publish & Đóng bài Quiz | `GET /lecturer/quiz/:id/publish`<br>`POST /lecturer/quiz/:id/publish`<br>`POST /lecturer/quiz/:id/close` | **`works`** | [#34](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/34) / [#89](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/89) | Đã hoàn thiện qua PR #89 (branch `89-us04-publish-quiz`). Chặn giảng viên khác (BR2); kiểm tra quiz đủ điều kiện ≥ 1 câu hỏi, đủ đáp án đúng (BR3); đóng quiz ngăn sinh viên làm bài (BR4). |
+| **US04** | Lecturer publishes and closes a quiz *(Lecturer)* | Màn hình Publish & Đóng bài Quiz | `GET /lecturer/quiz/:id/publish`<br>`POST /lecturer/quiz/:id/publish`<br>`POST /lecturer/quiz/:id/close`<br>`POST /lecturer/quiz/:id/schedule` | **`works`** | [#34](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/34) / [#89](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/89) | Đã hoàn thiện qua PR #89 (branch `89-us04-publish-quiz`). Chặn giảng viên khác (BR2); kiểm tra quiz đủ điều kiện ≥ 1 câu hỏi, đủ đáp án đúng (BR3); đóng quiz ngăn sinh viên làm bài (BR4). Lịch mở/đóng được lưu UTC và nhập theo giờ Hà Nội UTC+7. |
 | **US06** | Student starts a quiz attempt *(Student)* | Dashboard Sinh viên & Giao diện làm bài (có Timer) | `GET /student/dashboard`<br>`POST /student/quiz/:id/start`<br>`GET /student/quiz/:id/take`<br>`POST /student/quiz/:id/take` | **`works`** | [#30](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/30) / [#88](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/88) | Đã merge PR #94. Bắt đầu hoặc tiếp tục attempt đang mở; hiển thị từng câu hỏi kèm bộ đếm ngược; lưu câu trả lời bằng kỹ thuật Post/Redirect/Get; chặn quiz đóng (BR4) hoặc đã nộp (BR5). |
 | **US08** | Student submits a quiz *(Student)* | Màn hình xác nhận nộp & tổng kết | `POST /student/quiz/:id/submit` | **`works`** | [#31](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/31) | Tự động chấm điểm từ đáp án đã lưu; ghi nhận đúng 1 mốc thời gian nộp bài (`submitted_at`); từ chối nộp lần 2 hoặc can thiệp sau nộp (BR5, BR6). |
-| *(US14)* | Lecturer sees their quizzes on a dashboard *(Màn hình điều hướng)* | Lecturer Dashboard | `GET /lecturer/dashboard` | **`works`** | [#49](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/49) | Hiển thị danh sách quiz của chính giảng viên (BR2), trạng thái (Draft, Published, Closed), số lượt attempt; cung cấp nút Tạo Quiz và Publish trực tiếp. |
+| *(US14)* | Lecturer sees their quizzes on a dashboard *(Màn hình điều hướng)* | Lecturer Dashboard | `GET /lecturer/dashboard` | **`works`** | [#49](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/49) | Hiển thị danh sách quiz của chính giảng viên (BR2), trạng thái (Draft, Published, Closed), số lượt attempt; cung cấp nút Tạo Quiz, Publish và mở lại quiz đã đóng. |
 
 *Ghi chú quy ước trạng thái:*
 - `works`: Đã hoàn thành, tích hợp giao diện với SQLite backend, đi hết luồng bằng nút bấm và vượt qua toàn bộ unit/integration tests tự động.
@@ -65,7 +65,7 @@ flowchart TD
     LDash -->|Bấm 'Tạo Quiz'| Create
     Create -->|Lưu Quiz (Draft)| Questions
     Questions -->|Bấm 'Tiếp: Publish'| Publish
-    Publish -->|Bấm 'Publish Quiz' / 'Close Quiz'| LDash
+    Publish -->|Bấm 'Publish Quiz' / 'Close Quiz' / 'Publish Quiz Again'| LDash
     LDash -->|Bấm 'Publish' hoặc 'Manage' trên bảng Quiz| Publish
 
     %% Chi tiết luồng Sinh viên
@@ -127,29 +127,29 @@ API gọi:
   - `POST /login`: Gửi thông tin `email`, `password`.
   - `POST /logout`: Hủy session đăng nhập và chuyển hướng về `/login`.
 
-### 2.2 Màn hình Giảng viên — `/lecturer/dashboard` & `/quiz/create` (US02, US14)
-- **The user comes here to:** Xem toàn bộ danh sách các bài quiz do chính mình tạo ra cùng trạng thái hiện tại (`draft`, `published`, `closed`), số lượt sinh viên đã nộp bài; tạo quiz mới và đi tiếp đến khâu soạn đề.
+### 2.2 Màn hình Giảng viên — `/lecturer/dashboard`, `/quiz/create` & `/lecturer/quiz/:id/publish` (US02, US03, US04, US14)
+- **The user comes here to:** Xem danh sách quiz và lượt làm, tạo quiz mới, rồi quản lý câu hỏi, lịch và trạng thái xuất bản trong cùng trang Manage Quiz.
 - **Endpoints called:**
   - `GET /lecturer/dashboard`: Lấy danh sách quiz thuộc sở hữu của giảng viên đang đăng nhập.
-  - `POST /quiz/create`: Gửi thông tin `title`, `duration_minutes` để khởi tạo bản ghi quiz mới ở trạng thái `draft`.
-
-### 2.3 Màn hình Soạn câu hỏi — `/quiz/:id/questions` (US03)
-- **The user comes here to:** Thêm từng câu hỏi trắc nghiệm, tạo các phương án lựa chọn (ít nhất 2 choices), đánh dấu radio chọn duy nhất 1 đáp án đúng theo quy định BR3, và bấm nút chuyển tiếp sang duyệt Publish.
-- **Endpoints called:**
-  - `POST /quiz/:id/questions`: Lưu nội dung câu hỏi, điểm số, danh sách choices và chỉ số đáp án đúng.
-
-### 2.4 Màn hình Publish và Đóng bài Quiz — `/lecturer/quiz/:id/publish` (US04)
-- **The user comes here to:** Kiểm tra tổng thể nội dung bài quiz (tiêu đề, thời lượng, danh sách câu hỏi, trạng thái đáp án đúng), phát hiện các cảnh báo vi phạm BR3 trước khi chính thức bấm "Publish Quiz" để mở đề cho sinh viên, hoặc bấm "Close Quiz" để kết thúc đợt thi.
-- **Endpoints called:**
-  - `GET /lecturer/quiz/:id/publish`: Lấy chi tiết bài quiz và danh sách câu hỏi/đáp án kèm cờ kiểm tra tính hợp lệ `is_publishable`.
-  - `POST /lecturer/quiz/:id/publish`: Chuyển trạng thái quiz từ `draft` sang `published`.
+  - `GET /lecturer/quiz/:id/attempts`: Xem sinh viên đã bắt đầu quiz, trạng thái, điểm và thời gian làm.
+  - `GET /lecturer/quiz/:id/attempts/:attempt_id`: Xem câu trả lời từng câu, đáp án đúng và câu sai/bỏ trống; chỉ chủ quiz được truy cập.
+  - `POST /quiz/create`: Tạo quiz ở trạng thái `draft` rồi chuyển thẳng đến Manage Quiz.
+  - `GET /lecturer/quiz/:id/publish`: Mở trang quản lý; mục Add Questions và Questions List có thể thu gọn/mở rộng tại chỗ.
+  - `POST /quiz/:id/questions`: Lưu câu hỏi và đáp án; khi validation lỗi, dữ liệu đã nhập được giữ lại và mục Add Questions tự mở.
+  - `POST /quiz/:id/questions/:question_id/edit`: Cập nhật nội dung câu hỏi, choices và đáp án đúng; chỉ chủ quiz được sửa.
+  - `POST /lecturer/quiz/:id/publish`: Chuyển quiz hợp lệ từ `draft` hoặc `closed` sang `published`.
   - `POST /lecturer/quiz/:id/close`: Chuyển trạng thái quiz từ `published` sang `closed`.
+  - `POST /lecturer/quiz/:id/schedule`: Lưu hoặc xóa lịch mở/đóng; chỉ chủ quiz được chỉnh sửa.
+
+### 2.3 Manage Quiz — câu hỏi, lịch và trạng thái xuất bản
+- **The user comes here to:** Quản lý câu hỏi trong cùng màn hình với lịch quiz; câu trả lời đúng được đánh dấu xanh lá và giảng viên có thể sửa câu hỏi, đáp án. Giảng viên có thể cập nhật thời lượng, số lượt làm tối đa cho mỗi sinh viên, giờ bắt đầu và deadline tại Quiz Schedule. Lịch hiển thị theo giờ Hà Nội UTC+7; xóa cả hai mốc giờ rồi lưu để gỡ lịch.
+- **Thời lượng và lịch:** Giảng viên có thể chọn "No time limit"; giờ bắt đầu và deadline cũng có thể đặt độc lập. Nếu không giới hạn thời lượng nhưng có deadline, sinh viên vẫn thấy bộ đếm đến deadline; nếu cả hai đều không giới hạn thì không hiện đồng hồ đếm ngược.
 - **Wireframe layout:**
 
 ![US04 Publish Quiz Wireframe](images/ui/US04-wireframe.png)
 
 ### 2.5 Màn hình Dashboard Sinh viên — `/student/dashboard` (US05, US06 — 4 trạng thái)
-- **The user comes here to:** Xem danh sách các bài quiz đang mở (`published`), nắm bắt thời hạn kết thúc (`end_at`), thời lượng làm bài và bấm nút bắt đầu làm bài.
+- **The user comes here to:** Xem danh sách quiz đã publish, giờ mở/đóng theo UTC+7, thời lượng làm bài và bấm bắt đầu khi quiz đang trong lịch. Quiz chưa mở hoặc đã hết lịch không có nút bắt đầu.
 - **4 trạng thái giao diện bắt buộc:**
   1. *Empty state:* Hiển thị thông báo thân thiện "No published quizzes available." khi chưa có bài thi nào được mở.
   2. *Loading state:* Hiển thị chỉ báo đang tải dữ liệu danh sách quiz từ cơ sở dữ liệu.
@@ -157,10 +157,11 @@ API gọi:
   4. *Data state:* Hiển thị bảng danh sách các bài quiz với đầy đủ thông tin: Tiêu đề, Giảng viên phụ trách, Thời lượng, Hạn nộp và nút bấm "Take quiz".
 - **Endpoints called:**
   - `GET /student/dashboard`: Truy vấn danh sách bài thi đang publish.
+  - `GET /api/student/quizzes`: Trả trạng thái lượt làm, số lượt còn lại và lịch quiz cho bảng danh sách.
   - `POST /student/quiz/:id/start`: Khởi tạo lượt thi mới hoặc tiếp tục lượt thi chưa hoàn thành của sinh viên.
 
 ### 2.6 Màn hình Làm bài thi — `/student/quiz/:id/take` & Nộp bài (US06, US08)
-- **The user comes here to:** Trả lời lần lượt các câu hỏi trắc nghiệm trong thời gian giới hạn (có đồng hồ đếm ngược thời gian thực); tự động lưu câu trả lời mỗi khi chọn; duyệt lại các câu chưa làm và nộp bài.
+- **The user comes here to:** Trả lời lần lượt các câu hỏi trắc nghiệm trong thời gian giới hạn (đồng hồ nhỏ cố định ở góc màn hình); tự động lưu câu trả lời mỗi khi chọn; duyệt lại các câu chưa làm và nộp bài. Thời gian còn lại là giới hạn sớm hơn giữa thời lượng từ lúc bắt đầu và giờ kết thúc quiz; hết giờ hệ thống tự nộp bài.
 - **Endpoints called:**
   - `GET /student/quiz/:id/take?q=n`: Hiển thị câu hỏi thứ `n` cùng các lựa chọn và thời gian còn lại.
   - `POST /student/quiz/:id/take`: Lưu lựa chọn của sinh viên vào cơ sở dữ liệu (Post/Redirect/Get).
@@ -189,11 +190,10 @@ Bảng dưới đây trích xuất chính xác từ hệ thống mã lỗi trong
 | **`422`** | **BR3** / US04 | `"Chưa thể publish: câu {position} chưa có đáp án đúng. Hãy chọn đúng 1 đáp án cho mỗi câu. (Please select one correct option.)"`<br>*(Ví dụ: "Chưa thể publish: câu 2 chưa có đáp án đúng. Hãy chọn đúng 1 đáp án cho mỗi câu.")* | **Kích hoạt:** Bài quiz có câu hỏi nhưng câu hỏi tại vị trí `{position}` chưa được tích chọn đáp án đúng nào trong các lựa chọn.<br>**Giải quyết:** Chỉ rõ chính xác vị trí câu bị thiếu đáp án để giảng viên vào sửa, không cần tự rà soát lại toàn bộ đề. |
 | **`422`** | **BR3** / US04 | `"Chưa thể publish: câu {position} phải có ít nhất 2 đáp án lựa chọn."` | **Kích hoạt:** Câu hỏi trắc nghiệm tại vị trí `{position}` chỉ có 0 hoặc 1 phương án lựa chọn, không đủ điều kiện tạo câu hỏi trắc nghiệm.<br>**Giải quyết:** Yêu cầu giảng viên bổ sung thêm các lựa chọn cho câu hỏi đó. |
 | **`403`** | **BR4** / US06 | `"This quiz is closed, so you can't start it. Contact your lecturer if you need access."`<br>*(Tiếng Việt: "Quiz đã đóng nên bạn không thể bắt đầu làm bài. Liên hệ giảng viên nếu cần.")* | **Kích hoạt:** Sinh viên cố tình bấm vào làm bài thi của một quiz đã chuyển sang trạng thái `closed`.<br>**Giải quyết:** Chặn sinh viên bắt đầu làm bài mới; hướng dẫn sinh viên liên hệ giảng viên phụ trách nếu cần gia hạn thời gian làm bài. |
-| **`409`** | **BR5** / US06, US08 | `"You have already submitted this quiz, and each quiz allows only one submission. Go back to the dashboard to see other quizzes."`<br>*(Tiếng Việt: "Bạn đã nộp quiz này rồi. Mỗi quiz chỉ được nộp 1 lần; bạn có thể xem lại kết quả.")* | **Kích hoạt:** Sinh viên đã hoàn thành và nộp bài thi, nhưng sau đó cố tình mở lại link `/take` hoặc bấm nút nộp bài lần thứ 2.<br>**Giải quyết:** Chặn thao tác ghi đè kết quả; hiển thị thông báo giải thích và cung cấp link quay về Dashboard sinh viên. |
+| **`409`** | **BR5** / US06, US08 | `"You have no attempts remaining for this quiz. Go back to the dashboard to choose another quiz."` | **Kích hoạt:** Sinh viên đã dùng hết số lượt làm được cấu hình cho quiz, nhưng cố bắt đầu thêm lượt mới.<br>**Giải quyết:** Chặn lượt mới, giữ nguyên các lượt đã nộp và cung cấp link quay về Dashboard sinh viên. |
 | **`400`** | **US02** | `"Quiz title is required."` | **Kích hoạt:** Giảng viên để trống trường Tiêu đề bài quiz khi bấm nút Lưu trên form `/quiz/create`.<br>**Giải quyết:** Form giữ lại các dữ liệu khác và hiển thị cảnh báo đỏ yêu cầu nhập tiêu đề bài thi. |
 | **`403`** | **BR4** / US06 | `"Time is up for this quiz, so your answer was not saved. Contact your lecturer if you think this is a mistake."` | **Kích hoạt:** Sinh viên gửi câu trả lời sau khi đồng hồ đếm ngược thời gian của lượt thi đã chạm mốc 00:00.<br>**Giải quyết:** Từ chối lưu lựa chọn muộn; chuyển hướng người dùng đến màn hình tổng kết nộp bài. |
 | **`400`** | **US04** | `"Bài quiz đang ở trạng thái bản nháp (Draft), phải được publish trước khi đóng. (A quiz must be published before it can be closed.)"` | **Kích hoạt:** Cố tình gửi lệnh đóng một bài quiz khi bài đó chưa từng được Publish.<br>**Giải quyết:** Giữ nguyên trạng thái `draft`; nhắc nhở giảng viên quy trình chuyển trạng thái theo đúng vòng đời bài quiz. |
-| **`400`** | **US04** | `"Bài quiz đã đóng không thể publish lại. (A closed quiz cannot be published again.)"` | **Kích hoạt:** Cố tình gửi request Publish lại một bài quiz đã đóng.<br>**Giải quyết:** Giữ nguyên trạng thái `closed` để bảo toàn tính toàn vẹn dữ liệu điểm số của các bài đã nộp. |
 
 ---
 
@@ -251,7 +251,7 @@ Nhóm chốt điều này khi làm phần nộp bài (#87), để các story xem
   - Nếu không có `/lecturer/dashboard`, giảng viên sau khi đăng nhập thành công ở US01 sẽ không có điểm đến hợp lệ, buộc phải gõ URL thủ công `/quiz/create` hoặc `/lecturer/quiz/:id/publish`. Điều này vi phạm trực tiếp tiêu chí đánh giá cốt lõi của Milestone 3: *"Hoàn thành P0 story qua giao diện, không gõ URL bằng tay"*.
 - **Giải pháp điều chỉnh đã cập nhật vào `design.md`:**
   - Nâng cấp màn hình `GET /lecturer/dashboard` thành thành phần bắt buộc của luồng P0.
-  - Bổ sung truy vấn danh sách bài quiz theo `lecturer_id` (BR2) kèm số lượng câu hỏi và số lượt nộp bài, cung cấp các nút thao tác nhanh: **Tạo bài Quiz mới**, **Publish**, **Đóng bài Quiz**.
+  - Bổ sung truy vấn danh sách bài quiz theo `lecturer_id` (BR2) kèm số lượng câu hỏi và số lượt nộp bài, cung cấp các nút thao tác nhanh: **Tạo bài Quiz mới**, **Publish**, **Đóng bài Quiz**, **Publish lại quiz đã đóng**.
 
 ### 4.3 Chuẩn hóa State Machine cho vòng đời bài Quiz (US04)
 - **Tình trạng tại M2:** M2 chỉ quy định chuyển trạng thái từ `draft` sang `published`.
@@ -259,8 +259,30 @@ Nhóm chốt điều này khi làm phần nộp bài (#87), để các story xem
   - Trong thực tế giảng dạy, giảng viên cần có nút **"Close Quiz"** để dừng nhận bài làm khi hết hạn thời gian nộp bài. Đồng thời, trạng thái của một bài quiz cần phải tuân thủ nghiêm ngặt máy trạng thái hữu hạn (Finite State Machine):
     - `draft` $\rightarrow$ `published`: Hợp lệ khi thỏa mãn BR3.
     - `published` $\rightarrow$ `closed`: Hợp lệ khi giảng viên muốn kết thúc kỳ thi.
-    - `closed` $\rightarrow$ `published`: Nghiêm cấm (tránh việc sửa đổi đề khi đã có sinh viên làm bài).
+    - `closed` $\rightarrow$ `published`: Hợp lệ khi quiz vượt qua kiểm tra BR3; giảng viên có thể mở lại quiz đã đóng mà không xóa các lượt nộp trước.
     - `draft` $\rightarrow$ `closed`: Nghiêm cấm (quiz chưa từng mở thì không thể đóng).
 - **Giải pháp điều chỉnh đã cập nhật vào `design.md`:**
   - Bổ sung route `POST /lecturer/quiz/:id/close` vào bảng API Design Section 3.
   - Cập nhật ràng buộc chuyển đổi trạng thái trong `src/services/quiz_service.py` với mã lỗi và thông báo thân thiện tương ứng.
+
+## 5. Visual design system
+
+Toàn bộ template dùng chung stylesheet `src/static/css/hig.css` để giữ nhất quán
+giữa màn hình giảng viên, sinh viên, đăng nhập, làm bài và thông báo lỗi.
+Thiết kế lấy cảm hứng từ Apple Human Interface Guidelines:
+
+- Font hệ thống Apple, phân cấp tiêu đề/body rõ ràng và khoảng cách theo bội số 4/8.
+- Accent xanh iOS, bề mặt sáng/tối tự thích ứng theo cấu hình giao diện của thiết bị,
+  card bo góc lớn, control bo góc vừa và nhãn dạng capsule.
+- Header/sidebar có nền bán trong suốt và blur; card, bảng và form dùng viền mảnh
+  cùng shadow nhẹ.
+- Nút, input, bảng, trạng thái rỗng/lỗi/loading và hộp thoại dùng chung tokens,
+  có trạng thái focus dễ nhận biết, chuyển động ngắn và tôn trọng `prefers-reduced-motion`.
+- Các tác vụ trong bảng dùng nút gọn cùng chiều cao, khoảng cách và căn hàng; nhóm nút
+  hành động trên trang chi tiết tự xuống dòng cân đối khi ở màn hình nhỏ.
+- Các thao tác tạo quiz/câu hỏi, publish/đóng quiz và nộp bài hiển thị toast xác nhận
+  thành công; các thao tác quan trọng yêu cầu xác nhận trước khi gửi.
+- Form đánh dấu trường bắt buộc và kiểm tra định dạng ngay trên trình duyệt; lỗi do
+  kiểm tra phía server tiếp tục được hiển thị cạnh biểu mẫu để người dùng sửa.
+- Giảng viên mở danh sách lượt làm bằng cách nhấn số lượt làm trên dashboard, sau đó
+  chọn tên sinh viên để xem chi tiết đúng/sai theo từng câu.

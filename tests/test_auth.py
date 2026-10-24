@@ -204,6 +204,9 @@ def test_logout_clears_session_and_redirects_to_login(auth_client):
         },
     )
 
+    dashboard = auth_client.get("/student/dashboard")
+    assert b'data-confirm="Are you sure you want to sign out?"' in dashboard.data
+
     response = auth_client.post("/logout")
 
     assert response.status_code == 302

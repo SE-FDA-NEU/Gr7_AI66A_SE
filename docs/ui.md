@@ -134,14 +134,15 @@ API gọi:
   - `GET /lecturer/quiz/:id/attempts`: Xem sinh viên đã bắt đầu quiz, trạng thái, điểm và thời gian làm.
   - `GET /lecturer/quiz/:id/attempts/:attempt_id`: Xem câu trả lời từng câu, đáp án đúng và câu sai/bỏ trống; chỉ chủ quiz được truy cập.
   - `POST /quiz/create`: Tạo quiz ở trạng thái `draft` rồi chuyển thẳng đến Manage Quiz.
-  - `GET /lecturer/quiz/:id/publish`: Mở Manage Quiz; mục Add Questions và Questions List có thể thu gọn/mở rộng tại chỗ.
+  - `GET /lecturer/quiz/:id/publish`: Mở trang quản lý; mục Add Questions và Questions List có thể thu gọn/mở rộng tại chỗ.
   - `POST /quiz/:id/questions`: Lưu câu hỏi và đáp án; khi validation lỗi, dữ liệu đã nhập được giữ lại và mục Add Questions tự mở.
+  - `POST /quiz/:id/questions/:question_id/edit`: Cập nhật nội dung câu hỏi, choices và đáp án đúng; chỉ chủ quiz được sửa.
   - `POST /lecturer/quiz/:id/publish`: Chuyển quiz hợp lệ từ `draft` hoặc `closed` sang `published`.
   - `POST /lecturer/quiz/:id/close`: Chuyển trạng thái quiz từ `published` sang `closed`.
   - `POST /lecturer/quiz/:id/schedule`: Lưu hoặc xóa lịch mở/đóng; chỉ chủ quiz được chỉnh sửa.
 
 ### 2.3 Manage Quiz — câu hỏi, lịch và trạng thái xuất bản
-- **The user comes here to:** Quản lý câu hỏi trong cùng màn hình với lịch quiz; câu trả lời đúng được đánh dấu xanh lá. Giảng viên có thể cập nhật thời lượng, giờ bắt đầu và deadline tại Quiz Schedule. Lịch hiển thị theo giờ Hà Nội UTC+7; xóa cả hai mốc giờ rồi lưu để gỡ lịch.
+- **The user comes here to:** Quản lý câu hỏi trong cùng màn hình với lịch quiz; câu trả lời đúng được đánh dấu xanh lá và giảng viên có thể sửa câu hỏi, đáp án. Giảng viên có thể cập nhật thời lượng, số lượt làm tối đa cho mỗi sinh viên, giờ bắt đầu và deadline tại Quiz Schedule. Lịch hiển thị theo giờ Hà Nội UTC+7; xóa cả hai mốc giờ rồi lưu để gỡ lịch.
 - **Thời lượng và lịch:** Giảng viên có thể chọn "No time limit"; giờ bắt đầu và deadline cũng có thể đặt độc lập. Nếu không giới hạn thời lượng nhưng có deadline, sinh viên vẫn thấy bộ đếm đến deadline; nếu cả hai đều không giới hạn thì không hiện đồng hồ đếm ngược.
 - **Wireframe layout:**
 
@@ -156,7 +157,7 @@ API gọi:
   4. *Data state:* Hiển thị bảng danh sách các bài quiz với đầy đủ thông tin: Tiêu đề, Giảng viên phụ trách, Thời lượng, Hạn nộp và nút bấm "Take quiz".
 - **Endpoints called:**
   - `GET /student/dashboard`: Truy vấn danh sách bài thi đang publish.
-  - `GET /api/student/quizzes`: Trả trạng thái lượt làm và lịch quiz cho bảng danh sách.
+  - `GET /api/student/quizzes`: Trả trạng thái lượt làm, số lượt còn lại và lịch quiz cho bảng danh sách.
   - `POST /student/quiz/:id/start`: Khởi tạo lượt thi mới hoặc tiếp tục lượt thi chưa hoàn thành của sinh viên.
 
 ### 2.6 Màn hình Làm bài thi — `/student/quiz/:id/take` & Nộp bài (US06, US08)
@@ -189,7 +190,7 @@ Bảng dưới đây trích xuất chính xác từ hệ thống mã lỗi trong
 | **`422`** | **BR3** / US04 | `"Chưa thể publish: câu {position} chưa có đáp án đúng. Hãy chọn đúng 1 đáp án cho mỗi câu. (Please select one correct option.)"`<br>*(Ví dụ: "Chưa thể publish: câu 2 chưa có đáp án đúng. Hãy chọn đúng 1 đáp án cho mỗi câu.")* | **Kích hoạt:** Bài quiz có câu hỏi nhưng câu hỏi tại vị trí `{position}` chưa được tích chọn đáp án đúng nào trong các lựa chọn.<br>**Giải quyết:** Chỉ rõ chính xác vị trí câu bị thiếu đáp án để giảng viên vào sửa, không cần tự rà soát lại toàn bộ đề. |
 | **`422`** | **BR3** / US04 | `"Chưa thể publish: câu {position} phải có ít nhất 2 đáp án lựa chọn."` | **Kích hoạt:** Câu hỏi trắc nghiệm tại vị trí `{position}` chỉ có 0 hoặc 1 phương án lựa chọn, không đủ điều kiện tạo câu hỏi trắc nghiệm.<br>**Giải quyết:** Yêu cầu giảng viên bổ sung thêm các lựa chọn cho câu hỏi đó. |
 | **`403`** | **BR4** / US06 | `"This quiz is closed, so you can't start it. Contact your lecturer if you need access."`<br>*(Tiếng Việt: "Quiz đã đóng nên bạn không thể bắt đầu làm bài. Liên hệ giảng viên nếu cần.")* | **Kích hoạt:** Sinh viên cố tình bấm vào làm bài thi của một quiz đã chuyển sang trạng thái `closed`.<br>**Giải quyết:** Chặn sinh viên bắt đầu làm bài mới; hướng dẫn sinh viên liên hệ giảng viên phụ trách nếu cần gia hạn thời gian làm bài. |
-| **`409`** | **BR5** / US06, US08 | `"You have already submitted this quiz, and each quiz allows only one submission. Go back to the dashboard to see other quizzes."`<br>*(Tiếng Việt: "Bạn đã nộp quiz này rồi. Mỗi quiz chỉ được nộp 1 lần; bạn có thể xem lại kết quả.")* | **Kích hoạt:** Sinh viên đã hoàn thành và nộp bài thi, nhưng sau đó cố tình mở lại link `/take` hoặc bấm nút nộp bài lần thứ 2.<br>**Giải quyết:** Chặn thao tác ghi đè kết quả; hiển thị thông báo giải thích và cung cấp link quay về Dashboard sinh viên. |
+| **`409`** | **BR5** / US06, US08 | `"You have no attempts remaining for this quiz. Go back to the dashboard to choose another quiz."` | **Kích hoạt:** Sinh viên đã dùng hết số lượt làm được cấu hình cho quiz, nhưng cố bắt đầu thêm lượt mới.<br>**Giải quyết:** Chặn lượt mới, giữ nguyên các lượt đã nộp và cung cấp link quay về Dashboard sinh viên. |
 | **`400`** | **US02** | `"Quiz title is required."` | **Kích hoạt:** Giảng viên để trống trường Tiêu đề bài quiz khi bấm nút Lưu trên form `/quiz/create`.<br>**Giải quyết:** Form giữ lại các dữ liệu khác và hiển thị cảnh báo đỏ yêu cầu nhập tiêu đề bài thi. |
 | **`403`** | **BR4** / US06 | `"Time is up for this quiz, so your answer was not saved. Contact your lecturer if you think this is a mistake."` | **Kích hoạt:** Sinh viên gửi câu trả lời sau khi đồng hồ đếm ngược thời gian của lượt thi đã chạm mốc 00:00.<br>**Giải quyết:** Từ chối lưu lựa chọn muộn; chuyển hướng người dùng đến màn hình tổng kết nộp bài. |
 | **`400`** | **US04** | `"Bài quiz đang ở trạng thái bản nháp (Draft), phải được publish trước khi đóng. (A quiz must be published before it can be closed.)"` | **Kích hoạt:** Cố tình gửi lệnh đóng một bài quiz khi bài đó chưa từng được Publish.<br>**Giải quyết:** Giữ nguyên trạng thái `draft`; nhắc nhở giảng viên quy trình chuyển trạng thái theo đúng vòng đời bài quiz. |

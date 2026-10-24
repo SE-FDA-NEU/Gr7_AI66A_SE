@@ -6,6 +6,7 @@ from pathlib import Path
 from src import errors
 from src.db import get_connection
 from src.repositories import attempt_repository as repo
+from src.repositories.quiz_repository import close_expired_published_quizzes
 from src.time_utils import (
     TIMESTAMP_FORMAT,
     format_vietnam_time as format_vietnam_timestamp,
@@ -133,7 +134,7 @@ def _find_open_attempt(connection, student_id: int, quiz_id: int):
 
     attempt = repo.get_open_attempt(connection, student_id, quiz_id)
     if attempt is None:
-        if repo.get_submitted_attempt(connection, student_id, quiz_id) is not None:
+        if repo.count_submitted_attempts(connection, student_id, quiz_id) >= quiz["max_attempts"]:
             raise AttemptError(409, errors.ALREADY_SUBMITTED)
         raise AttemptError(404, errors.ATTEMPT_NOT_STARTED)
 
@@ -174,12 +175,19 @@ def start_attempt(db_path: str | Path, student_id: int, quiz_id: int) -> dict:
     connection = get_connection(db_path)
     try:
         # Lock before checking so two simultaneous starts cannot both create an attempt.
+        close_expired_published_quizzes(
+            connection, _now().strftime(TIMESTAMP_FORMAT)
+        )
+        connection.commit()
         connection.execute("BEGIN IMMEDIATE")
         quiz = repo.get_quiz(connection, quiz_id)
         _check_quiz_can_start(quiz)
 
-        # BR5: one submission per student and quiz.
-        if repo.get_submitted_attempt(connection, student_id, quiz_id) is not None:
+        # Only submitted attempts consume the lecturer-configured attempt limit.
+        if (
+            repo.count_submitted_attempts(connection, student_id, quiz_id)
+            >= quiz["max_attempts"]
+        ):
             raise AttemptError(409, errors.ALREADY_SUBMITTED)
 
         attempt = repo.get_open_attempt(connection, student_id, quiz_id)

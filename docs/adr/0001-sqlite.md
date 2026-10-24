@@ -6,9 +6,9 @@
 `choice`, `attempt` and `answer` (Section 2). The instructor must install
 and run the project on a machine we have never seen, using only
 `docs/SETUP.md`. Some business rules must hold even if the application code
-has a bug: BR3 (exactly one correct choice per question), BR5 (at most one
-submitted attempt per student and quiz) and BR6 (submitted attempts are
-never changed).
+has a bug: BR3 (exactly one correct choice per question) and BR6 (submitted
+attempts are never changed). BR5 (the configured submitted-attempt limit) is
+enforced transactionally by the application.
 
 **Options**
 
@@ -29,12 +29,12 @@ never changed).
   benefit at our scale.
 - *Rules enforced by the database, not only by code.* SQLite supports
   FOREIGN KEY, CHECK and partial UNIQUE indexes. `src/schema.py` uses
-  `one_correct_choice_per_question` to enforce part of BR3 and
-  `one_submitted_attempt_per_student_quiz` to enforce BR5, and `src/db.py`
+  `one_correct_choice_per_question` to enforce part of BR3, and `src/db.py`
   turns on `PRAGMA foreign_keys = ON` for every connection. CSV files
-  (option 3) cannot enforce any of these rules. Two students saving at the
-  same time could also overwrite each other's file, so option 3 was
-  rejected.
+  (option 3) cannot enforce these rules. For BR5, SQLite's
+  `BEGIN IMMEDIATE` serializes concurrent attempt creation while the service
+  checks the configured limit. Two students saving at the same time could
+  also overwrite each other's file, so option 3 was rejected.
 - *Data size.* One course has at most a few hundred students. Even
   300 students × 20 quizzes × 20 questions is about 120,000 `answer` rows,
   which a single SQLite file handles comfortably.

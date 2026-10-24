@@ -88,8 +88,8 @@ def test_questions_route_redirects_to_integrated_manage_page(client):
     assert "Advanced Analytics" in html
     assert "Questions List" in html
     assert "Add Questions" in html
-    assert html.count('type="radio"') == 4
-    assert html.count('name="choices"') == 4
+    assert html.count('type="radio"') == 8
+    assert html.count('name="choices"') == 8
     assert 'class="correct-answer"' in html
     assert "Correct answer" in html
     assert "Sign out" not in html
@@ -315,3 +315,73 @@ def test_question_text_is_escaped_in_the_page(client):
 
     assert "<script>alert(1)</script>" not in html
     assert "&lt;script&gt;alert(1)&lt;/script&gt;" in html
+
+
+def test_lecturer_can_edit_question_choices_and_correct_answer(client, db_path):
+    login(client)
+    with get_connection(db_path) as connection:
+        question_id = connection.execute(
+            "SELECT question_id FROM question WHERE quiz_id = ? ORDER BY position LIMIT 1",
+            (NGAN_QUIZ,),
+        ).fetchone()[0]
+
+    response = client.post(
+        f"/quiz/{NGAN_QUIZ}/questions/{question_id}/edit",
+        data=valid_form(
+            content="Updated question text",
+            choices=["Updated A", "Updated B", "Updated C", "Updated D"],
+            correct_index="3",
+        ),
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert "Question updated successfully." in response.get_data(as_text=True)
+    with get_connection(db_path) as connection:
+        question = connection.execute(
+            "SELECT content FROM question WHERE question_id = ?", (question_id,)
+        ).fetchone()
+        choices = connection.execute(
+            "SELECT content, is_correct FROM choice WHERE question_id = ? ORDER BY choice_id",
+            (question_id,),
+        ).fetchall()
+    assert question["content"] == "Updated question text"
+    assert [(row["content"], row["is_correct"]) for row in choices] == [
+        ("Updated A", 0),
+        ("Updated B", 0),
+        ("Updated C", 0),
+        ("Updated D", 1),
+    ]
+
+
+def test_invalid_question_edit_keeps_the_form_open_and_preserves_values(client, db_path):
+    login(client)
+    with get_connection(db_path) as connection:
+        question_id = connection.execute(
+            "SELECT question_id FROM question WHERE quiz_id = ? ORDER BY position LIMIT 1",
+            (NGAN_QUIZ,),
+        ).fetchone()[0]
+
+    response = client.post(
+        f"/quiz/{NGAN_QUIZ}/questions/{question_id}/edit",
+        data=valid_form(content="", correct_index=""),
+    )
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 422
+    assert '<details class="manage-disclosure card" open>' in html
+    assert f'<details class="manage-edit-disclosure" open>' in html
+    assert shows(response, QUESTION_CONTENT_REQUIRED)
+    assert shows(response, SELECT_CORRECT_OPTION)
+    assert 'value="Routes"' in html
+
+
+def test_lecturer_cannot_edit_another_quiz_question(client):
+    login(client, NAM_EMAIL)
+
+    response = client.post(
+        f"/quiz/{NGAN_QUIZ}/questions/1/edit",
+        data=valid_form(),
+    )
+
+    assert response.status_code == 403

@@ -115,6 +115,7 @@ def handle_quiz_schedule(quiz_id: int):
         if "duration" in request.form or "duration_unlimited" in request.form
         else None
     )
+    max_attempts = request.form.get("max_attempts")
     try:
         update_quiz_schedule(
             db_path,
@@ -124,6 +125,7 @@ def handle_quiz_schedule(quiz_id: int):
             end_at_local,
             duration,
             duration_unlimited,
+            max_attempts,
         )
     except InvalidQuiz as error:
         try:
@@ -149,6 +151,11 @@ def handle_quiz_schedule(quiz_id: int):
                     bool(duration_unlimited)
                     if duration_unlimited is not None
                     else data["quiz"]["duration_unlimited"]
+                ),
+                max_attempts=(
+                    max_attempts
+                    if max_attempts is not None
+                    else data["quiz"]["max_attempts"]
                 ),
                 messages=[],
                 show_add_form=False,

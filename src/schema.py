@@ -43,6 +43,10 @@ CREATE TABLE quiz (
     duration_minutes INTEGER NOT NULL CHECK (duration_minutes > 0),
     duration_unlimited INTEGER NOT NULL DEFAULT 0
         CHECK (duration_unlimited IN (0, 1)),
+    max_attempts INTEGER NOT NULL DEFAULT 1 CHECK (max_attempts > 0),
+    last_published_end_at TEXT,
+    closed_by_deadline INTEGER NOT NULL DEFAULT 0
+        CHECK (closed_by_deadline IN (0, 1)),
     start_at TEXT,
     end_at TEXT,
     CHECK (start_at IS NULL OR end_at IS NULL OR end_at > start_at)
@@ -75,9 +79,6 @@ CREATE TABLE attempt (
     submitted_at TEXT,
     score REAL
 );
-
-CREATE UNIQUE INDEX one_submitted_attempt_per_student_quiz
-    ON attempt(student_id, quiz_id) WHERE submitted_at IS NOT NULL;
 
 CREATE TABLE answer (
     answer_id INTEGER PRIMARY KEY,

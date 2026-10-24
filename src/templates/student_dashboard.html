@@ -133,9 +133,18 @@
                 form.action = quiz.start_url;
                 var button = document.createElement("button");
                 button.type = "submit";
-                button.textContent = quiz.status === "in_progress" ? "Continue quiz" : "Take quiz";
+                button.textContent = quiz.status === "in_progress"
+                    ? "Continue quiz"
+                    : quiz.submitted_attempts > 0 ? "Retake quiz" : "Take quiz";
                 form.appendChild(button);
                 td.appendChild(form);
+                if (quiz.attempts_remaining < quiz.max_attempts) {
+                    var remaining = document.createElement("small");
+                    remaining.className = "muted";
+                    remaining.textContent = quiz.attempts_remaining + " attempt"
+                        + (quiz.attempts_remaining === 1 ? "" : "s") + " remaining";
+                    td.appendChild(remaining);
+                }
                 return td;
             }
 

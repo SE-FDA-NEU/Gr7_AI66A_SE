@@ -21,10 +21,12 @@ from src.services.question_service import (
     QuestionError,
     add_question,
     get_questions_page_data,
+    update_question,
 )
 
 from src.services.quiz_service import (
     InvalidQuiz,
+    QuizServiceError,
     create_new_quiz,
     get_quiz_publish_details,
 )
@@ -154,7 +156,7 @@ def add_quiz_question(quiz_id: int):
                 quiz_id,
             )
 
-        except QuestionError as page_error:
+        except (QuestionError, QuizServiceError) as page_error:
             return render_error(
                 page_error.status_code,
                 page_error.message,
@@ -175,4 +177,54 @@ def add_quiz_question(quiz_id: int):
         )
 
     flash("Question added successfully.", "success")
+    return redirect(url_for("lecturer.publish_page", quiz_id=quiz_id))
+
+
+@quiz_bp.post("/quiz/<int:quiz_id>/questions/<int:question_id>/edit")
+@role_required("lecturer")
+def edit_quiz_question(quiz_id: int, question_id: int):
+    db_path = current_app.config["DATABASE_PATH"]
+    choices = request.form.getlist("choices")
+    form = {
+        "content": request.form.get("content", ""),
+        "choices": (choices + [""] * CHOICE_COUNT)[:CHOICE_COUNT],
+        "correct_index": request.form.get("correct_index", ""),
+        "points": request.form.get("points", ""),
+    }
+
+    try:
+        update_question(
+            db_path,
+            session["user_id"],
+            quiz_id,
+            question_id,
+            form["content"],
+            choices,
+            form["correct_index"],
+            form["points"],
+        )
+    except QuestionError as error:
+        return render_error(error.status_code, error.message)
+    except InvalidQuestion as error:
+        try:
+            data = get_quiz_publish_details(db_path, session["user_id"], quiz_id)
+        except (QuestionError, QuizServiceError) as page_error:
+            return render_error(page_error.status_code, page_error.message)
+        return (
+            render_template(
+                "publish_quiz.html",
+                **data,
+                messages=[],
+                choice_labels=CHOICE_LABELS,
+                max_points=MAX_POINTS,
+                schedule_error=None,
+                editing_question_id=question_id,
+                edit_form=form,
+                edit_messages=error.messages,
+                show_add_form=False,
+            ),
+            422,
+        )
+
+    flash("Question updated successfully.", "success")
     return redirect(url_for("lecturer.publish_page", quiz_id=quiz_id))

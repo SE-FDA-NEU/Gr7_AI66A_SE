@@ -22,8 +22,8 @@ QUIZ_CLOSED = (
     "Contact your lecturer if you need access."
 )
 ALREADY_SUBMITTED = (
-    "You have already submitted this quiz, and each quiz allows only one submission. "
-    "Go back to the dashboard to see other quizzes."
+    "You have no attempts remaining for this quiz. "
+    "Go back to the dashboard to choose another quiz."
 )
 ATTEMPT_NOT_STARTED = (
     "You haven't started this quiz yet, so there is nothing to show. "

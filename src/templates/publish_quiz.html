@@ -17,7 +17,6 @@
 <main class="manage-quiz-page">
     <header class="manage-quiz-header">
         <a class="button button-secondary" href="{{ url_for('lecturer.lecturer_dashboard') }}">Back to Dashboard</a>
-        <h1>Manage Quiz</h1>
     </header>
 
     <section class="manage-quiz-overview" aria-labelledby="quiz-title">
@@ -27,6 +26,7 @@
             <p class="muted">
                 {{ question_count }} question{{ '' if question_count == 1 else 's' }}
                 · {{ 'Unlimited time' if quiz.duration_unlimited else quiz.duration_minutes ~ ' minutes' }}
+                · {{ quiz.max_attempts }} attempt{{ '' if quiz.max_attempts == 1 else 's' }} per student
             </p>
         </div>
         <span class="badge badge-{{ quiz.status }}">{{ quiz.status|capitalize }}</span>
@@ -97,7 +97,7 @@
         </div>
     </details>
 
-    <details class="manage-disclosure card">
+    <details class="manage-disclosure card"{% if editing_question_id %} open{% endif %}>
         <summary class="manage-disclosure-summary">
             <span>
                 <strong>Questions List</strong>
@@ -117,12 +117,75 @@
                         {% if question.choices %}
                             <ul class="manage-choice-list">
                                 {% for choice in question.choices %}
-                                        <li{% if choice.is_correct %} class="correct-answer"{% endif %}>
-                                            {{ choice.content }}{% if choice.is_correct %}<span class="correct-answer-label">Correct answer</span>{% endif %}
-                                        </li>
+                                    <li{% if choice.is_correct %} class="correct-answer"{% endif %}>
+                                        {{ choice.content }}{% if choice.is_correct %}<span class="correct-answer-label">Correct answer</span>{% endif %}
+                                    </li>
                                 {% endfor %}
                             </ul>
                         {% endif %}
+                        <details class="manage-edit-disclosure" {% if editing_question_id == question.question_id %}open{% endif %}>
+                            <summary class="table-action">Edit question &amp; answers</summary>
+                            <form
+                                class="manage-question-form"
+                                method="post"
+                                action="{{ url_for('quiz.edit_quiz_question', quiz_id=quiz.quiz_id, question_id=question.question_id) }}"
+                            >
+                                {% if editing_question_id == question.question_id and edit_messages %}
+                                    <div class="alert alert-error" role="alert">
+                                        <p>Please review the following:</p>
+                                        <ul>
+                                            {% for message in edit_messages %}
+                                                <li>{{ message }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% endif %}
+                                <label for="edit-question-content-{{ question.question_id }}">Question</label>
+                                <textarea id="edit-question-content-{{ question.question_id }}" name="content" rows="3" required>{% if editing_question_id == question.question_id and edit_form %}{{ edit_form.content }}{% else %}{{ question.content }}{% endif %}</textarea>
+                                <fieldset class="manage-choice-fieldset">
+                                    <legend>Answer choices</legend>
+                                    <div class="manage-choice-grid">
+                                        {% for index in range(4) %}
+                                            {% set existing_choice = question.choices[index] if index < question.choices|length else none %}
+                                            <div class="manage-choice-row">
+                                                <input
+                                                    type="radio"
+                                                    name="correct_index"
+                                                    value="{{ index }}"
+                                                    aria-label="Mark choice {{ choice_labels[index] }} as correct"
+                                                    {% if editing_question_id == question.question_id and edit_form %}
+                                                        {% if edit_form.correct_index|string == index|string %}checked{% endif %}
+                                                    {% elif existing_choice and existing_choice.is_correct %}checked{% endif %}
+                                                    required
+                                                >
+                                                <label for="edit-choice-{{ question.question_id }}-{{ index }}">Choice {{ choice_labels[index] }}</label>
+                                                <input
+                                                    id="edit-choice-{{ question.question_id }}-{{ index }}"
+                                                    name="choices"
+                                                    type="text"
+                                                    value="{% if editing_question_id == question.question_id and edit_form %}{{ edit_form.choices[index] }}{% elif existing_choice %}{{ existing_choice.content }}{% endif %}"
+                                                    required
+                                                >
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </fieldset>
+                                <label for="edit-question-points-{{ question.question_id }}">Points</label>
+                                <input
+                                    id="edit-question-points-{{ question.question_id }}"
+                                    name="points"
+                                    type="number"
+                                    min="1"
+                                    max="{{ max_points }}"
+                                    step="1"
+                                    value="{% if editing_question_id == question.question_id and edit_form %}{{ edit_form.points }}{% else %}{{ question.points }}{% endif %}"
+                                    required
+                                >
+                                <div class="form-actions">
+                                    <button type="submit" class="button button-secondary">Save changes</button>
+                                </div>
+                            </form>
+                        </details>
                     </article>
                 {% endfor %}
             {% else %}
@@ -166,6 +229,19 @@
                     </label>
                     <small class="muted">The student's time limit is also capped by the quiz deadline.</small>
                 </div>
+                <div class="manage-attempt-limit-field">
+                    <label for="max-attempts">Maximum attempts per student</label>
+                    <input
+                        id="max-attempts"
+                        type="number"
+                        name="max_attempts"
+                        min="1"
+                        step="1"
+                        value="{{ max_attempts|default(quiz.max_attempts) }}"
+                        required
+                    >
+                    <small class="muted">Must be a positive whole number.</small>
+                </div>
                 <div>
                     <label for="start-at">Start time</label>
                     <input id="start-at" type="datetime-local" name="start_at" value="{{ start_at_local }}">
@@ -197,12 +273,17 @@
                 </form>
             {% else %}
                 <form method="post" action="{{ url_for('lecturer.handle_publish_quiz', quiz_id=quiz.quiz_id) }}" data-confirm="Are you sure you want to publish this quiz?" data-confirm-title="Publish quiz" data-confirm-label="Publish quiz">
-                    <button type="submit" {% if not is_publishable %}disabled{% endif %}>
+                    <button type="submit" {% if not is_publishable %}disabled aria-describedby="publish-block-reason"{% endif %}>
                         {{ "Publish Quiz" if quiz.status == "draft" else "Publish Quiz Again" }}
                     </button>
                 </form>
             {% endif %}
         </div>
+        {% if quiz.status != "published" and not is_publishable %}
+            <p id="publish-block-reason" class="manage-publish-block-reason muted" role="status">
+                {{ validation_error }}
+            </p>
+        {% endif %}
     </section>
 </main>
 <script>

@@ -572,6 +572,29 @@ def test_submit_stores_submission_time_and_score(client, db_path):
     assert 'class="btn btn-secondary" href="/student/dashboard">Back to dashboard</a>' in page
 
 
+def test_student_can_take_up_to_the_quiz_attempt_limit(client, db_path):
+    with get_connection(db_path) as connection:
+        connection.execute(
+            "UPDATE quiz SET max_attempts = 2 WHERE quiz_id = ?",
+            (PUBLISHED_QUIZ,),
+        )
+
+    start_and_answer(client, db_path, {1: 0})
+    assert submit(client, db_path).status_code == 302
+
+    start_and_answer(client, db_path, {1: 0})
+    assert submit(client, db_path).status_code == 302
+
+    response = client.post(f"/student/quiz/{PUBLISHED_QUIZ}/start")
+    assert response.status_code == 409
+    assert shows_message(response, ALREADY_SUBMITTED)
+    assert count_rows(
+        db_path,
+        "SELECT COUNT(*) FROM attempt WHERE student_id = ? AND quiz_id = ? AND submitted_at IS NOT NULL",
+        (DUC_ID, PUBLISHED_QUIZ),
+    ) == 2
+
+
 def test_submitted_page_shows_vietnam_time(client, db_path, monkeypatch):
     monkeypatch.setattr(attempt_service, "_now", lambda: datetime(2026, 10, 18, 8, 0, 0))
     start_and_answer(client, db_path, {1: 0})

@@ -11,12 +11,14 @@ from src.time_utils import (
     utc_timestamp_to_local_input,
 )
 from src.repositories.quiz_repository import (
+    close_expired_published_quizzes,
     get_quiz_by_id,
     get_quiz_questions_with_choices,
     list_published_quizzes,
     list_quizzes_by_lecturer,
     update_quiz_schedule as save_quiz_schedule,
-    update_quiz_status,
+    update_quiz_publication,
+    update_quiz_closed_by_lecturer,
 )
 
 
@@ -54,7 +56,7 @@ def _format_schedule(start_at: str | None, end_at: str | None) -> str:
     start_display = format_vietnam_time(start_at) if start_at else "Available immediately"
     end_display = format_vietnam_time(end_at) if end_at else "No deadline"
     return f"{start_display} – {end_display}"
-from src.repositories.attempt_repository import get_open_attempt, get_submitted_attempt
+from src.repositories.attempt_repository import count_submitted_attempts, get_open_attempt
 from src.repositories.quiz_repository import (
     create_quiz,
     list_published_quizzes,
@@ -74,6 +76,10 @@ def get_student_dashboard_data(db_path: str | Path):
     conn = get_connection(db_path)
 
     try:
+        close_expired_published_quizzes(
+            conn, utc_now_naive().strftime("%Y-%m-%dT%H:%M:%S")
+        )
+        conn.commit()
         quizzes = list_published_quizzes(conn)
         return quizzes
     finally:
@@ -84,6 +90,10 @@ def get_lecturer_dashboard_data(db_path: str | Path, lecturer_id: int):
     """Lấy danh sách quiz thuộc về giảng viên đang đăng nhập."""
     conn = get_connection(db_path)
     try:
+        close_expired_published_quizzes(
+            conn, utc_now_naive().strftime("%Y-%m-%dT%H:%M:%S")
+        )
+        conn.commit()
         quizzes = list_quizzes_by_lecturer(conn, lecturer_id)
         return quizzes
     finally:
@@ -97,6 +107,10 @@ def get_quiz_publish_details(db_path: str | Path, lecturer_id: int, quiz_id: int
     """
     conn = get_connection(db_path)
     try:
+        close_expired_published_quizzes(
+            conn, utc_now_naive().strftime("%Y-%m-%dT%H:%M:%S")
+        )
+        conn.commit()
         quiz = get_quiz_by_id(conn, quiz_id)
         if not quiz:
             raise QuizServiceError(404, errors.QUIZ_NOT_FOUND)
@@ -125,6 +139,19 @@ def get_quiz_publish_details(db_path: str | Path, lecturer_id: int, quiz_id: int
                     validation_error = errors.quiz_question_missing_correct_choice(q["position"])
                     break
 
+        if quiz["closed_by_deadline"]:
+            if quiz["end_at"] == quiz["last_published_end_at"]:
+                is_publishable = False
+                validation_error = (
+                    "Change the quiz deadline before publishing it again."
+                )
+            elif quiz["end_at"] and parse_utc_timestamp(quiz["end_at"]) <= utc_now_naive():
+                is_publishable = False
+                validation_error = "The quiz deadline must be in the future to publish."
+        elif quiz["end_at"] and parse_utc_timestamp(quiz["end_at"]) <= utc_now_naive():
+            is_publishable = False
+            validation_error = "The quiz deadline must be in the future to publish."
+
         return {
             "quiz": quiz,
             "questions": questions,
@@ -148,6 +175,10 @@ def publish_quiz(db_path: str | Path, lecturer_id: int, quiz_id: int) -> dict:
     """
     conn = get_connection(db_path)
     try:
+        close_expired_published_quizzes(
+            conn, utc_now_naive().strftime("%Y-%m-%dT%H:%M:%S")
+        )
+        conn.commit()
         conn.execute("BEGIN IMMEDIATE")
         quiz = get_quiz_by_id(conn, quiz_id)
         if not quiz:
@@ -162,6 +193,19 @@ def publish_quiz(db_path: str | Path, lecturer_id: int, quiz_id: int) -> dict:
         if quiz["status"] == "published":
             conn.rollback()
             raise QuizServiceError(409, errors.QUIZ_ALREADY_PUBLISHED)
+
+        if quiz["closed_by_deadline"] and quiz["end_at"] == quiz["last_published_end_at"]:
+            conn.rollback()
+            raise QuizServiceError(
+                422,
+                "Change the quiz deadline before publishing it again.",
+            )
+        if quiz["end_at"] and parse_utc_timestamp(quiz["end_at"]) <= utc_now_naive():
+            conn.rollback()
+            raise QuizServiceError(
+                422,
+                "The quiz deadline must be in the future to publish.",
+            )
 
         # BR3: Kiểm tra quiz có ít nhất 1 câu hỏi
         questions = get_quiz_questions_with_choices(conn, quiz_id)
@@ -178,7 +222,7 @@ def publish_quiz(db_path: str | Path, lecturer_id: int, quiz_id: int) -> dict:
                 conn.rollback()
                 raise QuizServiceError(422, errors.quiz_question_missing_correct_choice(q["position"]))
 
-        update_quiz_status(conn, quiz_id, "published")
+        update_quiz_publication(conn, quiz_id, quiz["end_at"])
         conn.commit()
 
         updated_quiz = get_quiz_by_id(conn, quiz_id)
@@ -200,6 +244,10 @@ def close_quiz(db_path: str | Path, lecturer_id: int, quiz_id: int) -> dict:
     """
     conn = get_connection(db_path)
     try:
+        close_expired_published_quizzes(
+            conn, utc_now_naive().strftime("%Y-%m-%dT%H:%M:%S")
+        )
+        conn.commit()
         conn.execute("BEGIN IMMEDIATE")
         quiz = get_quiz_by_id(conn, quiz_id)
         if not quiz:
@@ -220,7 +268,7 @@ def close_quiz(db_path: str | Path, lecturer_id: int, quiz_id: int) -> dict:
             conn.rollback()
             raise QuizServiceError(409, errors.QUIZ_ALREADY_CLOSED)
 
-        update_quiz_status(conn, quiz_id, "closed")
+        update_quiz_closed_by_lecturer(conn, quiz_id)
         conn.commit()
 
         updated_quiz = get_quiz_by_id(conn, quiz_id)
@@ -240,11 +288,18 @@ def get_student_quiz_statuses(db_path: str | Path, student_id: int):
     conn = get_connection(db_path)
 
     try:
+        now = utc_now_naive()
+        close_expired_published_quizzes(
+            conn, now.strftime("%Y-%m-%dT%H:%M:%S")
+        )
+        conn.commit()
         quizzes = list_published_quizzes_with_question_count(conn)
 
-        now = utc_now_naive()
         for quiz in quizzes:
             quiz_id = quiz["quiz_id"]
+            submitted_count = count_submitted_attempts(conn, student_id, quiz_id)
+            quiz["submitted_attempts"] = submitted_count
+            quiz["attempts_remaining"] = max(0, quiz["max_attempts"] - submitted_count)
             quiz["schedule_display"] = _format_schedule(
                 quiz["start_at"], quiz["end_at"]
             )
@@ -252,9 +307,7 @@ def get_student_quiz_statuses(db_path: str | Path, student_id: int):
                 format_vietnam_time(quiz["start_at"]) if quiz["start_at"] else ""
             )
 
-            if get_submitted_attempt(
-                conn, student_id, quiz_id
-            ) is not None:
+            if quiz["attempts_remaining"] == 0:
                 quiz["status"] = "submitted"
 
             elif get_open_attempt(
@@ -346,6 +399,7 @@ def update_quiz_schedule(
     end_local: str,
     duration: str | None = None,
     duration_unlimited: bool | None = None,
+    max_attempts: str | None = None,
 ) -> dict:
     """Update quiz scheduling settings after confirming the lecturer owns it."""
     conn = get_connection(db_path)
@@ -357,18 +411,42 @@ def update_quiz_schedule(
             raise QuizServiceError(403, errors.NOT_QUIZ_OWNER)
 
         start_utc, end_utc = _parse_schedule(start_local, end_local)
-        if duration is None and duration_unlimited is None:
+        if (
+            duration is None
+            and duration_unlimited is None
+            and max_attempts is None
+        ):
             save_quiz_schedule(conn, quiz_id, start_utc, end_utc)
         else:
-            if duration_unlimited:
+            unlimited = (
+                bool(duration_unlimited)
+                if duration_unlimited is not None
+                else quiz["duration_unlimited"]
+            )
+            if unlimited:
                 duration_minutes = 1
+            elif duration is None:
+                duration_minutes = quiz["duration_minutes"]
             else:
                 try:
-                    duration_minutes = int(duration or "")
+                    if not duration.isascii() or not duration.isdecimal():
+                        raise ValueError
+                    duration_minutes = int(duration)
                 except (ValueError, TypeError):
                     raise InvalidQuiz("Duration must be a positive number.")
                 if duration_minutes <= 0:
                     raise InvalidQuiz("Duration must be a positive number.")
+
+            attempts_limit = quiz["max_attempts"]
+            if max_attempts is not None:
+                try:
+                    if not max_attempts.isascii() or not max_attempts.isdecimal():
+                        raise ValueError
+                    attempts_limit = int(max_attempts)
+                except (ValueError, TypeError):
+                    raise InvalidQuiz("Maximum attempts must be a positive whole number.")
+                if attempts_limit <= 0:
+                    raise InvalidQuiz("Maximum attempts must be a positive whole number.")
 
             save_quiz_schedule(
                 conn,
@@ -376,7 +454,8 @@ def update_quiz_schedule(
                 start_utc,
                 end_utc,
                 duration_minutes,
-                bool(duration_unlimited),
+                unlimited,
+                attempts_limit,
             )
         return get_quiz_by_id(conn, quiz_id)
     finally:

@@ -12,6 +12,7 @@ def get_quiz(connection: sqlite3.Connection, quiz_id: int) -> sqlite3.Row | None
             status,
             duration_minutes,
             duration_unlimited,
+            max_attempts,
             start_at,
             end_at
         FROM quiz
@@ -59,9 +60,25 @@ def get_submitted_attempt(
         SELECT attempt_id, student_id, quiz_id, started_at, submitted_at, score
         FROM attempt
         WHERE student_id = ? AND quiz_id = ? AND submitted_at IS NOT NULL
+        ORDER BY attempt_id DESC
+        LIMIT 1
         """,
         (student_id, quiz_id),
     ).fetchone()
+
+
+def count_submitted_attempts(
+    connection: sqlite3.Connection,
+    student_id: int,
+    quiz_id: int,
+) -> int:
+    return connection.execute(
+        """
+        SELECT COUNT(*) FROM attempt
+        WHERE student_id = ? AND quiz_id = ? AND submitted_at IS NOT NULL
+        """,
+        (student_id, quiz_id),
+    ).fetchone()[0]
 
 
 def list_quiz_attempts(connection: sqlite3.Connection, quiz_id: int) -> list[dict]:

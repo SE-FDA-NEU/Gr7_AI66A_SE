@@ -19,8 +19,42 @@
     --ease-spring: cubic-bezier(0.25, 1, 0.5, 1);
 }
 
+.manage-edit-disclosure {
+    margin-top: 16px;
+}
+
+.manage-edit-disclosure > summary {
+    width: fit-content;
+    min-height: 36px;
+    padding: 7px 12px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.manage-edit-disclosure > summary::-webkit-details-marker {
+    display: none;
+}
+
+.manage-edit-disclosure[open] > summary {
+    margin-bottom: 16px;
+}
+
+.manage-edit-disclosure form {
+    margin: 0;
+}
+
 * {
     box-sizing: border-box;
+}
+
+.manage-attempt-limit-field {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+}
+
+.manage-publish-block-reason {
+    margin: 12px 0 0;
 }
 
 html {
@@ -208,7 +242,7 @@ header {
 
 .header {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     padding: 16px 32px;
 }
@@ -820,6 +854,38 @@ fieldset.answer-options {
     margin-top: 24px;
 }
 
+.quiz-submitted-page {
+    max-width: 760px;
+    padding: 32px 24px;
+    text-align: center;
+}
+
+.quiz-submitted-page h1 {
+    margin-bottom: 20px;
+}
+
+.quiz-submitted-page > p {
+    margin: 16px 0;
+}
+
+.quiz-submitted-page .quiz-dashboard-link {
+    display: flex;
+    justify-content: center;
+    margin-top: 28px;
+    transform: translateX(12px);
+}
+
+.quiz-submitted-page .quiz-dashboard-link .btn {
+    border-color: transparent;
+    background: var(--accent);
+    color: #fff;
+}
+
+.quiz-submitted-page .quiz-dashboard-link .btn:hover {
+    background: var(--accent-hover);
+    color: #fff;
+}
+
 .quiz-dashboard-link .btn,
 form .btn-secondary {
     display: inline-flex;
@@ -882,9 +948,15 @@ form .btn-secondary {
     backdrop-filter: none;
 }
 
-.manage-quiz-header h1 {
+.manage-quiz-overview > div {
+    display: grid;
+    gap: 10px;
+}
+
+.manage-quiz-overview .eyebrow,
+.manage-quiz-overview h2,
+.manage-quiz-overview .muted {
     margin: 0;
-    font-size: 28px;
 }
 
 .manage-quiz-page .button-secondary,

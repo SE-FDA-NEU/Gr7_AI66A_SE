@@ -130,3 +130,36 @@ def add_question(
                 repo.insert_choice(connection, question_id, text, index == correct)
 
             return question_id
+
+
+def update_question(
+    db_path: str | Path,
+    lecturer_id: int,
+    quiz_id: int,
+    question_id: int,
+    content: str,
+    choices: list[str],
+    correct_index: str,
+    points: str,
+) -> None:
+    with closing(get_connection(db_path)) as connection:
+        with connection:
+            connection.execute("BEGIN IMMEDIATE")
+            _get_owned_quiz(connection, lecturer_id, quiz_id)
+            if repo.get_question(connection, quiz_id, question_id) is None:
+                raise QuestionError(404, errors.QUESTION_NOT_FOUND)
+
+            content, choices, correct, points = _validate(
+                content,
+                choices,
+                correct_index,
+                points,
+            )
+            repo.update_question(
+                connection,
+                question_id,
+                content,
+                points,
+                choices,
+                correct,
+            )

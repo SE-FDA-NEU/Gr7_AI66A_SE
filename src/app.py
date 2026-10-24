@@ -13,7 +13,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 load_dotenv(PROJECT_ROOT / ".env")
 
 from src.errors import render_error
-from src.db import ensure_quiz_duration_unlimited_column, get_connection
+from src.db import ensure_quiz_schema_columns, get_connection
 from src.routes.api_routes import api_bp
 from src.routes.auth_routes import auth_bp
 from src.routes.lecturer_routes import lecturer_bp
@@ -38,7 +38,7 @@ def create_app(test_config=None):
     if database_path.exists():
         connection = get_connection(database_path)
         try:
-            ensure_quiz_duration_unlimited_column(connection)
+            ensure_quiz_schema_columns(connection)
         finally:
             connection.close()
 

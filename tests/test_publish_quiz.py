@@ -3,6 +3,7 @@
 from src.app import create_app
 from src.db import get_connection
 from src.init_db import init_db
+import src.services.quiz_service as quiz_service
 
 
 def _login_as(client, email, password="MiniLMS2026!"):
@@ -14,6 +15,9 @@ def _login_as(client, email, password="MiniLMS2026!"):
 def test_lecturer_can_view_publish_page(tmp_path):
     db_path = tmp_path / "minilms.db"
     init_db(db_path)
+    with get_connection(db_path) as connection:
+        connection.execute("UPDATE quiz SET end_at = NULL WHERE quiz_id = 1")
+        connection.commit()
     app = create_app({"TESTING": True, "DATABASE_PATH": db_path})
     client = app.test_client()
 
@@ -35,6 +39,9 @@ def test_lecturer_can_view_publish_page(tmp_path):
 def test_lecturer_can_save_quiz_schedule_in_hanoi_time(tmp_path):
     db_path = tmp_path / "minilms.db"
     init_db(db_path)
+    with get_connection(db_path) as connection:
+        connection.execute("UPDATE quiz SET end_at = NULL WHERE quiz_id = 1")
+        connection.commit()
     app = create_app({"TESTING": True, "DATABASE_PATH": db_path})
     client = app.test_client()
     _login_as(client, "ngan.lecturer@example.edu", "MiniLMS2026!")
@@ -115,6 +122,87 @@ def test_lecturer_can_update_quiz_time_limit_from_schedule(tmp_path):
             "SELECT duration_unlimited FROM quiz WHERE quiz_id = 13"
         ).fetchone()[0]
     assert duration == 1
+
+
+def test_deadline_expiry_closes_quiz_and_republish_requires_new_deadline(
+    tmp_path, monkeypatch
+):
+    db_path = tmp_path / "minilms.db"
+    init_db(db_path)
+    now = quiz_service.parse_utc_timestamp("2026-10-24T06:00:00")
+    monkeypatch.setattr(quiz_service, "utc_now_naive", lambda: now)
+    with get_connection(db_path) as connection:
+        connection.execute(
+            """
+            UPDATE quiz
+            SET start_at = NULL, end_at = '2026-10-20T05:00:00'
+            WHERE quiz_id = 1
+            """
+        )
+        connection.commit()
+
+    app = create_app({"TESTING": True, "DATABASE_PATH": db_path})
+    client = app.test_client()
+    _login_as(client, "ngan.lecturer@example.edu", "MiniLMS2026!")
+
+    manage = client.get("/lecturer/quiz/1/publish")
+    html = manage.get_data(as_text=True)
+    assert manage.status_code == 200
+    assert "Close Quiz" not in html
+    assert "Publish Quiz Again" in html
+    assert "disabled aria-describedby=\"publish-block-reason\"" in html
+    with get_connection(db_path) as connection:
+        quiz = connection.execute(
+            "SELECT status, closed_by_deadline FROM quiz WHERE quiz_id = 1"
+        ).fetchone()
+    assert tuple(quiz) == ("closed", 1)
+
+    rejected = client.post("/lecturer/quiz/1/publish")
+    assert rejected.status_code == 422
+    assert "Change the quiz deadline before publishing it again." in rejected.get_data(as_text=True)
+
+    schedule = client.post(
+        "/lecturer/quiz/1/schedule",
+        data={
+            "start_at": "",
+            "end_at": "2026-10-30T12:00",
+            "duration": "20",
+            "max_attempts": "1",
+        },
+        follow_redirects=True,
+    )
+    assert schedule.status_code == 200
+    assert "disabled aria-describedby=\"publish-block-reason\"" not in schedule.get_data(as_text=True)
+
+    republished = client.post("/lecturer/quiz/1/publish", follow_redirects=True)
+    assert republished.status_code == 200
+    with get_connection(db_path) as connection:
+        quiz = connection.execute(
+            "SELECT status, closed_by_deadline, last_published_end_at "
+            "FROM quiz WHERE quiz_id = 1"
+        ).fetchone()
+    assert tuple(quiz) == ("published", 0, "2026-10-30T05:00:00")
+
+
+def test_max_attempts_must_be_a_positive_integer(tmp_path):
+    db_path = tmp_path / "minilms.db"
+    init_db(db_path)
+    app = create_app({"TESTING": True, "DATABASE_PATH": db_path})
+    client = app.test_client()
+    _login_as(client, "ngan.lecturer@example.edu", "MiniLMS2026!")
+
+    response = client.post(
+        "/lecturer/quiz/13/schedule",
+        data={"start_at": "", "end_at": "", "max_attempts": "0"},
+    )
+
+    assert response.status_code == 422
+    assert "Maximum attempts must be a positive whole number." in response.get_data(as_text=True)
+    with get_connection(db_path) as connection:
+        value = connection.execute(
+            "SELECT max_attempts FROM quiz WHERE quiz_id = 13"
+        ).fetchone()[0]
+    assert value == 1
 
 
 def test_invalid_schedule_is_rejected_and_other_lecturers_cannot_change_it(tmp_path):
@@ -250,6 +338,11 @@ def test_publish_quiz_rejected_when_missing_correct_choice_br3(tmp_path):
 def test_publish_already_published_quiz_returns_409(tmp_path):
     db_path = tmp_path / "minilms.db"
     init_db(db_path)
+    with get_connection(db_path) as connection:
+        connection.execute(
+            "UPDATE quiz SET start_at = NULL, end_at = NULL WHERE quiz_id = 1"
+        )
+        connection.commit()
     app = create_app({"TESTING": True, "DATABASE_PATH": db_path})
     client = app.test_client()
 
@@ -263,6 +356,11 @@ def test_publish_already_published_quiz_returns_409(tmp_path):
 def test_close_quiz_updates_status_and_blocks_new_student_attempts(tmp_path):
     db_path = tmp_path / "minilms.db"
     init_db(db_path)
+    with get_connection(db_path) as connection:
+        connection.execute(
+            "UPDATE quiz SET start_at = NULL, end_at = NULL WHERE quiz_id = 1"
+        )
+        connection.commit()
     app = create_app({"TESTING": True, "DATABASE_PATH": db_path})
     client = app.test_client()
 
@@ -398,6 +496,9 @@ def test_closed_quiz_behavior_preserves_submitted_attempts_and_blocks_new_ones(t
     # Student 3 (Duc) has submitted an attempt on Quiz 1
     with get_connection(db_path) as conn:
         cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE quiz SET start_at = NULL, end_at = NULL WHERE quiz_id = 1"
+        )
         cursor.execute(
             """
             INSERT INTO attempt (student_id, quiz_id, started_at, submitted_at, score)

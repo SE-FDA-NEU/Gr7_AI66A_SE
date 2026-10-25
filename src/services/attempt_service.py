@@ -58,6 +58,18 @@ def format_vietnam_time(utc_text: str) -> str:
     return utc_time.astimezone(VIETNAM_TIME).strftime("%d %b %Y, %H:%M (UTC+7)")
 
 
+def result_summary(correct: int, total: int) -> dict:
+    """US09: 'correct/total' and the percent rounded half-up, e.g. 1/8 -> 13 (not round()'s 12)."""
+    # Integer form of floor(correct * 100 / total + 0.5), so no float error creeps in.
+    percent = (200 * correct + total) // (2 * total) if total else 0
+    return {
+        "correct": correct,
+        "total": total,
+        "fraction": f"{correct}/{total}",
+        "percent": percent,
+    }
+
+
 def _check_quiz_can_start(quiz) -> None:
     """BR4: only published quizzes can be started."""
     if quiz is None:
@@ -283,16 +295,20 @@ def submit_attempt(
 
 
 def get_submitted_data(db_path: str | Path, student_id: int, quiz_id: int) -> dict:
-    """The student's submitted attempt for the confirmation page."""
+    """The student's submitted attempt and its result for the confirmation page (US08, US09)."""
     connection = get_connection(db_path)
     try:
         quiz = repo.get_quiz(connection, quiz_id)
         attempt = repo.get_submitted_attempt(connection, student_id, quiz_id)
         if quiz is None or attempt is None:
             raise AttemptError(404, errors.ATTEMPT_NOT_SUBMITTED)
+        # Recount from the stored answers, which cannot change after submission (BR6).
+        total = len(repo.list_questions_with_choices(connection, quiz_id))
+        correct = repo.count_correct_answers(connection, attempt["attempt_id"])
         return {
             "quiz": dict(quiz),
             "submitted_at_display": format_vietnam_time(attempt["submitted_at"]),
+            "result": result_summary(correct, total),
         }
     finally:
         connection.close()

@@ -10,6 +10,8 @@ def list_published_quizzes(conn):
             q.title, 
             u.name AS lecturer_name, 
             q.duration_minutes, 
+            q.duration_unlimited,
+            q.max_attempts,
             q.end_at 
         FROM quiz q 
         JOIN user u ON u.user_id = q.lecturer_id 
@@ -26,7 +28,9 @@ def list_published_quizzes(conn):
             "title": row[1],
             "lecturer_name": row[2],
             "duration_minutes": row[3],
-            "end_at": row[4]
+            "duration_unlimited": bool(row[4]),
+            "max_attempts": row[5],
+            "end_at": row[6]
         })
     return quizzes
 
@@ -41,6 +45,10 @@ def get_quiz_by_id(conn, quiz_id: int) -> dict | None:
             q.title, 
             q.status, 
             q.duration_minutes, 
+            q.duration_unlimited,
+            q.max_attempts,
+            q.last_published_end_at,
+            q.closed_by_deadline,
             q.start_at, 
             q.end_at,
             u.name AS lecturer_name
@@ -58,6 +66,10 @@ def get_quiz_by_id(conn, quiz_id: int) -> dict | None:
         "title": row["title"],
         "status": row["status"],
         "duration_minutes": row["duration_minutes"],
+        "duration_unlimited": bool(row["duration_unlimited"]),
+        "max_attempts": row["max_attempts"],
+        "last_published_end_at": row["last_published_end_at"],
+        "closed_by_deadline": bool(row["closed_by_deadline"]),
         "start_at": row["start_at"],
         "end_at": row["end_at"],
         "lecturer_name": row["lecturer_name"],
@@ -137,6 +149,8 @@ def list_quizzes_by_lecturer(conn, lecturer_id: int) -> list[dict]:
             q.title, 
             q.status, 
             q.duration_minutes, 
+            q.duration_unlimited,
+            q.max_attempts,
             q.end_at,
             (SELECT COUNT(*) FROM attempt a WHERE a.quiz_id = q.quiz_id) AS attempt_count
         FROM quiz q
@@ -153,6 +167,8 @@ def list_quizzes_by_lecturer(conn, lecturer_id: int) -> list[dict]:
             "title": row["title"],
             "status": row["status"],
             "duration_minutes": row["duration_minutes"],
+            "duration_unlimited": bool(row["duration_unlimited"]),
+            "max_attempts": row["max_attempts"],
             "end_at": row["end_at"],
             "attempt_count": row["attempt_count"],
         })
@@ -167,6 +183,9 @@ def list_published_quizzes_with_question_count(conn):
             q.quiz_id,
             q.title,
             q.duration_minutes,
+            q.duration_unlimited,
+            q.max_attempts,
+            q.start_at,
             q.end_at,
             COUNT(qu.question_id) AS question_count
         FROM quiz q
@@ -180,8 +199,11 @@ def list_published_quizzes_with_question_count(conn):
             "quiz_id": row[0],
             "title": row[1],
             "duration_minutes": row[2],
-            "end_at": row[3],
-            "question_count": row[4],
+            "duration_unlimited": bool(row[3]),
+            "max_attempts": row[4],
+            "start_at": row[5],
+            "end_at": row[6],
+            "question_count": row[7],
         }
         for row in conn.execute(query)
     ]
@@ -193,6 +215,9 @@ def create_quiz(
     title,
     duration_minutes,
     description="",
+    start_at=None,
+    end_at=None,
+    duration_unlimited=False,
 ):
     """Create a new draft quiz with an optional description."""
 
@@ -203,17 +228,94 @@ def create_quiz(
             title,
             description,
             status,
-            duration_minutes
+            duration_minutes,
+            duration_unlimited,
+            start_at,
+            end_at
         )
-        VALUES (?, ?, ?, 'draft', ?)
+        VALUES (?, ?, ?, 'draft', ?, ?, ?, ?)
         """,
         (
             lecturer_id,
             title,
             description,
             duration_minutes,
+            int(duration_unlimited),
+            start_at,
+            end_at,
         ),
     )
 
     conn.commit()
     return cursor.lastrowid
+
+
+def update_quiz_schedule(
+    conn,
+    quiz_id: int,
+    start_at: str | None,
+    end_at: str | None,
+    duration_minutes: int | None = None,
+    duration_unlimited: bool | None = None,
+    max_attempts: int | None = None,
+) -> None:
+    """Save the quiz's UTC schedule and, when provided, its time limit."""
+    if (
+        duration_minutes is None
+        or duration_unlimited is None
+        or max_attempts is None
+    ):
+        conn.execute(
+            "UPDATE quiz SET start_at = ?, end_at = ? WHERE quiz_id = ?",
+            (start_at, end_at, quiz_id),
+        )
+    else:
+        conn.execute(
+            """
+            UPDATE quiz
+            SET start_at = ?, end_at = ?, duration_minutes = ?, duration_unlimited = ?,
+                max_attempts = ?
+            WHERE quiz_id = ?
+            """,
+            (
+                start_at,
+                end_at,
+                duration_minutes,
+                int(duration_unlimited),
+                max_attempts,
+                quiz_id,
+            ),
+        )
+    conn.commit()
+
+
+def close_expired_published_quizzes(conn, now: str) -> int:
+    """Mark quizzes closed when their published deadline has passed."""
+    cursor = conn.execute(
+        """
+        UPDATE quiz
+        SET status = 'closed', closed_by_deadline = 1,
+            last_published_end_at = end_at
+        WHERE status = 'published' AND end_at IS NOT NULL AND end_at <= ?
+        """,
+        (now,),
+    )
+    return cursor.rowcount
+
+
+def update_quiz_publication(conn, quiz_id: int, end_at: str | None) -> None:
+    conn.execute(
+        """
+        UPDATE quiz
+        SET status = 'published', last_published_end_at = ?, closed_by_deadline = 0
+        WHERE quiz_id = ?
+        """,
+        (end_at, quiz_id),
+    )
+
+
+def update_quiz_closed_by_lecturer(conn, quiz_id: int) -> None:
+    conn.execute(
+        "UPDATE quiz SET status = 'closed', closed_by_deadline = 0 WHERE quiz_id = ?",
+        (quiz_id,),
+    )

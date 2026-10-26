@@ -17,6 +17,14 @@ Every screen traces back to a feature and forward to the issue that built it.
 | `/student/quiz/:id/grade` | Automatic quiz grading & score result | U | P1 | F7 | [#32](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/32) | [#44](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/44) | In progress |
 | `/student/quiz/:id/review` | Student views quiz result | U | P1 | F11 | [#33](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/33) | [#50](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/50) | In progress |
 
+**US09 note:** the score for `/student/quiz/:id/grade` is shown on `/student/quiz/:id/submitted` (`Score: n/N (p%)`) instead of a separate route; see `docs/testing.md`, section US09.
+
+## Story tests
+
+| Story | Route | Implemented in | Test issue | Tested by | Status |
+| --- | --- | --- | --- | --- | --- |
+| US09 - Student sees an automatically calculated result | `/student/quiz/:id/submitted` | `attempt_service.result_summary()`, `get_submitted_data()`, `quiz_submitted.html` | [#112](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/112) | `tests/test_us09.py` (US09-01..14 in `docs/testing.md`) | AC1, AC4 done · AC2, AC3 blocked (need `quiz.show_answers` and lecturer UI) |
+
 **Access codes:** G = guest (not logged in) · U = authenticated user · A = administrator (not currently used by any screen - `requirements.md` has no admin persona or business rule).
 
 # Business Rules
@@ -27,7 +35,7 @@ Every screen traces back to a feature and forward to the issue that built it.
 | BR2 | Only the quiz owner may edit a quiz | Lecturer Ngan owns quiz Q01. At 09:00 Ngan may edit Q01; lecturer Nam requests the same edit at 09:01 and receives `403 Forbidden`, while Q01 remains unchanged. | Backend API / Quiz Controller | `tests/test_quiz_ownership.py` |
 | BR3 | A quiz cannot be published unless it contains at least 1 question, every question has at least 2 choices, and exactly 1 choice is marked correct | Q02 has 2 questions; question 1 has 4 choices and 1 correct choice, question 2 has 3 choices and 0 correct choices. Publishing Q02 is rejected because the second question has 0 instead of exactly 1 correct choice. | Quiz Publish Service | `tests/test_quiz_publish_validation.py` |
 | BR4 | A quiz attempt cannot continue after the configured duration or the quiz closing time, whichever comes first | A quiz opens at 09:00, closes at 10:00, and has a 20-minute duration. An attempt started at 09:45 ends at 10:00 after 15 minutes, not at 10:05. | Attempt Service / Quiz Timer | `tests/test_quiz_time_limit.py` |
-| BR5 | Each student has at most one submitted attempt per quiz | Duc submits Q03 at 14:20. At 14:25 he tries to start Q03 again; the system rejects the request with `You have already submitted this quiz` and keeps the submitted attempt count at 1. | Attempt Service / Submission API | `tests/test_duplicate_submission.py` |
+| BR5 | Each student may submit up to the quiz's configured attempt limit | Lecturer sets Q03's limit to 2; Duc may submit twice, and a third attempt is rejected. | Attempt Service / Submission API | `tests/test_attempt.py::test_student_can_take_up_to_the_quiz_attempt_limit` |
 | BR6 | Submitted attempts and scores are append-only: the original answers, score, and event history cannot be updated or deleted through normal application actions | A submitted 10-question attempt has score `8/10` at 15:00. At 15:05 a user tries to change it to `10/10`; the request is rejected and the audit history still contains the original `8/10` score. | Database / Attempt Service | `tests/test_attempt_audit.py` |
 
 *This table was previously out of sync with `docs/requirements.md` (different rule text under the same BR1-BR6 IDs, plus duplicated rows). It now mirrors `requirements.md` section 5 exactly; the "Enforced where" / "Tested by" columns are this file's own addition and don't need to match anything in `requirements.md`.*

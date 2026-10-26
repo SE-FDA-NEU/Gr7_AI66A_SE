@@ -1,263 +1,301 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Publish Quiz - {{ quiz.title }} - Mini LMS</title>
-    <style>
-        :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --success: #16a34a;
-            --danger: #dc2626;
-            --warning: #d97706;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --border: #e2e8f0;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text-main);
-            margin: 0;
-            padding: 24px;
-        }
-        .container {
-            max-width: 860px;
-            margin: 0 auto;
-        }
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--border);
-        }
-        .badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 9999px;
-            font-size: 13px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        .badge-draft { background-color: #fef3c7; color: #b45309; }
-        .badge-published { background-color: #dcfce7; color: #15803d; }
-        .badge-closed { background-color: #fee2e2; color: #b91c1c; }
-        .badge-correct { background-color: #dcfce7; color: #15803d; font-size: 11px; margin-left: 8px; }
-        .badge-missing { background-color: #fee2e2; color: #b91c1c; font-size: 11px; margin-left: 8px; }
-
-        .card {
-            background-color: var(--card-bg);
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        .alert {
-            padding: 14px 16px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-        .alert-error { background-color: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
-        .alert-success { background-color: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
-        .alert-warning { background-color: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
-        .alert-info { background-color: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
-
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 16px;
-            margin-top: 12px;
-        }
-        .summary-item {
-            background: #f1f5f9;
-            padding: 12px;
-            border-radius: 6px;
-        }
-        .summary-item .label { font-size: 12px; color: var(--text-muted); }
-        .summary-item .value { font-size: 16px; font-weight: 600; margin-top: 4px; }
-
-        .question-card {
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 16px;
-            margin-bottom: 12px;
-            background: #ffffff;
-        }
-        .question-header {
-            display: flex;
-            justify-content: space-between;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        .choice-list {
-            list-style: none;
-            padding-left: 0;
-            margin: 8px 0 0 0;
-        }
-        .choice-item {
-            padding: 8px 12px;
-            border-radius: 4px;
-            margin-bottom: 6px;
-            background: #f8fafc;
-            border: 1px solid #edf2f7;
-            display: flex;
-            align-items: center;
-        }
-        .choice-item.correct {
-            background: #f0fdf4;
-            border-color: #86efac;
-            font-weight: 500;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 10px 18px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            border: none;
-            font-size: 14px;
-        }
-        .btn-primary { background-color: var(--primary); color: white; }
-        .btn-primary:hover { background-color: var(--primary-hover); }
-        .btn-danger { background-color: var(--danger); color: white; }
-        .btn-danger:hover { background-color: #b91c1c; }
-        .btn-secondary { background-color: #e2e8f0; color: #334155; }
-        .btn-secondary:hover { background-color: #cbd5e1; }
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .actions-bar {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            margin-top: 24px;
-        }
-    </style>
+    <title>Manage Quiz - {{ quiz.title }} - Mini LMS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/hig.css') }}">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div>
-                <a href="{{ url_for('lecturer.lecturer_dashboard') }}" style="color: var(--primary); text-decoration: none; font-size: 14px;">&larr; Back to Dashboard</a>
-                <h1 style="margin: 6px 0 0 0; font-size: 24px;">Publish Quiz</h1>
-            </div>
-            <div>
-                <form method="post" action="{{ url_for('auth.logout') }}" style="margin: 0;">
-                    <button type="submit" class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px;">Sign out</button>
-                </form>
-            </div>
-        </header>
+{% set form = form|default({'content': '', 'choices': ['', '', '', ''], 'correct_index': '', 'points': '1'}) %}
+{% set messages = messages|default([]) %}
+{% set show_add_form = show_add_form|default(false) %}
+{% set choice_labels = choice_labels|default(['A', 'B', 'C', 'D']) %}
+{% set max_points = max_points|default(2147483647) %}
+{% set question_count = questions|length %}
 
-        {% if validation_error %}
-        <div role="alert" class="alert alert-error">
-            <strong>Unable to publish quiz:</strong><br>
-            {{ validation_error }}
-        </div>
-        {% elif quiz.status == 'draft' %}
-        <div role="status" class="alert alert-success">
-            <strong>Ready:</strong> The quiz is eligible to be published to students.
-        </div>
-        {% elif quiz.status == 'published' %}
-        <div role="status" class="alert alert-info">
-            <strong>Opening:</strong> The quiz is currently open. Students can start taking the quiz.
-        </div>
-        {% elif quiz.status == 'closed' %}
-        <div role="status" class="alert alert-warning">
-            <strong>Closed:</strong> The quiz has ended. Students cannot retake, but can review their old submissions.
-        </div>
-        {% endif %}
+<main class="manage-quiz-page">
+    <header class="manage-quiz-header">
+        <a class="button button-secondary" href="{{ url_for('lecturer.lecturer_dashboard') }}">Back to Dashboard</a>
+    </header>
 
-        <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2 style="margin: 0; font-size: 20px;">{{ quiz.title }}</h2>
-                <span class="badge badge-{{ quiz.status }}">{{ quiz.status }}</span>
-            </div>
-
-            <div class="summary-grid">
-                <div class="summary-item">
-                    <div class="label">Duration</div>
-                    <div class="value">{{ quiz.duration_minutes }} minutes</div>
-                </div>
-                <div class="summary-item">
-                    <div class="label">Number of questions</div>
-                    <div class="value">{{ questions|length }} questions</div>
-                </div>
-                <div class="summary-item">
-                    <div class="label">Lecturer in charge</div>
-                    <div class="value">{{ quiz.lecturer_name }}</div>
-                </div>
-                <div class="summary-item">
-                    <div class="label">Status</div>
-                    <div class="value" id="quiz-status-text">{{ quiz.status|capitalize }}</div>
-                </div>
-            </div>
+    <section class="manage-quiz-overview" aria-labelledby="quiz-title">
+        <div>
+            <p class="eyebrow">Quiz management</p>
+            <h2 id="quiz-title">{{ quiz.title }}</h2>
+            <p class="muted">
+                {{ question_count }} question{{ '' if question_count == 1 else 's' }}
+                · {{ 'Unlimited time' if quiz.duration_unlimited else quiz.duration_minutes ~ ' minutes' }}
+                · {{ quiz.max_attempts }} attempt{{ '' if quiz.max_attempts == 1 else 's' }} per student
+            </p>
         </div>
+        <span class="badge badge-{{ quiz.status }}">{{ quiz.status|capitalize }}</span>
+    </section>
 
-        <div class="card">
-            <h3 style="margin-top: 0;">Question List ({{ questions|length }})</h3>
-            {% if questions|length == 0 %}
-            <div class="alert alert-warning">
-                This quiz currently has no questions. You need to add at least 1 valid question before publishing.
-            </div>
-            {% else %}
-                {% for q in questions %}
-                <div class="question-card">
-                    <div class="question-header">
-                        <span>Question {{ q.position }}: {{ q.content }}</span>
-                        <span>
-                            {% if q.has_valid_correct %}
-                            <span class="badge badge-published">&#10003; Has correct answer</span>
-                            {% else %}
-                            <span class="badge badge-missing">&#9888; Missing correct answer</span>
-                            {% endif %}
-                        </span>
-                    </div>
-                    <ul class="choice-list">
-                        {% for c in q.choices %}
-                        <li class="choice-item {% if c.is_correct %}correct{% endif %}">
-                            <span style="margin-right: 8px;">{{ loop.index }}.</span>
-                            <span>{{ c.content }}</span>
-                            {% if c.is_correct %}
-                            <span class="badge badge-correct">&#10003; Correct Answer</span>
-                            {% endif %}
-                        </li>
+    {% if validation_error %}
+        <div class="alert alert-warning" role="alert">{{ validation_error }}</div>
+    {% endif %}
+
+    <details class="manage-disclosure card" {% if show_add_form %}open{% endif %}>
+        <summary class="manage-disclosure-summary">
+            <span>
+                <strong>Add Questions</strong>
+                <span class="manage-disclosure-hint">Create a question and its answer choices</span>
+            </span>
+            <span class="disclosure-indicator" aria-hidden="true"></span>
+        </summary>
+        <div class="manage-disclosure-content">
+            {% if messages %}
+                <div class="alert alert-error" role="alert">
+                    <p>Please review the following:</p>
+                    <ul>
+                        {% for message in messages %}
+                            <li>{{ message }}</li>
                         {% endfor %}
                     </ul>
                 </div>
-                {% endfor %}
             {% endif %}
 
-            <div class="actions-bar">
-                {% if quiz.status == 'draft' %}
-                <form method="post" action="{{ url_for('lecturer.handle_publish_quiz', quiz_id=quiz.quiz_id) }}" style="margin: 0;">
-                    <button type="submit" id="btn-publish" class="btn btn-primary" {% if not is_publishable %}disabled{% endif %}>
-                        Publish Quiz
-                    </button>
-                </form>
-                {% elif quiz.status == 'published' %}
-                <form method="post" action="{{ url_for('lecturer.handle_close_quiz', quiz_id=quiz.quiz_id) }}" style="margin: 0;">
-                    <button type="submit" id="btn-close" class="btn btn-danger">
-                        Close Quiz
-                    </button>
-                </form>
-                {% endif %}
+            <form class="manage-question-form" method="post" action="{{ url_for('quiz.add_quiz_question', quiz_id=quiz.quiz_id) }}">
+                <label for="question-content">Question</label>
+                <textarea id="question-content" name="content" rows="3" required>{{ form.content }}</textarea>
 
-                <a href="{{ url_for('lecturer.lecturer_dashboard') }}" class="btn btn-secondary">
-                    Back to Dashboard
-                </a>
+                <fieldset class="manage-choice-fieldset">
+                    <legend>Answer choices</legend>
+                    <p class="muted">Select the radio button next to the correct answer.</p>
+                    <div class="manage-choice-grid">
+                        {% for index in range(4) %}
+                            <div class="manage-choice-row">
+                                <input
+                                    type="radio"
+                                    name="correct_index"
+                                    value="{{ index }}"
+                                    aria-label="Mark choice {{ choice_labels[index] }} as correct"
+                                    {% if form.correct_index|string == index|string %}checked{% endif %}
+                                    required
+                                >
+                                <label for="choice-{{ index }}">Choice {{ choice_labels[index] }}</label>
+                                <input
+                                    id="choice-{{ index }}"
+                                    name="choices"
+                                    type="text"
+                                    value="{{ form.choices[index] }}"
+                                    required
+                                >
+                            </div>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+
+                <label for="question-points">Points</label>
+                <input id="question-points" name="points" type="number" min="1" max="{{ max_points }}" step="1" value="{{ form.points }}" required>
+
+                <div class="form-actions">
+                    <button type="submit">Add Question</button>
+                </div>
+            </form>
+        </div>
+    </details>
+
+    <details class="manage-disclosure card"{% if editing_question_id %} open{% endif %}>
+        <summary class="manage-disclosure-summary">
+            <span>
+                <strong>Questions List</strong>
+                <span class="manage-disclosure-hint">{{ question_count }} question{{ '' if question_count == 1 else 's' }} in this quiz</span>
+            </span>
+            <span class="disclosure-indicator" aria-hidden="true"></span>
+        </summary>
+        <div class="manage-disclosure-content manage-question-list">
+            {% if questions %}
+                {% for question in questions %}
+                    <article class="manage-question-item">
+                        <div class="manage-question-heading">
+                            <h3>Question {{ loop.index }}</h3>
+                            <span class="badge">{{ question.points }} point{{ '' if question.points == 1 else 's' }}</span>
+                        </div>
+                        <p>{{ question.content }}</p>
+                        {% if question.choices %}
+                            <ul class="manage-choice-list">
+                                {% for choice in question.choices %}
+                                    <li{% if choice.is_correct %} class="correct-answer"{% endif %}>
+                                        {{ choice.content }}{% if choice.is_correct %}<span class="correct-answer-label">Correct answer</span>{% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                        <details class="manage-edit-disclosure" {% if editing_question_id == question.question_id %}open{% endif %}>
+                            <summary class="table-action">Edit question &amp; answers</summary>
+                            <form
+                                class="manage-question-form"
+                                method="post"
+                                action="{{ url_for('quiz.edit_quiz_question', quiz_id=quiz.quiz_id, question_id=question.question_id) }}"
+                            >
+                                {% if editing_question_id == question.question_id and edit_messages %}
+                                    <div class="alert alert-error" role="alert">
+                                        <p>Please review the following:</p>
+                                        <ul>
+                                            {% for message in edit_messages %}
+                                                <li>{{ message }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% endif %}
+                                <label for="edit-question-content-{{ question.question_id }}">Question</label>
+                                <textarea id="edit-question-content-{{ question.question_id }}" name="content" rows="3" required>{% if editing_question_id == question.question_id and edit_form %}{{ edit_form.content }}{% else %}{{ question.content }}{% endif %}</textarea>
+                                <fieldset class="manage-choice-fieldset">
+                                    <legend>Answer choices</legend>
+                                    <div class="manage-choice-grid">
+                                        {% for index in range(4) %}
+                                            {% set existing_choice = question.choices[index] if index < question.choices|length else none %}
+                                            <div class="manage-choice-row">
+                                                <input
+                                                    type="radio"
+                                                    name="correct_index"
+                                                    value="{{ index }}"
+                                                    aria-label="Mark choice {{ choice_labels[index] }} as correct"
+                                                    {% if editing_question_id == question.question_id and edit_form %}
+                                                        {% if edit_form.correct_index|string == index|string %}checked{% endif %}
+                                                    {% elif existing_choice and existing_choice.is_correct %}checked{% endif %}
+                                                    required
+                                                >
+                                                <label for="edit-choice-{{ question.question_id }}-{{ index }}">Choice {{ choice_labels[index] }}</label>
+                                                <input
+                                                    id="edit-choice-{{ question.question_id }}-{{ index }}"
+                                                    name="choices"
+                                                    type="text"
+                                                    value="{% if editing_question_id == question.question_id and edit_form %}{{ edit_form.choices[index] }}{% elif existing_choice %}{{ existing_choice.content }}{% endif %}"
+                                                    required
+                                                >
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </fieldset>
+                                <label for="edit-question-points-{{ question.question_id }}">Points</label>
+                                <input
+                                    id="edit-question-points-{{ question.question_id }}"
+                                    name="points"
+                                    type="number"
+                                    min="1"
+                                    max="{{ max_points }}"
+                                    step="1"
+                                    value="{% if editing_question_id == question.question_id and edit_form %}{{ edit_form.points }}{% else %}{{ question.points }}{% endif %}"
+                                    required
+                                >
+                                <div class="form-actions">
+                                    <button type="submit" class="button button-secondary">Save changes</button>
+                                </div>
+                            </form>
+                        </details>
+                    </article>
+                {% endfor %}
+            {% else %}
+                <p class="muted">No questions have been added yet.</p>
+            {% endif %}
+        </div>
+    </details>
+
+    <section class="card manage-schedule-card" aria-labelledby="schedule-heading">
+        <div class="section-heading">
+            <div>
+                <h2 id="schedule-heading">Quiz Schedule</h2>
+                <p class="muted">Times use Vietnam time (UTC+7).</p>
             </div>
         </div>
-    </div>
+        {% if schedule_error %}
+            <div class="alert alert-error" role="alert">{{ schedule_error }}</div>
+        {% endif %}
+        <form method="post" action="{{ url_for('lecturer.handle_quiz_schedule', quiz_id=quiz.quiz_id) }}">
+            <div class="form-grid">
+                <div class="manage-duration-field">
+                    <label for="duration">Time limit</label>
+                    <input
+                        id="duration"
+                        type="number"
+                        name="duration"
+                        min="1"
+                        step="1"
+                        value="{{ duration|default(quiz.duration_minutes) }}"
+                        {% if duration_unlimited|default(quiz.duration_unlimited) %}disabled{% else %}required{% endif %}
+                    >
+                    <label class="duration-unlimited-option" for="duration_unlimited">
+                        <input
+                            type="checkbox"
+                            id="duration_unlimited"
+                            name="duration_unlimited"
+                            value="yes"
+                            {% if duration_unlimited|default(quiz.duration_unlimited) %}checked{% endif %}
+                        >
+                        No time limit
+                    </label>
+                    <small class="muted">The student's time limit is also capped by the quiz deadline.</small>
+                </div>
+                <div class="manage-attempt-limit-field">
+                    <label for="max-attempts">Maximum attempts per student</label>
+                    <input
+                        id="max-attempts"
+                        type="number"
+                        name="max_attempts"
+                        min="1"
+                        step="1"
+                        value="{{ max_attempts|default(quiz.max_attempts) }}"
+                        required
+                    >
+                    <small class="muted">Must be a positive whole number.</small>
+                </div>
+                <div>
+                    <label for="start-at">Start time</label>
+                    <input id="start-at" type="datetime-local" name="start_at" value="{{ start_at_local }}">
+                    <small class="muted">Leave empty to allow the quiz to start at any time.</small>
+                </div>
+                <div>
+                    <label for="end-at">Deadline</label>
+                    <input id="end-at" type="datetime-local" name="end_at" value="{{ end_at_local }}">
+                    <small class="muted">Leave empty for no deadline.</small>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="button button-secondary">Save Schedule</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="card manage-publish-card" aria-labelledby="publish-heading">
+        <div class="section-heading">
+            <div>
+                <h2 id="publish-heading">Quiz Availability</h2>
+                <p class="muted">Publish, reopen, or close this quiz for students.</p>
+            </div>
+        </div>
+        <div class="form-actions manage-availability-actions">
+            {% if quiz.status == "published" %}
+                <form method="post" action="{{ url_for('lecturer.handle_close_quiz', quiz_id=quiz.quiz_id) }}" data-confirm="Are you sure you want to close this quiz?" data-confirm-title="Close quiz" data-confirm-label="Close quiz">
+                    <button class="button button-secondary" type="submit">Close Quiz</button>
+                </form>
+            {% else %}
+                <form method="post" action="{{ url_for('lecturer.handle_publish_quiz', quiz_id=quiz.quiz_id) }}" data-confirm="Are you sure you want to publish this quiz?" data-confirm-title="Publish quiz" data-confirm-label="Publish quiz">
+                    <button type="submit" {% if not is_publishable %}disabled aria-describedby="publish-block-reason"{% endif %}>
+                        {{ "Publish Quiz" if quiz.status == "draft" else "Publish Quiz Again" }}
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+        {% if quiz.status != "published" and not is_publishable %}
+            <p id="publish-block-reason" class="manage-publish-block-reason muted" role="status">
+                {{ validation_error }}
+            </p>
+        {% endif %}
+    </section>
+</main>
+<script>
+    (function () {
+        var unlimited = document.getElementById("duration_unlimited");
+        var durationInput = document.getElementById("duration");
+        unlimited.addEventListener("change", function () {
+            durationInput.disabled = unlimited.checked;
+            durationInput.required = !unlimited.checked;
+        });
+    })();
+</script>
+{% include "_toasts.html" %}
 </body>
 </html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Student attempts - {{ quiz.title }} - Mini LMS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/hig.css') }}">
+</head>
+<body>
+    <main>
+        <nav class="question-page-actions" aria-label="Attempt navigation">
+            <a class="btn btn-secondary" href="{{ url_for('lecturer.lecturer_dashboard') }}">Back to dashboard</a>
+            <a class="btn btn-secondary" href="{{ url_for('lecturer.publish_page', quiz_id=quiz.quiz_id) }}">Quiz details</a>
+        </nav>
+
+        <h1>Student attempts</h1>
+        <p class="muted">{{ quiz.title }} · {{ attempts|length }} attempt{{ '' if attempts|length == 1 else 's' }}</p>
+
+        {% if attempts %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Status</th>
+                        <th>Score</th>
+                        <th>Correct</th>
+                        <th>Started</th>
+                        <th>Submitted</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for attempt in attempts %}
+                    <tr>
+                        <td>
+                            <a class="table-action" href="{{ url_for('lecturer.quiz_attempt_detail', quiz_id=quiz.quiz_id, attempt_id=attempt.attempt_id) }}">
+                                {{ attempt.student_name }}
+                            </a>
+                            <div class="muted attempt-email">{{ attempt.student_email }}</div>
+                        </td>
+                        <td>
+                            {% if attempt.submitted_at %}
+                            <span class="badge badge-published">Submitted</span>
+                            {% else %}
+                            <span class="badge badge-draft">In progress</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if attempt.score is not none %}
+                            {{ "%.0f"|format(attempt.score * 100) }}%
+                            {% else %}
+                            —
+                            {% endif %}
+                        </td>
+                        <td>{{ attempt.correct_count or 0 }} / {{ attempt.total_questions }}</td>
+                        <td>{{ attempt.started_at_display }}</td>
+                        <td>{{ attempt.submitted_at_display or "—" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <section class="empty attempts-empty">
+            <h2>No student attempts yet</h2>
+            <p class="muted">Student activity will appear here after someone starts this quiz.</p>
+        </section>
+        {% endif %}
+    </main>
+    {% include "_toasts.html" %}
+</body>
+</html>

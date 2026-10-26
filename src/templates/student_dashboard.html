@@ -28,6 +28,7 @@
         .submitted { color: #2e7d32; font-weight: bold; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/hig.css') }}">
     <noscript>
         <style>#state-loading { display: none; }</style>
     </noscript>
@@ -37,7 +38,7 @@
         <strong>Mini LMS</strong>
         <span>
             {{ session.get('name', 'Student') }} (student) |
-            <form method="post" action="{{ url_for('auth.logout') }}">
+            <form method="post" action="{{ url_for('auth.logout') }}" data-confirm="Are you sure you want to sign out?" data-confirm-title="Sign out" data-confirm-label="Sign out">
                 <button type="submit">Sign out</button>
             </form>
         </span>
@@ -81,6 +82,7 @@
                             <th>Quiz</th>
                             <th>Due date</th>
                             <th>Duration</th>
+                            <th>Availability (UTC+7)</th>
                             <th>Questions</th>
                             <th>Action</th>
                         </tr>
@@ -117,15 +119,33 @@
                     td.appendChild(label);
                     return td;
                 }
+                if (quiz.status === "scheduled" || quiz.status === "ended") {
+                    var availability = document.createElement("span");
+                    availability.className = "hint";
+                    availability.textContent = quiz.status === "scheduled"
+                        ? "Opens at " + quiz.start_at_display
+                        : "Quiz window has ended";
+                    td.appendChild(availability);
+                    return td;
+                }
                 // Take and Continue both POST to /start, which resumes an open attempt.
                 var form = document.createElement("form");
                 form.method = "post";
                 form.action = quiz.start_url;
                 var button = document.createElement("button");
                 button.type = "submit";
-                button.textContent = quiz.status === "in_progress" ? "Continue quiz" : "Take quiz";
+                button.textContent = quiz.status === "in_progress"
+                    ? "Continue quiz"
+                    : quiz.submitted_attempts > 0 ? "Retake quiz" : "Take quiz";
                 form.appendChild(button);
                 td.appendChild(form);
+                if (quiz.attempts_remaining < quiz.max_attempts) {
+                    var remaining = document.createElement("small");
+                    remaining.className = "muted";
+                    remaining.textContent = quiz.attempts_remaining + " attempt"
+                        + (quiz.attempts_remaining === 1 ? "" : "s") + " remaining";
+                    td.appendChild(remaining);
+                }
                 return td;
             }
 
@@ -136,7 +156,10 @@
                     var tr = document.createElement("tr");
                     tr.appendChild(cell(quiz.title));
                     tr.appendChild(cell(quiz.end_at ? quiz.end_at.slice(0, 10) : "No due date"));
-                    tr.appendChild(cell(quiz.duration_minutes + " min"));
+                    tr.appendChild(cell(
+                        quiz.duration_unlimited ? "No time limit" : quiz.duration_minutes + " min"
+                    ));
+                    tr.appendChild(cell(quiz.schedule_display));
                     tr.appendChild(cell(quiz.question_count));
                     tr.appendChild(actionCell(quiz));
                     rows.appendChild(tr);
@@ -172,5 +195,6 @@
             load();
         })();
     </script>
+    {% include "_toasts.html" %}
 </body>
 </html>

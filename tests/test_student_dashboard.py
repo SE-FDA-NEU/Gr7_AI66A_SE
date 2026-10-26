@@ -36,7 +36,14 @@ def test_student_dashboard_has_all_four_ui_states(tmp_path):
     assert "Your quizzes could not be loaded. Check your connection and try again." in html
     assert "Try again" in html
     assert '<section id="state-data" hidden>' in html
-    for heading in ("Quiz", "Due date", "Duration", "Questions", "Action"):
+    for heading in (
+        "Quiz",
+        "Due date",
+        "Duration",
+        "Availability (UTC+7)",
+        "Questions",
+        "Action",
+    ):
         assert f"<th>{heading}</th>" in html
 
     assert "/api/student/quizzes" in html

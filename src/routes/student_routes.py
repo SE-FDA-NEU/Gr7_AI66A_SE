@@ -137,5 +137,6 @@ def quiz_submitted(quiz_id):
     return render_template(
         "quiz_submitted.html",
         notice=AUTO_SUBMITTED if request.args.get("timeout") == "1" else None,
+        submitted_successfully=request.args.get("timeout") != "1",
         **data,
     )

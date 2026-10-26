@@ -43,10 +43,10 @@ tables. The attempt timer (US06, US11) does not add new containers.
 | Table | Purpose | Columns | Constraints / Business rules |
 |---|---|---|---|
 | `user` | Stores lecturer, student, and teaching-assistant accounts. | `user_id` INTEGER PK, `name` TEXT, `email` TEXT UNIQUE, `password_hash` TEXT, `role` TEXT | `email` is unique and required. `role` is required and limited to `lecturer`, `student`, or `ta`; application authorization enforces role-based access (BR1). |
-| `quiz` | Stores a lecturer's quiz, its publication state, availability, and time limit. | `quiz_id` INTEGER PK, `lecturer_id` INTEGER FK, `title` TEXT, `description` TEXT, `status` TEXT, `duration_minutes` INTEGER, `start_at` TEXT, `end_at` TEXT | `lecturer_id` references `user.user_id` (BR2). `status` is required, defaults to `draft`, and is limited to `draft`, `published`, or `closed`. Duration must be positive (US11); when both are set, `end_at` must be later than `start_at`. Attempts respect the earlier duration or closing deadline (BR4). Publication validity requirements are enforced by the service (BR3). |
+| `quiz` | Stores a lecturer's quiz, its publication state, availability, and attempt settings. | `quiz_id` INTEGER PK, `lecturer_id` INTEGER FK, `title` TEXT, `description` TEXT, `status` TEXT, `duration_minutes` INTEGER, `duration_unlimited` INTEGER, `max_attempts` INTEGER, `start_at` TEXT, `end_at` TEXT, `last_published_end_at` TEXT, `closed_by_deadline` INTEGER | `lecturer_id` references `user.user_id` (BR2). `status` is required, defaults to `draft`, and is limited to `draft`, `published`, or `closed`. Duration and attempt limit must be positive unless duration is unlimited (US11, BR5); when both schedule bounds are set, `end_at` must be later than `start_at`. Attempts respect the earlier duration or closing deadline (BR4). A deadline-expired quiz is closed on the next request and requires a changed future deadline before republishing. Publication validity requirements are enforced by the service (BR3). |
 | `question` | Stores ordered multiple-choice questions belonging to a quiz. | `question_id` INTEGER PK, `quiz_id` INTEGER FK, `content` TEXT, `points` INTEGER, `position` INTEGER | `quiz_id` references `quiz.quiz_id`; `points` and `position` must be positive. `(quiz_id, position)` is unique. Quiz publication requires at least one question and at least two choices per question (BR3; checked by application logic). |
 | `choice` | Stores answer options and the correctness flag for a question. | `choice_id` INTEGER PK, `question_id` INTEGER FK, `content` TEXT, `is_correct` INTEGER (0/1) | `question_id` references `question.question_id`. A partial unique index permits at most one correct choice per question; publish validation requires exactly one and at least two choices (BR3). |
-| `attempt` | Stores a student's quiz session, submission time, and score. | `attempt_id` INTEGER PK, `student_id` INTEGER FK, `quiz_id` INTEGER FK, `started_at` TEXT, `submitted_at` TEXT, `score` REAL | `student_id` references `user.user_id`; `quiz_id` references `quiz.quiz_id`. A partial unique index permits at most one submitted attempt per student and quiz (BR5). Submitted attempts and scores are append-only through normal application actions (BR6). |
+| `attempt` | Stores a student's quiz session, submission time, and score. | `attempt_id` INTEGER PK, `student_id` INTEGER FK, `quiz_id` INTEGER FK, `started_at` TEXT, `submitted_at` TEXT, `score` REAL | `student_id` references `user.user_id`; `quiz_id` references `quiz.quiz_id`. The service enforces the quiz's configured submitted-attempt limit transactionally (BR5). Submitted attempts and scores are append-only through normal application actions (BR6). |
 | `answer` | Stores the selected choice for each question in an attempt. | `answer_id` INTEGER PK, `attempt_id` INTEGER FK, `question_id` INTEGER FK, `choice_id` INTEGER FK (nullable) | Foreign keys reference `attempt`, `question`, and `choice`; `(attempt_id, question_id)` is unique. A NULL `choice_id` represents an unanswered question. The application must ensure the selected choice belongs to that question and prevent changes after submission (BR6, US13). |
 
 
@@ -57,16 +57,17 @@ tables. The attempt timer (US06, US11) does not add new containers.
 | POST | /login | email, password | 302 → role dashboard (US01) | 400 missing fields · 401 incorrect email/password · 429 five failed attempts within 10 minutes (15-minute lockout): "Too many failed attempts. Try again in 15 minutes." |
 | POST | /logout | — | 302 → /login; session cleared (US01) | — |
 | GET | /student/dashboard | — | 200 · page shell that loads quizzes from `/api/student/quizzes` and shows one of 4 states: Loading, Empty, Error, Data (US05, #85) | 302 → /login if not logged in · 403 wrong role (BR1) |
-| GET | /api/student/quizzes | — | 200 · JSON `{"quizzes": [{quiz_id, title, duration_minutes, question_count, status, start_url}]}` for published quizzes; status is `not_started`, `in_progress` (open attempt) or `submitted`; empty list when nothing is published (#85) | 302 → /login if not logged in · 403 wrong role (BR1) |
+| GET | /api/student/quizzes | — | 200 · JSON `{"quizzes": [{quiz_id, title, duration_minutes, max_attempts, submitted_attempts, attempts_remaining, question_count, status, start_url}]}` for published quizzes; status is `not_started`, `in_progress` (open attempt) or `submitted` (attempt limit reached); empty list when nothing is published (#85) | 302 → /login if not logged in · 403 wrong role (BR1) |
 | POST | /quiz/create | title, description, duration | 302 → /quiz/:id/questions; creates a quiz with status draft (US02) | 302 → /login if not logged in · 403 wrong role (BR1) · 422 "Quiz title is required." or invalid duration |
 | POST | /quiz/:id/questions | content, points, choices[], correct_index | 201 · question_id (US03) | 403 not the quiz owner (BR2) · 404 quiz not found · 422 "Please select one correct option" (BR3) |
+| POST | /quiz/:id/questions/:question_id/edit | content, points, choices[], correct_index | 302 → /lecturer/quiz/:id/publish; updates the question and its choices | 403 not the quiz owner (BR2) · 404 quiz/question not found · 422 invalid question |
 | POST | /lecturer/quiz/:id/publish | — | 200 · status published (US04) | 403 not the quiz owner (BR2) · 409 already published · 422 invalid quiz (BR3) |
-| POST | /student/quiz/:id/start | — | 302 → /student/quiz/:id/take?q=1; creates an attempt, or resumes the student's open attempt (US06) | 302 → /login if not logged in · 403 wrong role (BR1) · 403 quiz draft or closed (BR4) · 404 quiz not found · 409 already submitted (BR5) |
+| POST | /student/quiz/:id/start | — | 302 → /student/quiz/:id/take?q=1; creates an attempt, or resumes the student's open attempt (US06) | 302 → /login if not logged in · 403 wrong role (BR1) · 403 quiz draft or closed (BR4) · 404 quiz not found · 409 configured attempt limit reached (BR5) |
 | GET | /student/quiz/:id/take?q=n | q = question number (default 1) | 200 · one question with its choices, saved choice checked, "Question n / N", remaining seconds = duration − time since `started_at` (US06) · 302 → submitted?timeout=1 when time is up (attempt auto-submitted, US11/US13) | 302 → /login · 403 wrong role (BR1) · 404 quiz not started or q out of range · 409 already submitted (BR5) |
 | POST | /student/quiz/:id/take | attempt_id, question_id, choice_id (optional), go | 302 → take?q=go, or → review when go=review (Post/Redirect/Get); answer upserted on (attempt_id, question_id) (US06) · 302 → submitted?timeout=1 when time is up (late answer not saved, attempt auto-submitted) | 302 → /login · 400 choice not in this question · 403 wrong role (BR1) · 403 attempt belongs to another student · 409 already submitted (BR5, BR6) |
 | GET | /student/quiz/:id/review | — | 200 · "You answered n of N questions", unanswered questions with links to them, Submit form (US08) · 302 → submitted?timeout=1 when time is up | 302 → /login · 403 wrong role (BR1) · 404 quiz not started · 409 already submitted (BR5) |
 | POST | /student/quiz/:id/submit | attempt_id, confirm=yes (required only when questions are unanswered) | 302 → /student/quiz/:id/submitted; stores `submitted_at` (UTC) and `score` = correct / total questions, ratio 0–1 (US08) · 302 → submitted?timeout=1 when time is up (`submitted_at` = deadline, no confirmation needed) | 302 → /login · 403 wrong role (BR1) · 403 attempt belongs to another student · 409 already submitted (BR5, BR6, US13) · 422 review page re-shown: unanswered questions remain without confirmation (US08) |
-| GET | /student/quiz/:id/submitted | timeout=1 (optional) | 200 · "Quiz submitted", "Submitted at 18 Oct 2026, 15:15 (UTC+7)", auto-submit notice when timeout=1 (US08) | 302 → /login · 403 wrong role (BR1) · 404 not submitted yet |
+| GET | /student/quiz/:id/submitted | timeout=1 (optional) | 200 · "Quiz submitted", "Submitted at 18 Oct 2026, 15:15 (UTC+7)", auto-submit notice when timeout=1 (US08) · "Score: 8/10 (80%)" (US09; shown here instead of the `/student/quiz/:id/grade` route listed in requirements.md, see testing.md) | 302 → /login · 403 wrong role (BR1) · 404 not submitted yet |
 | GET | /lecturer/dashboard | — | 200 · lecturer's quiz list (US14) | 403 not a lecturer (BR1) |
 
 ## 4. Walking skeleton
@@ -109,9 +110,9 @@ database schema.
 `choice`, `attempt` and `answer` (Section 2). The instructor must install
 and run the project on a machine we have never seen, using only
 `docs/SETUP.md`. Some business rules must hold even if the application code
-has a bug: BR3 (exactly one correct choice per question), BR5 (at most one
-submitted attempt per student and quiz) and BR6 (submitted attempts are
-never changed).
+has a bug: BR3 (exactly one correct choice per question) and BR6 (submitted
+attempts are never changed). BR5 (the configured submitted-attempt limit) is
+enforced transactionally by the application.
 
 **Options**
 
@@ -132,12 +133,12 @@ never changed).
   benefit at our scale.
 - *Rules enforced by the database, not only by code.* SQLite supports
   FOREIGN KEY, CHECK and partial UNIQUE indexes. `src/schema.py` uses
-  `one_correct_choice_per_question` to enforce part of BR3 and
-  `one_submitted_attempt_per_student_quiz` to enforce BR5, and `src/db.py`
+  `one_correct_choice_per_question` to enforce part of BR3, and `src/db.py`
   turns on `PRAGMA foreign_keys = ON` for every connection. CSV files
-  (option 3) cannot enforce any of these rules. Two students saving at the
-  same time could also overwrite each other's file, so option 3 was
-  rejected.
+  (option 3) cannot enforce these rules. For BR5, SQLite's `BEGIN IMMEDIATE`
+  serializes concurrent attempt creation while the service checks the
+  configured limit. Two students saving at the same time could also
+  overwrite each other's file, so option 3 was rejected.
 - *Data size.* One course has at most a few hundred students. Even
   300 students × 20 quizzes × 20 questions is about 120,000 `answer` rows,
   which a single SQLite file handles comfortably.

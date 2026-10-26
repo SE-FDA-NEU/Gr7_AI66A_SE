@@ -65,6 +65,23 @@ def test_dashboard_requires_lecturer_role(tmp_path):
     assert response.status_code == 403
 
 
+def test_lecturer_can_log_out_from_dashboard(tmp_path):
+    client, _ = _dashboard_client(tmp_path)
+
+    dashboard = client.get("/lecturer/dashboard")
+    html = dashboard.get_data(as_text=True)
+
+    assert dashboard.status_code == 200
+    assert 'class="logout-form" method="post" action="/logout"' in html
+    assert 'data-confirm="Are you sure you want to sign out?"' in html
+
+    response = client.post("/logout")
+
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith("/login")
+    assert client.get("/lecturer/dashboard").headers["Location"].endswith("/login")
+
+
 def test_dashboard_shows_attempt_counts_from_database(tmp_path):
     client, db_path = _dashboard_client(tmp_path)
     quiz_id = _insert_quiz(db_path, 1, "Attempt Count Target")
@@ -95,6 +112,73 @@ def test_dashboard_shows_attempt_counts_from_database(tmp_path):
     unrelated_row = next(row for row in quiz_rows if "Unrelated Quiz" in row)
     assert f"{attempt_count} attempts" in target_row
     assert "1 attempts" in unrelated_row
+    assert f'href="/lecturer/quiz/{quiz_id}/attempts"' in target_row
+
+
+def test_lecturer_can_view_attempt_list_and_answer_review(tmp_path):
+    client, db_path = _dashboard_client(tmp_path)
+    with get_connection(db_path) as conn:
+        question = conn.execute(
+            "SELECT question_id, content FROM question WHERE quiz_id = 1"
+        ).fetchone()
+        choices = conn.execute(
+            "SELECT choice_id, content, is_correct FROM choice WHERE question_id = ? ORDER BY choice_id",
+            (question["question_id"],),
+        ).fetchall()
+        correct_choice = next(choice for choice in choices if choice["is_correct"])
+        wrong_choice = next(choice for choice in choices if not choice["is_correct"])
+
+        submitted_attempt_id = conn.execute(
+            """
+            INSERT INTO attempt (
+                student_id, quiz_id, started_at, submitted_at, score
+            ) VALUES (3, 1, '2026-10-20T09:00:00', '2026-10-20T09:10:00', 0.0)
+            """
+        ).lastrowid
+        conn.execute(
+            "INSERT INTO answer (attempt_id, question_id, choice_id) VALUES (?, ?, ?)",
+            (submitted_attempt_id, question["question_id"], wrong_choice["choice_id"]),
+        )
+
+        open_attempt_id = conn.execute(
+            """
+            INSERT INTO attempt (student_id, quiz_id, started_at)
+            VALUES (4, 1, '2026-10-20T09:30:00')
+            """
+        ).lastrowid
+        conn.execute(
+            "INSERT INTO answer (attempt_id, question_id, choice_id) VALUES (?, ?, ?)",
+            (open_attempt_id, question["question_id"], correct_choice["choice_id"]),
+        )
+        conn.commit()
+
+    attempts_response = client.get("/lecturer/quiz/1/attempts")
+    attempts_html = attempts_response.get_data(as_text=True)
+    assert attempts_response.status_code == 200
+    assert "duc.student@example.edu" in attempts_html
+    assert "lan.student@example.edu" in attempts_html
+    assert "In progress" in attempts_html
+    assert f'href="/lecturer/quiz/1/attempts/{submitted_attempt_id}"' in attempts_html
+
+    detail_response = client.get(
+        f"/lecturer/quiz/1/attempts/{submitted_attempt_id}"
+    )
+    detail_html = detail_response.get_data(as_text=True)
+    assert detail_response.status_code == 200
+    assert question["content"] in detail_html
+    assert wrong_choice["content"] in detail_html
+    assert correct_choice["content"] in detail_html
+    assert "Incorrect" in detail_html
+
+
+def test_lecturer_attempt_pages_enforce_quiz_ownership_and_attempt_scope(tmp_path):
+    client, _ = _dashboard_client(tmp_path, "nam.lecturer@example.edu")
+
+    forbidden = client.get("/lecturer/quiz/1/attempts")
+    assert forbidden.status_code == 403
+
+    not_found = client.get("/lecturer/quiz/14/attempts/1")
+    assert not_found.status_code == 404
 
 def test_dashboard_shows_empty_state_and_create_link(tmp_path):
     client, db_path = _dashboard_client(tmp_path)
@@ -133,22 +217,30 @@ def test_dashboard_navigation_links_to_create_edit_and_publish(tmp_path):
     published_quiz_id = _insert_quiz(
         db_path, 1, "Navigation Published Quiz", status="published"
     )
+    closed_quiz_id = _insert_quiz(
+        db_path, 1, "Navigation Closed Quiz", status="closed"
+    )
 
     response = client.get("/lecturer/dashboard")
     html = response.get_data(as_text=True)
 
     assert response.status_code == 200
+    assert '<nav aria-label="Lecturer navigation">' not in html
+    assert '<h1>My Quizzes</h1>' in html
     assert 'href="/quiz/create"' in html
-    assert f'href="/quiz/{draft_quiz_id}/questions"' in html
-    assert f'href="/lecturer/quiz/{draft_quiz_id}/publish"' in html
-    assert f'href="/quiz/{published_quiz_id}/questions"' in html
+    assert html.count(f'href="/lecturer/quiz/{draft_quiz_id}/publish"') == 1
+    assert html.count(f'href="/lecturer/quiz/{published_quiz_id}/publish"') == 1
+    assert html.count(f'href="/lecturer/quiz/{closed_quiz_id}/publish"') == 1
+    assert ">Manage</a>" not in html
 
     create_page = client.get("/quiz/create")
-    edit_questions = client.get(f"/quiz/{draft_quiz_id}/questions")
+    edit_questions = client.get(f"/lecturer/quiz/{draft_quiz_id}/publish")
     publish_page = client.get(f"/lecturer/quiz/{draft_quiz_id}/publish")
+    closed_publish_page = client.get(f"/lecturer/quiz/{closed_quiz_id}/publish")
     assert create_page.status_code == 200
     assert edit_questions.status_code == 200
     assert publish_page.status_code == 200
+    assert closed_publish_page.status_code == 200
 
 
 def test_dashboard_displays_human_readable_quiz_statuses(tmp_path):

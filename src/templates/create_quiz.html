@@ -157,6 +157,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/hig.css') }}">
 </head>
 
 <body>
@@ -183,7 +184,9 @@
             <form
                 action="{{ url_for('quiz.submit_create_quiz') }}"
                 method="POST"
-                novalidate
+                data-confirm="Are you sure you want to create this quiz?"
+                data-confirm-title="Create quiz"
+                data-confirm-label="Create quiz"
             >
 
                 <!-- QUIZ TITLE -->
@@ -200,6 +203,7 @@
                         placeholder="Enter quiz title"
                         value="{{ title }}"
                         aria-required="true"
+                        required
                         {% if error == "Quiz title is required." %}
                         aria-invalid="true"
                         {% endif %}
@@ -228,7 +232,7 @@
                 <div class="form-group">
                     <label for="duration">
                         Duration (minutes)
-                        <span class="required">*</span>
+                        {% if not duration_unlimited %}<span class="required">*</span>{% endif %}
                     </label>
 
                     <input
@@ -239,12 +243,53 @@
                         step="1"
                         value="{{ duration }}"
                         aria-required="true"
+                        {% if not duration_unlimited %}required{% endif %}
+                        {% if duration_unlimited %}disabled{% endif %}
+                        {% if error == "Duration must be a positive number." %}
+                        aria-invalid="true"
+                        {% endif %}
                     >
+                    <label class="duration-unlimited-option" for="duration_unlimited">
+                        <input
+                            type="checkbox"
+                            id="duration_unlimited"
+                            name="duration_unlimited"
+                            value="yes"
+                            {% if duration_unlimited %}checked{% endif %}
+                        >
+                        No time limit
+                    </label>
 
                     <p class="hint">
-                        The duration must be greater than 0 minutes.
+                        Enable "No time limit" to let students work without a quiz-duration countdown.
                     </p>
                 </div>
+
+                <fieldset class="schedule-fields">
+                    <legend>Quiz availability (Hanoi time, UTC+7)</legend>
+                    <p class="hint">Choose either time independently. Leave Start time empty for immediate availability, or End time empty for no deadline.</p>
+                    <div class="schedule-grid">
+                        <div class="form-group">
+                            <label for="start_at">Start time</label>
+                            <input
+                                type="datetime-local"
+                                id="start_at"
+                                name="start_at"
+                                value="{{ start_at }}"
+                            >
+                        </div>
+                        <div class="form-group">
+                            <label for="end_at">End time</label>
+                            <input
+                                type="datetime-local"
+                                id="end_at"
+                                name="end_at"
+                                value="{{ end_at }}"
+                            >
+                        </div>
+                    </div>
+                    <p class="hint">Students can start only during this window. Their timer ends at the earlier of the quiz duration or the scheduled end time.</p>
+                </fieldset>
 
                 <!-- ACTIONS -->
                 <div class="actions">
@@ -266,5 +311,16 @@
             </form>
         </div>
     </main>
+    <script>
+        (function () {
+            var unlimited = document.getElementById("duration_unlimited");
+            var duration = document.getElementById("duration");
+            unlimited.addEventListener("change", function () {
+                duration.disabled = unlimited.checked;
+                duration.required = !unlimited.checked;
+            });
+        })();
+    </script>
+    {% include "_toasts.html" %}
 </body>
 </html>

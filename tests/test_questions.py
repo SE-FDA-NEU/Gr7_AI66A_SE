@@ -73,31 +73,45 @@ def make_empty_quiz(db_path):
         ).lastrowid
 
 
-def test_questions_page_shows_form_and_current_count(client):
+def test_questions_route_redirects_to_integrated_manage_page(client):
     login(client)
 
     response = client.get(f"/quiz/{NGAN_QUIZ}/questions")
-    html = response.get_data(as_text=True)
 
-    assert response.status_code == 200
+    assert response.status_code == 302
+    assert response.headers["Location"].endswith(f"/lecturer/quiz/{NGAN_QUIZ}/publish")
+
+    page = client.get(response.headers["Location"])
+    html = page.get_data(as_text=True)
+    assert page.status_code == 200
+    assert "Manage Quiz" in html
     assert "Advanced Analytics" in html
-    assert "(1 question)" in html
-    assert html.count('type="radio"') == 4
-    assert html.count('name="choices"') == 4
-    assert f"/lecturer/quiz/{NGAN_QUIZ}/publish" in html
+    assert "Questions List" in html
+    assert "Add Questions" in html
+    assert html.count('type="radio"') == 8
+    assert html.count('name="choices"') == 8
+    assert 'class="correct-answer"' in html
+    assert "Correct answer" in html
+    assert "Sign out" not in html
+    assert "Has correct answer" not in html
+    assert "Missing correct answer" not in html
+    assert '<details class="manage-disclosure card">' in html
 
 
 def test_adding_first_question_makes_the_count_1(client, db_path):
     quiz_id = make_empty_quiz(db_path)
     login(client)
-    assert "This quiz has no questions yet" in client.get(f"/quiz/{quiz_id}/questions").get_data(as_text=True)
+    manage_page = client.get(f"/lecturer/quiz/{quiz_id}/publish")
+    assert "No questions have been added yet." in manage_page.get_data(as_text=True)
 
     response = post_question(client, quiz_id)
 
     assert response.status_code == 302
-    assert response.headers["Location"].endswith(f"/quiz/{quiz_id}/questions")
+    assert response.headers["Location"].endswith(f"/lecturer/quiz/{quiz_id}/publish")
     assert question_count(db_path, quiz_id) == 1
-    assert "(1 question)" in client.get(response.headers["Location"]).get_data(as_text=True)
+    page = client.get(response.headers["Location"]).get_data(as_text=True)
+    assert "1 question in this quiz" in page
+    assert "Question added successfully." in page
 
 
 def test_saved_question_has_exactly_4_options_and_1_correct(client, db_path):
@@ -180,6 +194,7 @@ def test_form_keeps_what_the_lecturer_typed_after_an_error(client):
     html = response.get_data(as_text=True)
 
     assert response.status_code == 422
+    assert '<details class="manage-disclosure card" open>' in html
     assert "Which layer runs the SQL queries?" in html
     for text in ("Routes", "Services", "Repositories", "Templates"):
         assert f'value="{text}"' in html
@@ -296,7 +311,77 @@ def test_question_text_is_escaped_in_the_page(client):
     login(client)
 
     post_question(client, content="<script>alert(1)</script>")
-    html = client.get(f"/quiz/{NGAN_QUIZ}/questions").get_data(as_text=True)
+    html = client.get(f"/lecturer/quiz/{NGAN_QUIZ}/publish").get_data(as_text=True)
 
     assert "<script>alert(1)</script>" not in html
     assert "&lt;script&gt;alert(1)&lt;/script&gt;" in html
+
+
+def test_lecturer_can_edit_question_choices_and_correct_answer(client, db_path):
+    login(client)
+    with get_connection(db_path) as connection:
+        question_id = connection.execute(
+            "SELECT question_id FROM question WHERE quiz_id = ? ORDER BY position LIMIT 1",
+            (NGAN_QUIZ,),
+        ).fetchone()[0]
+
+    response = client.post(
+        f"/quiz/{NGAN_QUIZ}/questions/{question_id}/edit",
+        data=valid_form(
+            content="Updated question text",
+            choices=["Updated A", "Updated B", "Updated C", "Updated D"],
+            correct_index="3",
+        ),
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert "Question updated successfully." in response.get_data(as_text=True)
+    with get_connection(db_path) as connection:
+        question = connection.execute(
+            "SELECT content FROM question WHERE question_id = ?", (question_id,)
+        ).fetchone()
+        choices = connection.execute(
+            "SELECT content, is_correct FROM choice WHERE question_id = ? ORDER BY choice_id",
+            (question_id,),
+        ).fetchall()
+    assert question["content"] == "Updated question text"
+    assert [(row["content"], row["is_correct"]) for row in choices] == [
+        ("Updated A", 0),
+        ("Updated B", 0),
+        ("Updated C", 0),
+        ("Updated D", 1),
+    ]
+
+
+def test_invalid_question_edit_keeps_the_form_open_and_preserves_values(client, db_path):
+    login(client)
+    with get_connection(db_path) as connection:
+        question_id = connection.execute(
+            "SELECT question_id FROM question WHERE quiz_id = ? ORDER BY position LIMIT 1",
+            (NGAN_QUIZ,),
+        ).fetchone()[0]
+
+    response = client.post(
+        f"/quiz/{NGAN_QUIZ}/questions/{question_id}/edit",
+        data=valid_form(content="", correct_index=""),
+    )
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 422
+    assert '<details class="manage-disclosure card" open>' in html
+    assert f'<details class="manage-edit-disclosure" open>' in html
+    assert shows(response, QUESTION_CONTENT_REQUIRED)
+    assert shows(response, SELECT_CORRECT_OPTION)
+    assert 'value="Routes"' in html
+
+
+def test_lecturer_cannot_edit_another_quiz_question(client):
+    login(client, NAM_EMAIL)
+
+    response = client.post(
+        f"/quiz/{NGAN_QUIZ}/questions/1/edit",
+        data=valid_form(),
+    )
+
+    assert response.status_code == 403

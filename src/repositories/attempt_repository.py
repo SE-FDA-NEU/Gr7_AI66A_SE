@@ -5,7 +5,19 @@ import sqlite3
 
 def get_quiz(connection: sqlite3.Connection, quiz_id: int) -> sqlite3.Row | None:
     return connection.execute(
-        "SELECT quiz_id, title, status, duration_minutes FROM quiz WHERE quiz_id = ?",
+        """
+        SELECT
+            quiz_id,
+            title,
+            status,
+            duration_minutes,
+            duration_unlimited,
+            max_attempts,
+            start_at,
+            end_at
+        FROM quiz
+        WHERE quiz_id = ?
+        """,
         (quiz_id,),
     ).fetchone()
 
@@ -48,9 +60,91 @@ def get_submitted_attempt(
         SELECT attempt_id, student_id, quiz_id, started_at, submitted_at, score
         FROM attempt
         WHERE student_id = ? AND quiz_id = ? AND submitted_at IS NOT NULL
+        ORDER BY attempt_id DESC
+        LIMIT 1
         """,
         (student_id, quiz_id),
     ).fetchone()
+
+
+def count_submitted_attempts(
+    connection: sqlite3.Connection,
+    student_id: int,
+    quiz_id: int,
+) -> int:
+    return connection.execute(
+        """
+        SELECT COUNT(*) FROM attempt
+        WHERE student_id = ? AND quiz_id = ? AND submitted_at IS NOT NULL
+        """,
+        (student_id, quiz_id),
+    ).fetchone()[0]
+
+
+def list_quiz_attempts(connection: sqlite3.Connection, quiz_id: int) -> list[dict]:
+    """Return all student attempts for a quiz, including attempts in progress."""
+    rows = connection.execute(
+        """
+        SELECT
+            a.attempt_id,
+            a.student_id,
+            u.name AS student_name,
+            u.email AS student_email,
+            a.started_at,
+            a.submitted_at,
+            a.score,
+            COUNT(q.question_id) AS total_questions,
+            SUM(CASE WHEN selected_choice.is_correct = 1 THEN 1 ELSE 0 END)
+                AS correct_count
+        FROM attempt a
+        JOIN user u ON u.user_id = a.student_id
+        LEFT JOIN question q ON q.quiz_id = a.quiz_id
+        LEFT JOIN answer ans
+            ON ans.attempt_id = a.attempt_id AND ans.question_id = q.question_id
+        LEFT JOIN choice selected_choice ON selected_choice.choice_id = ans.choice_id
+        WHERE a.quiz_id = ?
+        GROUP BY a.attempt_id
+        ORDER BY a.started_at DESC, a.attempt_id DESC
+        """,
+        (quiz_id,),
+    ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def get_attempt_answers(
+    connection: sqlite3.Connection,
+    attempt_id: int,
+) -> list[dict]:
+    """Return each question, the student's answer, and its correct answer."""
+    rows = connection.execute(
+        """
+        SELECT
+            q.question_id,
+            q.position,
+            q.content,
+            q.points,
+            ans.choice_id AS selected_choice_id,
+            selected_choice.content AS selected_choice,
+            correct_choice.content AS correct_choice,
+            CASE
+                WHEN ans.choice_id IS NULL THEN NULL
+                WHEN selected_choice.is_correct = 1 THEN 1
+                ELSE 0
+            END AS is_correct
+        FROM attempt a
+        JOIN question q ON q.quiz_id = a.quiz_id
+        LEFT JOIN answer ans
+            ON ans.attempt_id = a.attempt_id AND ans.question_id = q.question_id
+        LEFT JOIN choice selected_choice ON selected_choice.choice_id = ans.choice_id
+        LEFT JOIN choice correct_choice
+            ON correct_choice.question_id = q.question_id
+            AND correct_choice.is_correct = 1
+        WHERE a.attempt_id = ?
+        ORDER BY q.position
+        """,
+        (attempt_id,),
+    ).fetchall()
+    return [dict(row) for row in rows]
 
 
 def create_attempt(

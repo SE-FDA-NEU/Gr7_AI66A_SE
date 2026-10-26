@@ -17,7 +17,7 @@ Mini LMS is for university lecturers and students who need to create, deliver, c
 ### Persona 2 - Duc, first-year student
 
 - **Role:** University student taking quizzes on a phone or laptop.
-- **Goal:** Find an available quiz, complete it before the deadline, submit it once, and see the result quickly.
+- **Goal:** Find an available quiz, complete up to its allowed number of attempts before the deadline, and see each result quickly.
 - **Blocked by:** Unclear deadlines, losing answers when a session changes, and not knowing whether submission succeeded.
 - **In his words:** "When I submit, I want a clear result instead of wondering whether my answers were saved."
 - **Technical context:** Uses a phone on campus Wi-Fi and needs readable questions with a visible remaining-time indicator.
@@ -239,11 +239,11 @@ The attempt cannot continue after the configured duration or the quiz closing ti
 
 **Worked example:** A quiz opens at 09:00, closes at 10:00, and has a 20-minute duration. An attempt started at 09:45 ends at 10:00 after 15 minutes, not at 10:05.
 
-### BR5 - Each student has at most one submitted attempt per quiz
+### BR5 - Each student may submit up to the quiz's configured attempt limit
 
-After a student submits an attempt for a quiz, another submitted attempt for that same student and quiz is rejected.
+The lecturer configures a positive whole-number attempt limit for each quiz. A student may submit attempts until they reach that limit; further attempts are rejected.
 
-**Worked example:** Duc submits Q03 at 14:20. At 14:25 he tries to start Q03 again; the system rejects the request with `You have already submitted this quiz` and keeps the submitted attempt count at 1.
+**Worked example:** The lecturer sets Q03's attempt limit to 2. Duc submits once at 14:20 and may start Q03 again; after submitting the second attempt, any further start is rejected.
 
 ### BR6 - Submitted attempts and scores are append-only
 

@@ -11,10 +11,6 @@
         header { display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; background: #fff; border-bottom: 1px solid #cbd5e1; }
         header strong { color: #111827; font-size: 20px; }
         a { color: #1d4ed8; }
-        .layout { display: grid; grid-template-columns: 210px minmax(0, 1fr); min-height: calc(100vh - 70px); }
-        nav { padding: 28px 14px; border-right: 1px solid #cbd5e1; background: #fff; }
-        nav a { display: block; padding: 12px 14px; margin-bottom: 8px; text-decoration: none; color: #1e293b; }
-        nav a[aria-current="page"] { background: #dbeafe; font-weight: 700; }
         main { padding: 36px; overflow: auto; }
         .title-row { display: flex; justify-content: space-between; align-items: start; gap: 20px; }
         h1 { margin: 0 0 8px; }
@@ -25,24 +21,22 @@
         th, td { padding: 14px; border: 1px solid #cbd5e1; text-align: left; }
         th { background: #e2e8f0; }
         .status { font-weight: 600; }
-        .actions { white-space: nowrap; }
-        .actions a { margin-right: 10px; }
         .empty { min-height: 400px; margin-top: 28px; display: grid; place-content: center; text-align: center; gap: 16px; background: #fff; border: 1px solid #cbd5e1; border-radius: 30px; }
-        @media (max-width: 700px) { .layout { grid-template-columns: 1fr; } nav { display: flex; gap: 8px; border-right: 0; border-bottom: 1px solid #cbd5e1; padding: 10px; } nav a { margin: 0; } main { padding: 22px 14px; } .title-row { flex-direction: column; } }
+        @media (max-width: 700px) { main { padding: 22px 14px; } .title-row { flex-direction: column; } }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/hig.css') }}">
 </head>
 <body>
     <header>
         <strong>Mini LMS</strong>
-        <span>{{ name }} · <a href="{{ url_for('auth.logout') }}">Log out</a></span>
+        <span>
+            {{ name }} ·
+            <form class="logout-form" method="post" action="{{ url_for('auth.logout') }}" data-confirm="Are you sure you want to sign out?" data-confirm-title="Sign out" data-confirm-label="Sign out">
+                <button class="logout-button" type="submit">Log out</button>
+            </form>
+        </span>
     </header>
-    <div class="layout">
-        <nav aria-label="Lecturer navigation">
-            <a href="{{ url_for('lecturer.lecturer_dashboard') }}" aria-current="page">Dashboard</a>
-            <a href="{{ url_for('lecturer.lecturer_dashboard') }}">My Quizzes</a>
-            <a href="{{ url_for('quiz.create_quiz_page') }}">Create Quiz</a>
-        </nav>
-        <main>
+    <main class="lecturer-main">
             <div class="title-row">
                 <div>
                     <h1>My Quizzes</h1>
@@ -55,7 +49,7 @@
             <div class="table-wrap">
             <table>
                 <thead>
-                    <tr style="background: #f1f5f9;">
+                    <tr>
                         <th>ID</th>
                         <th>Quiz Title</th>
                         <th>Status</th>
@@ -69,14 +63,15 @@
                         <td>{{ q.quiz_id }}</td>
                         <td>{{ q.title }}</td>
                         <td class="status">{{ q.status|capitalize }}</td>
-                        <td>{{ q.attempt_count }} attempts</td>
+                        <td>
+                            <a class="attempt-count" href="{{ url_for('lecturer.quiz_attempts', quiz_id=q.quiz_id) }}">
+                                {{ q.attempt_count }} attempts
+                            </a>
+                        </td>
                         <td class="actions">
-                            <a href="{{ url_for('quiz.questions_page', quiz_id=q.quiz_id) }}">Edit Questions</a>
-                            {% if q.status == 'draft' %}
-                            <a href="{{ url_for('lecturer.publish_page', quiz_id=q.quiz_id) }}">Publish</a>
-                            {% elif q.status == 'published' %}
-                            <a href="{{ url_for('lecturer.publish_page', quiz_id=q.quiz_id) }}">Manage</a>
-                            {% endif %}
+                            <div class="table-actions">
+                                <a class="table-action" href="{{ url_for('lecturer.publish_page', quiz_id=q.quiz_id) }}">Manage Quiz</a>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -85,13 +80,13 @@
             </div>
             {% else %}
             <section class="empty">
-                <div aria-hidden="true" style="font-size: 36px;">▤</div>
+                <div class="empty-icon" aria-hidden="true">▤</div>
                 <h2>You have no quizzes yet</h2>
                 <p class="muted">Create your first quiz to get started.</p>
                 <a class="button" href="{{ url_for('quiz.create_quiz_page') }}">+ Create Quiz</a>
             </section>
             {% endif %}
-        </main>
-    </div>
+    </main>
+    {% include "_toasts.html" %}
 </body>
 </html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ attempt.student_name }} - {{ quiz.title }} - Mini LMS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/hig.css') }}">
+</head>
+<body>
+    <main>
+        <nav class="question-page-actions" aria-label="Attempt detail navigation">
+            <a class="btn btn-secondary" href="{{ url_for('lecturer.quiz_attempts', quiz_id=quiz.quiz_id) }}">Back to attempts</a>
+            <a class="btn btn-secondary" href="{{ url_for('lecturer.lecturer_dashboard') }}">Dashboard</a>
+        </nav>
+
+        <h1>{{ attempt.student_name }}</h1>
+        <p class="muted">{{ attempt.student_email }} · {{ quiz.title }}</p>
+
+        <section class="attempt-summary">
+            <div>
+                <span class="attempt-summary-label">Status</span>
+                {% if attempt.submitted_at %}
+                <span class="badge badge-published">Submitted</span>
+                {% else %}
+                <span class="badge badge-draft">In progress</span>
+                {% endif %}
+            </div>
+            <div>
+                <span class="attempt-summary-label">Score</span>
+                {% if attempt.score is not none %}
+                <strong>{{ "%.0f"|format(attempt.score * 100) }}%</strong>
+                {% else %}
+                <strong>Not submitted</strong>
+                {% endif %}
+            </div>
+            <div>
+                <span class="attempt-summary-label">Started</span>
+                <strong>{{ attempt.started_at_display }}</strong>
+            </div>
+            <div>
+                <span class="attempt-summary-label">Submitted</span>
+                <strong>{{ attempt.submitted_at_display or "—" }}</strong>
+            </div>
+        </section>
+
+        <h2>Answer review</h2>
+        {% if answers %}
+        <div class="attempt-answer-list">
+            {% for answer in answers %}
+            <article class="attempt-answer
+                {% if answer.is_correct == 1 %}attempt-answer-correct
+                {% elif answer.is_correct == 0 %}attempt-answer-wrong
+                {% else %}attempt-answer-unanswered{% endif %}">
+                <div class="attempt-answer-heading">
+                    <h3>Question {{ answer.position }}</h3>
+                    {% if answer.is_correct == 1 %}
+                    <span class="badge badge-published">Correct</span>
+                    {% elif answer.is_correct == 0 %}
+                    <span class="badge badge-closed">Incorrect</span>
+                    {% else %}
+                    <span class="badge badge-draft">Unanswered</span>
+                    {% endif %}
+                </div>
+                <p>{{ answer.content }}</p>
+                <dl class="answer-comparison">
+                    <div>
+                        <dt>Student's answer</dt>
+                        <dd>{{ answer.selected_choice or "No answer" }}</dd>
+                    </div>
+                    <div>
+                        <dt>Correct answer</dt>
+                        <dd>{{ answer.correct_choice or "No correct answer configured" }}</dd>
+                    </div>
+                    <div>
+                        <dt>Points</dt>
+                        <dd>{{ answer.points }}</dd>
+                    </div>
+                </dl>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <section class="empty attempts-empty">
+            <p class="muted">This quiz has no questions to review.</p>
+        </section>
+        {% endif %}
+    </main>
+    {% include "_toasts.html" %}
+</body>
+</html>

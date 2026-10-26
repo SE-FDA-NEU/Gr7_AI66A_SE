@@ -22,8 +22,8 @@ QUIZ_CLOSED = (
     "Contact your lecturer if you need access."
 )
 ALREADY_SUBMITTED = (
-    "You have already submitted this quiz, and each quiz allows only one submission. "
-    "Go back to the dashboard to see other quizzes."
+    "You have no attempts remaining for this quiz. "
+    "Go back to the dashboard to choose another quiz."
 )
 ATTEMPT_NOT_STARTED = (
     "You haven't started this quiz yet, so there is nothing to show. "
@@ -44,6 +44,10 @@ UNANSWERED_NOT_CONFIRMED = (
 ATTEMPT_NOT_SUBMITTED = (
     "You haven't submitted this quiz yet, so there is no submission to show. "
     "Go back to the dashboard to continue the quiz."
+)
+ATTEMPT_NOT_FOUND = (
+    "This attempt could not be found for the selected quiz. "
+    "Return to the quiz attempts list and choose a listed attempt."
 )
 INVALID_CHOICE = (
     "The selected option does not belong to this question, so it was not saved. "
@@ -74,10 +78,6 @@ QUIZ_NO_QUESTIONS = (
 QUIZ_ALREADY_PUBLISHED = (
     "Bài quiz này đã được publish trước đó. "
     "Không thể publish lại bài quiz đang hoạt động."
-)
-QUIZ_CANNOT_REPUBLISH_CLOSED = (
-    "Bài quiz đã đóng không thể publish lại. "
-    "(A closed quiz cannot be published again.)"
 )
 QUIZ_DRAFT_CANNOT_BE_CLOSED = (
     "Bài quiz đang ở trạng thái bản nháp (Draft), phải được publish trước khi đóng. "

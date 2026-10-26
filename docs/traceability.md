@@ -17,6 +17,14 @@ Every screen traces back to a feature and forward to the issue that built it.
 | `/student/quiz/:id/grade` | Automatic quiz grading & score result | U | P1 | F7 | [#32](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/32) | [#44](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/44) | In progress |
 | `/student/quiz/:id/review` | Student views quiz result | U | P1 | F11 | [#33](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/33) | [#50](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/50) | In progress |
 
+**US09 note:** the score for `/student/quiz/:id/grade` is shown on `/student/quiz/:id/submitted` (`Score: n/N (p%)`) instead of a separate route; see `docs/testing.md`, section US09.
+
+## Story tests
+
+| Story | Route | Implemented in | Test issue | Tested by | Status |
+| --- | --- | --- | --- | --- | --- |
+| US09 - Student sees an automatically calculated result | `/student/quiz/:id/submitted` | `attempt_service.result_summary()`, `get_submitted_data()`, `quiz_submitted.html` | [#112](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/112) | `tests/test_us09.py` (US09-01..14 in `docs/testing.md`) | AC1, AC4 done · AC2, AC3 blocked (need `quiz.show_answers` and lecturer UI) |
+
 **Access codes:** G = guest (not logged in) · U = authenticated user · A = administrator (not currently used by any screen - `requirements.md` has no admin persona or business rule).
 
 # Business Rules

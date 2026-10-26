@@ -231,7 +231,7 @@ Bảng dưới đây trích xuất chính xác từ hệ thống mã lỗi trong
 
 ### Thay đổi 3: Thống nhất ý nghĩa của `attempt.score`
 
-`score` lưu dưới dạng tỉ lệ từ 0 đến 1 (số câu đúng / tổng số câu; ví dụ 8/10 = 0.8). Khi hiển thị thì làm tròn: phần trăm là `round(score × 100)`.
+`score` lưu dưới dạng tỉ lệ từ 0 đến 1 (số câu đúng / tổng số câu; ví dụ 8/10 = 0.8). Khi hiển thị (US09, trang `/student/quiz/:id/submitted`), phần trăm tính từ **số câu đúng / tổng số câu**, làm tròn half-up: `floor(correct × 100 / total + 0.5)` (ví dụ 2/3 → 67%, 1/8 = 12.5 → 13%; quiz không có câu → 0%). Không đảo ngược từ `score` để tránh sai số float, và không dùng `round()` của Python vì hàm này làm tròn về số chẵn (`round(12.5)` = 12). Code: `attempt_service.result_summary()` dùng dạng số nguyên tương đương `(200 × correct + total) // (2 × total)`. Chốt ở #112.
 
 Nhóm chốt điều này khi làm phần nộp bài (#87), để các story xem kết quả và thống kê (US09, US10) đọc cùng một giá trị.
 

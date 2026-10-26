@@ -305,6 +305,20 @@ def test_take_page_without_starting_shows_404(client):
     assert "Take quiz" in response.get_data(as_text=True)
 
 
+def test_us13_take_page_contains_one_time_second_tab_warning(client):
+    login(client)
+    client.post(f"/student/quiz/{PUBLISHED_QUIZ}/start")
+
+    response = client.get(f"/student/quiz/{PUBLISHED_QUIZ}/take?q=1")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert 'id="anti-cheat-warning"' in html
+    assert 'Warning recorded: you left the quiz page or opened another tab.' in html
+    assert 'document.addEventListener("visibilitychange"' in html
+    assert 'window.addEventListener("blur", recordWarning)' in html
+
+
 def test_late_answer_is_not_saved_and_attempt_is_auto_submitted(client, db_path, monkeypatch):
     start = datetime(2026, 10, 17, 8, 0, 0)
     monkeypatch.setattr(attempt_service, "_now", lambda: start)

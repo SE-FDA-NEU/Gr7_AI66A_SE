@@ -77,6 +77,26 @@ def test_api_lists_published_quizzes_from_the_database(client, db_path):
     }
 
 
+def test_api_lists_six_published_quizzes_and_excludes_unpublished_quizzes(client, db_path):
+    with get_connection(db_path) as connection:
+        connection.execute("UPDATE quiz SET status = 'draft' WHERE status = 'published'")
+        connection.execute(
+            "UPDATE quiz SET status = 'published', end_at = ? WHERE quiz_id BETWEEN 1 AND 5",
+            ("2026-10-25T23:59:00",),
+        )
+        connection.execute(
+            "UPDATE quiz SET status = 'published', end_at = NULL WHERE quiz_id = 6"
+        )
+    login(client)
+
+    quizzes = quizzes_by_id(client)
+
+    assert sorted(quizzes) == [1, 2, 3, 4, 5, 6]
+    assert quizzes[1]["end_at"] == "2026-10-25T23:59:00"
+    assert all(quizzes[quiz_id]["end_at"] == "2026-10-25T23:59:00" for quiz_id in range(1, 6))
+    assert quizzes[6]["end_at"] is None
+
+
 def test_question_count_counts_every_question(client, db_path):
     with get_connection(db_path) as connection:
         connection.execute(

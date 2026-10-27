@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Isolated unit tests for the US06 take-attempt service."""
 
 from datetime import datetime

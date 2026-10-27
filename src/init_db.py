@@ -1,5 +1,5 @@
 """Create the local database and load its checked-in sample data."""
-
+from __future__ import annotations
 import csv
 import os
 from pathlib import Path

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import sqlite3
 
 from src.app import create_app

@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Read-only lecturer views of student quiz attempts."""
 
 from contextlib import closing

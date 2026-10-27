@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Tests for US04: Lecturer publishes and closes a quiz (BR2, BR3, BR4)."""
 
 from src.app import create_app

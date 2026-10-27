@@ -1,5 +1,5 @@
 """Business rules for taking and submitting a quiz attempt (US06, US08, BR4, BR5, BR6)."""
-
+from __future__ import annotations
 from datetime import datetime, timedelta
 from pathlib import Path
 

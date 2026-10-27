@@ -21,6 +21,7 @@
         {% if notice %}
         <p class="notice" role="status">{{ notice }}</p>
         {% endif %}
+        <p><strong>Score: {{ result.fraction }} ({{ result.percent }}%)</strong></p>
         <p>Submitted at {{ submitted_at_display }}</p>
         <p class="quiz-dashboard-link">
             <a class="btn btn-secondary" href="{{ url_for('student.student_dashboard') }}">Back to dashboard</a>

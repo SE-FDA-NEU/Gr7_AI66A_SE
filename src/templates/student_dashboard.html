@@ -80,6 +80,7 @@
                     <thead>
                         <tr>
                             <th>Quiz</th>
+                            <th>Due date</th>
                             <th>Duration</th>
                             <th>Availability (UTC+7)</th>
                             <th>Questions</th>
@@ -154,6 +155,7 @@
                 quizzes.forEach(function (quiz) {
                     var tr = document.createElement("tr");
                     tr.appendChild(cell(quiz.title));
+                    tr.appendChild(cell(quiz.end_at ? quiz.end_at.slice(0, 10) : "No due date"));
                     tr.appendChild(cell(
                         quiz.duration_unlimited ? "No time limit" : quiz.duration_minutes + " min"
                     ));

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import pytest
 
 from src.app import create_app

@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Login and logout routes."""
 
 from flask import (

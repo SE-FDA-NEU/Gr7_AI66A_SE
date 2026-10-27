@@ -1,3 +1,4 @@
+from __future__ import annotations
 import pytest
 from markupsafe import escape
 
@@ -96,6 +97,22 @@ def test_questions_route_redirects_to_integrated_manage_page(client):
     assert "Has correct answer" not in html
     assert "Missing correct answer" not in html
     assert '<details class="manage-disclosure card">' in html
+
+
+def test_answer_choice_labels_are_outside_the_choice_fieldsets(client):
+    login(client)
+
+    html = client.get(f"/lecturer/quiz/{NGAN_QUIZ}/publish").get_data(as_text=True)
+
+    assert '<div class="manage-choice-label" id="add-answer-choices-label">Answer choices</div>' in html
+    assert '<fieldset class="manage-choice-fieldset" aria-labelledby="add-answer-choices-label">' in html
+    assert "<legend>Answer choices</legend>" not in html
+    assert html.count('class="manage-choice-label"') == 2
+    assert 'id="edit-answer-choices-label-' in html
+    assert 'aria-labelledby="edit-answer-choices-label-' in html
+    assert html.index('<div class="manage-choice-label"') < html.index(
+        '<fieldset class="manage-choice-fieldset"'
+    )
 
 
 def test_adding_first_question_makes_the_count_1(client, db_path):

@@ -1,5 +1,5 @@
 """Helpers for timestamps stored in UTC and entered in Vietnam local time."""
-
+from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S"

@@ -1,3 +1,4 @@
+from __future__ import annotations
 from flask import Blueprint, current_app, redirect, render_template, request, session, url_for
 from src.auth import role_required
 from src.errors import AUTO_SUBMITTED, UNANSWERED_NOT_CONFIRMED, render_error

@@ -30,7 +30,10 @@
         <div class="bar">
             <p>Question {{ question_number }} / {{ total_questions }}</p>
         </div>
-
+        <p id="anti-cheat-warning" class="alert alert-warning" role="alert" hidden>
+            Warning recorded: you left the quiz page or opened another tab.
+        </p>
+        
         <form method="post" action="{{ url_for('student.save_quiz_answer', quiz_id=quiz.quiz_id) }}">
             <input type="hidden" name="attempt_id" value="{{ attempt_id }}">
             <input type="hidden" name="question_id" value="{{ question.question_id }}">
@@ -79,6 +82,24 @@
         </p>
     </main>
     <script>
+        // Warn once if the student switches away from the active quiz tab.
+        (function () {
+            var warning = document.getElementById("anti-cheat-warning");
+            var warned = false;
+            function recordWarning() {
+                if (!warned) {
+                    warned = true;
+                    warning.hidden = false;
+                }
+            }
+            document.addEventListener("visibilitychange", function () {
+                if (document.hidden) {
+                    recordWarning();
+                }
+            });
+            window.addEventListener("blur", recordWarning);
+        })();
+
         // Display only: the server decides whether time is up.
         (function () {
             var timer = document.getElementById("timer");

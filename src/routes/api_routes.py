@@ -1,3 +1,4 @@
+from __future__ import annotations
 """JSON endpoints used by pages that load their data with JavaScript."""
 
 from flask import Blueprint, current_app, session, url_for

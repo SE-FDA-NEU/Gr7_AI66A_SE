@@ -1,4 +1,5 @@
-"""Lecturer routes (US04, Lecturer Dashboard)."""
+from __future__ import annotations
+"""Lecturer routes (US04, US12, Lecturer Dashboard)."""
 
 from flask import (
     Blueprint,
@@ -13,7 +14,14 @@ from flask import (
 )
 
 from src.auth import role_required
+from src.db import get_connection
 from src.errors import render_error
+from src.repositories.audit_repository import get_attempt_audit_history
+from src.services.lecturer_attempt_service import (
+    LecturerAttemptError,
+    get_quiz_attempt_detail,
+    get_quiz_attempts,
+)
 from src.services.quiz_service import (
     InvalidQuiz,
     QuizServiceError,
@@ -91,6 +99,33 @@ def quiz_statistics(quiz_id: int):
         return render_error(error.status_code, error.message)
 
     return render_template("lecturer_statistics.html", **data)
+@lecturer_bp.get("/lecturer/quiz/<int:quiz_id>/attempts/<int:attempt_id>/audit")
+@role_required("lecturer")
+def view_attempt_audit_history(quiz_id: int, attempt_id: int):
+    """US12: Lecturer views an append-only attempt audit history."""
+    db_path = current_app.config["DATABASE_PATH"]
+    
+    with get_connection(db_path) as connection:
+        logs, error = get_attempt_audit_history(
+            connection,
+            attempt_id,
+            session["user_id"],
+        )
+
+    if error == "ATTEMPT_NOT_FOUND":
+        return render_error(404, "Attempt audit log not found.")
+    if error == "NOT_QUIZ_OWNER":
+        return render_error(
+            403,
+            "Bạn không có quyền xem nhật ký làm bài của quiz này vì nó thuộc giảng viên khác.",
+        )
+
+    return render_template(
+        "lecturer_attempt_audit.html",
+        logs=logs,
+        attempt_id=attempt_id,
+        quiz_id=quiz_id,
+    )
 
 
 @lecturer_bp.get("/lecturer/quiz/<int:quiz_id>/publish")

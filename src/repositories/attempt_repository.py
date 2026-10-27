@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Database access for quiz attempts and answers."""
 
 import sqlite3

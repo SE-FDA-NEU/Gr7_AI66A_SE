@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Isolated unit tests for the US06 take-attempt service."""
 
 from datetime import datetime
@@ -111,6 +112,71 @@ def test_take_page_uses_closing_time_when_it_precedes_duration(take_page_service
     data = attempt_service.get_take_page_data("unused", 3, 42, 1)
 
     assert data["remaining_seconds"] == 7 * 60
+
+
+def test_us13_expiry_boundary_keeps_attempt_open_just_before_deadline(
+    take_page_service, monkeypatch
+):
+    connection, _, _ = take_page_service
+    quiz = attempt_service.repo.get_quiz(None, 42)
+    finalize = Mock()
+    monkeypatch.setattr(attempt_service, "_finalize", finalize)
+    monkeypatch.setattr(
+        attempt_service, "_now", lambda: datetime(2026, 10, 26, 8, 19, 59)
+    )
+
+    attempt_service._auto_submit_if_expired(
+        connection,
+        {"attempt_id": 7, "started_at": "2026-10-26T08:00:00"},
+        quiz,
+    )
+
+    finalize.assert_not_called()
+    connection.commit.assert_not_called()
+
+
+def test_us13_expiry_boundary_auto_submits_at_exact_deadline(
+    take_page_service, monkeypatch
+):
+    connection, _, _ = take_page_service
+    quiz = attempt_service.repo.get_quiz(None, 42)
+    attempt = {"attempt_id": 7, "quiz_id": 42, "started_at": "2026-10-26T08:00:00"}
+    finalize = Mock(return_value=True)
+    monkeypatch.setattr(attempt_service, "_finalize", finalize)
+    monkeypatch.setattr(
+        attempt_service, "_now", lambda: datetime(2026, 10, 26, 8, 20, 0)
+    )
+
+    with pytest.raises(attempt_service.AutoSubmitted) as error:
+        attempt_service._auto_submit_if_expired(connection, attempt, quiz)
+
+    assert error.value.quiz_id == 42
+    finalize.assert_called_once_with(connection, attempt, datetime(2026, 10, 26, 8, 20, 0))
+    connection.commit.assert_called_once()
+
+
+def test_us13_second_submit_is_rejected_without_changing_saved_result(monkeypatch):
+    connection = Mock()
+    attempt = {
+        "attempt_id": 7,
+        "student_id": 3,
+        "quiz_id": 42,
+        "submitted_at": "2026-10-26T08:10:00",
+        "score": 0.8,
+    }
+    monkeypatch.setattr(attempt_service, "get_connection", lambda _: connection)
+    monkeypatch.setattr(attempt_service.repo, "get_attempt", lambda *_: attempt)
+    mark_submitted = Mock()
+    monkeypatch.setattr(attempt_service.repo, "mark_submitted", mark_submitted)
+
+    with pytest.raises(attempt_service.AttemptError) as error:
+        attempt_service.submit_attempt("unused", 3, 42, 7, confirmed=True)
+
+    assert error.value.status_code == 409
+    assert str(error.value) == attempt_service.errors.ALREADY_SUBMITTED
+    mark_submitted.assert_not_called()
+    connection.rollback.assert_called_once()
+    connection.close.assert_called_once()
 
 
 def test_expired_attempt_is_auto_submitted_at_earliest_deadline(

@@ -1,3 +1,4 @@
+from __future__ import annotations
 import pytest
 
 from src.app import create_app
@@ -77,7 +78,15 @@ def test_api_lists_published_quizzes_from_the_database(client, db_path):
     }
 
 
-def test_api_lists_six_published_quizzes_and_excludes_unpublished_quizzes(client, db_path):
+def test_api_lists_six_published_quizzes_and_excludes_unpublished_quizzes(
+    client, db_path, monkeypatch
+):
+    # Keep the scheduled quizzes in the future regardless of when the suite runs.
+    monkeypatch.setattr(
+        quiz_service,
+        "utc_now_naive",
+        lambda: quiz_service.parse_utc_timestamp("2026-10-20T00:00:00"),
+    )
     with get_connection(db_path) as connection:
         connection.execute("UPDATE quiz SET status = 'draft' WHERE status = 'published'")
         connection.execute(

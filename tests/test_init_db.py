@@ -1,3 +1,4 @@
+from __future__ import annotations
 import sqlite3
 
 import pytest
@@ -18,7 +19,7 @@ def test_init_db_seeds_expected_rows(db_path):
     with get_connection(db_path) as connection:
         counts = {
             table: connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
-            for table in ("user", "quiz", "question", "choice", "attempt", "answer")
+            for table in ("user", "quiz", "question", "choice", "attempt", "answer", "attempt_audit")
         }
 
     assert counts == {
@@ -28,6 +29,7 @@ def test_init_db_seeds_expected_rows(db_path):
         "choice": 60,
         "attempt": 0,
         "answer": 0,
+        "attempt_audit": 0,
     }
 
 
@@ -39,6 +41,7 @@ def test_init_db_is_repeatable(db_path):
         "choice": 60,
         "attempt": 0,
         "answer": 0,
+        "attempt_audit": 0,
     }
 
 

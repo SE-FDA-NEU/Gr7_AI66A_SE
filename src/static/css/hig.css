@@ -1066,14 +1066,18 @@ form .btn-secondary {
     margin-top: 4px;
 }
 
-.manage-choice-fieldset {
-    margin: 10px 0;
-    padding: 20px;
-    box-shadow: none;
+.manage-choice-label {
+    margin-top: 4px;
+    color: var(--text-primary);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
 }
 
-.manage-choice-fieldset legend {
-    padding: 0 8px;
+.manage-choice-fieldset {
+    margin: 0 0 10px;
+    padding: 20px;
+    box-shadow: none;
 }
 
 .manage-choice-fieldset .muted {

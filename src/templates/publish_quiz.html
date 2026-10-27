@@ -60,8 +60,8 @@
                 <label for="question-content">Question</label>
                 <textarea id="question-content" name="content" rows="3" required>{{ form.content }}</textarea>
 
-                <fieldset class="manage-choice-fieldset">
-                    <legend>Answer choices</legend>
+                <div class="manage-choice-label" id="add-answer-choices-label">Answer choices</div>
+                <fieldset class="manage-choice-fieldset" aria-labelledby="add-answer-choices-label">
                     <p class="muted">Select the radio button next to the correct answer.</p>
                     <div class="manage-choice-grid">
                         {% for index in range(4) %}
@@ -142,8 +142,8 @@
                                 {% endif %}
                                 <label for="edit-question-content-{{ question.question_id }}">Question</label>
                                 <textarea id="edit-question-content-{{ question.question_id }}" name="content" rows="3" required>{% if editing_question_id == question.question_id and edit_form %}{{ edit_form.content }}{% else %}{{ question.content }}{% endif %}</textarea>
-                                <fieldset class="manage-choice-fieldset">
-                                    <legend>Answer choices</legend>
+                                <div class="manage-choice-label" id="edit-answer-choices-label-{{ question.question_id }}">Answer choices</div>
+                                <fieldset class="manage-choice-fieldset" aria-labelledby="edit-answer-choices-label-{{ question.question_id }}">
                                     <div class="manage-choice-grid">
                                         {% for index in range(4) %}
                                             {% set existing_choice = question.choices[index] if index < question.choices|length else none %}

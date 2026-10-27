@@ -81,7 +81,7 @@ def test_choice_b_on_question_7_stays_answered_after_moving_to_question_8(ten_qu
 
     page = client.get(f"/student/quiz/{PUBLISHED_QUIZ}/take?q=7").get_data(as_text=True)
     assert "Question 7 / 10" in page
-    assert checked_value(choice_b) in page
+    assert re.search(checked_value(choice_b), page)
     assert page.count("checked") == 1
 
     with get_connection(db_path) as connection:

@@ -1,5 +1,5 @@
 """Database access for authentication and login lockouts."""
-
+from __future__ import annotations
 import sqlite3
 
 

@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Tests for the lecturer's quiz dashboard (US14)."""
 
 from src.app import create_app

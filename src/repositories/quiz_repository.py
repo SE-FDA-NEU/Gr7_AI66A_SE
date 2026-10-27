@@ -1,3 +1,4 @@
+from __future__ import annotations
 def list_published_quizzes(conn):
     """
     Truy vấn danh sách các quiz có status = 'published'

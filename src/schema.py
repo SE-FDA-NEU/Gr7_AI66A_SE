@@ -1,7 +1,9 @@
+from __future__ import annotations
 
 """SQLite schema for the MiniLMS data model."""
 
 SCHEMA_SQL = """
+DROP TABLE IF EXISTS attempt_audit;
 DROP TABLE IF EXISTS answer;
 DROP TABLE IF EXISTS attempt;
 DROP TABLE IF EXISTS choice;
@@ -87,6 +89,39 @@ CREATE TABLE answer (
     choice_id INTEGER REFERENCES choice(choice_id),
     UNIQUE (attempt_id, question_id)
 );
+
+CREATE TABLE attempt_audit (
+    audit_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    attempt_id INTEGER NOT NULL REFERENCES attempt(attempt_id) ON DELETE CASCADE,
+    actor_id INTEGER NOT NULL REFERENCES user(user_id),
+    action TEXT NOT NULL CHECK (
+        action IN (
+            'ATTEMPT_STARTED',
+            'ANSWER_SAVED',
+            'ATTEMPT_SUBMITTED',
+            'AUTO_SUBMITTED',
+            'GRADE_OVERRIDDEN'
+        )
+    ),
+    metadata TEXT, -- JSON string
+    timestamp TEXT NOT NULL
+);
+
+CREATE INDEX idx_attempt_audit_attempt_id
+    ON attempt_audit(attempt_id, timestamp ASC);
+
+-- Enforce Immutability (Append-Only) via Database Triggers
+CREATE TRIGGER prevent_attempt_audit_update
+BEFORE UPDATE ON attempt_audit
+BEGIN
+    SELECT RAISE(FAIL, 'IMMUTABLE_RECORD: Attempt audit history logs cannot be modified.');
+END;
+
+CREATE TRIGGER prevent_attempt_audit_delete
+BEFORE DELETE ON attempt_audit
+BEGIN
+    SELECT RAISE(FAIL, 'IMMUTABLE_RECORD: Attempt audit history logs cannot be deleted.');
+END;
 """
 
-TABLE_NAMES = ("user", "quiz", "question", "choice", "attempt", "answer")
+TABLE_NAMES = ("user", "quiz", "question", "choice", "attempt", "answer", "attempt_audit")

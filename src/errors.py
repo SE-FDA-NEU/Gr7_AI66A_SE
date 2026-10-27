@@ -1,5 +1,5 @@
+from __future__ import annotations
 from flask import render_template
-
 
 ERROR_MESSAGES = {
     400: "Email and password are required.",

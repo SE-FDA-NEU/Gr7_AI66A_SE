@@ -139,3 +139,65 @@ def test_tc11_04_refresh_preserves_12_minutes(client, db_path, monkeypatch):
     assert 0 < _remaining(first) <= 720
     assert 0 < _remaining(refreshed) <= 720
     assert _attempt(db_path)["attempt_id"] == initial["attempt_id"]
+
+
+def test_tc11_05_attempt_is_active_one_second_before_deadline(
+    client, db_path, monkeypatch
+):
+    """TC11-05: At 29:59, the attempt remains active with about one second left."""
+    _set_clock(monkeypatch, START)
+    assert client.post(f"/student/quiz/{QUIZ_ID}/start").status_code == 302
+
+    _set_clock(monkeypatch, START + timedelta(minutes=29, seconds=59))
+    response = client.get(f"/student/quiz/{QUIZ_ID}/take?q=1")
+
+    assert response.status_code == 200
+    assert _remaining(response) == 1
+    assert _attempt(db_path)["submitted_at"] is None
+
+
+def test_tc11_06_expired_attempt_is_submitted_and_cannot_answer(
+    client, db_path, monkeypatch
+):
+    """TC11-06: At 30:01, the attempt is submitted and answering is rejected."""
+    _set_clock(monkeypatch, START)
+    assert client.post(f"/student/quiz/{QUIZ_ID}/start").status_code == 302
+    initial = _attempt(db_path)
+    assert initial is not None
+
+    with get_connection(db_path) as conn:
+        question = conn.execute(
+            "SELECT question_id FROM question WHERE quiz_id = ? LIMIT 1",
+            (QUIZ_ID,),
+        ).fetchone()
+        choice = conn.execute(
+            """
+            SELECT c.choice_id
+              FROM choice c
+              JOIN question q ON q.question_id = c.question_id
+             WHERE q.quiz_id = ? LIMIT 1
+            """,
+            (QUIZ_ID,),
+        ).fetchone()
+    assert question is not None and choice is not None
+
+    _set_clock(monkeypatch, START + timedelta(minutes=30, seconds=1))
+    expired_page = client.get(f"/student/quiz/{QUIZ_ID}/take?q=1")
+    assert expired_page.status_code == 302
+    assert "submitted" in expired_page.headers["Location"]
+
+    submitted = _attempt(db_path)
+    assert submitted["attempt_id"] == initial["attempt_id"]
+    assert submitted["submitted_at"] is not None
+
+    answer = client.post(
+        f"/student/quiz/{QUIZ_ID}/take",
+        data={
+            "attempt_id": submitted["attempt_id"],
+            "question_id": question["question_id"],
+            "choice_id": choice["choice_id"],
+            "go": "1",
+        },
+    )
+    assert answer.status_code == 409
+    assert _attempt(db_path)["submitted_at"] == submitted["submitted_at"]

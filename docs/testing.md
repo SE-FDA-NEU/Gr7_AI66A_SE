@@ -87,11 +87,11 @@ Every P0 story has at least three test cases: one normal case, one error case, a
 | US06-01 | US06 Start attempt | Student starts a published quiz of 10 questions | Question 1 shown; questions displayed one at a time | normal |
 | US06-02 | US06 Start attempt | Quiz with a 30-minute limit, attempt just started | Timer starts at 30:00 (1800 s) | normal |
 | US06-03 | US06 Start attempt | Select B on question 3, move away and come back | B is still selected | normal |
-| US06-04 | US06 Start attempt | Refresh the page mid-attempt | Same question and same remaining time restored | normal |
+| US06-04 | US06 Start attempt | Refresh the page mid-attempt | Same question shown; started_at unchanged (timer not reset) | normal |
 | US06-05 | US06 Start attempt | Quiz of 10 questions: open question 0, 1, 10, 11 | 0 and 11 return 404; 1 and 10 open | boundary, both sides |
-| US06-06 | US06 Start attempt | Access the attempt at 29:59, 30:00 and 30:01 after the start | 29:59 still open; 30:00 auto-submitted; 30:01 cannot continue | boundary, three points |
+| US06-06 | US06 Start attempt | Access the attempt at 29:59, 30:00 and 30:01 after the start | 29:59 still open (200); 30:00 and 30:01 auto-submitted (302), submitted_at = 30:00 | boundary, three points |
 | US06-07 | US06 Start attempt | Start a draft quiz, then a closed quiz | Rejected; no attempt created | error |
-| US06-08 | US06 Start attempt | Attempt limit is 2: start a 2nd and a 3rd attempt | 2nd allowed; 3rd rejected (BR5) | boundary, both sides |
+| US06-08 | US06 Start attempt | Attempt limit is 2: start and submit 1st, start and submit 2nd, then start a 3rd | 3rd rejected (409, BR5) | boundary, both sides |
 
 ### 2.6 US08: Student submits a quiz
 

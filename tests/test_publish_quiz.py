@@ -231,6 +231,9 @@ def test_invalid_schedule_is_rejected_and_other_lecturers_cannot_change_it(tmp_p
 def test_publish_valid_quiz_updates_status_to_published(tmp_path):
     db_path = tmp_path / "minilms.db"
     init_db(db_path)
+    # Keep this valid-publication case independent of the calendar date.
+    with get_connection(db_path) as conn:
+        conn.execute("UPDATE quiz SET end_at = NULL WHERE quiz_id = 13")
     app = create_app({"TESTING": True, "DATABASE_PATH": db_path})
     client = app.test_client()
 

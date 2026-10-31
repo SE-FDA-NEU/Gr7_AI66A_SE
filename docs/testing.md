@@ -98,9 +98,9 @@ Every P0 story has at least three test cases: one normal case, one error case, a
 | ID | Story | Input | Expected result | Kind |
 |---|---|---|---|---|
 | US08-01 | US08 Submit | All 10 questions answered, student confirms | Status Submitted; exactly 1 submission timestamp stored | normal |
-| US08-02 | US08 Submit | Question 7 unanswered, student requests submission | "Question 7" listed; explicit confirmation required; not yet submitted | error |
-| US08-03 | US08 Submit | Question 7 unanswered, student confirms | Submitted; question 7 scores 0 | normal |
-| US08-04 | US08 Submit | Submit the same attempt a second time | Rejected; score and answers unchanged | error |
+| US08-02 | US08 Submit | Question 1 unanswered; student submits without confirmation | 422; question listed and confirmation shown; attempt remains unsubmitted with no answers | error |
+| US08-03 | US08 Submit | Question 1 unanswered; student confirms submission | Submitted with a timestamp; unanswered question scores 0 and result shows 0/1 (0%) | normal |
+| US08-04 | US08 Submit | Submit the same answered attempt a second time | 409; submission timestamp, score, answers, and submitted-attempt count stay unchanged | error |
 | US08-05 | US08 Submit | Change an answer after submission | Rejected (BR6) | error |
 | US08-06 | US08 Submit | Time limit 30 minutes: submit at 29:59 and at 30:01 | 29:59 submitted normally; at 30:01 the attempt was already auto-submitted and the late answer is not saved | boundary, both sides |
 | US08-07 | US08 Submit | A different student submits this attempt | Rejected; attempt unchanged | error |
@@ -122,7 +122,7 @@ Every P0 story has at least three test cases: one normal case, one error case, a
 | US03 | `tests/test_p0_us03_questions.py` |
 | US04 | `tests/test_p0_us04_publish.py` |
 | US06 | `tests/test_p0_us06_start_attempt.py` |
-| US08 | `tests/test_p0_us08_submit.py` |
+| US08 | `tests/test_p0_us08_publish.py` (issue #137) |
 
 **No server and no real database.** The tests use the Flask test client and a temporary SQLite file created in pytest's `tmp_path` by `init_db`. They never read `data/minilms.db` and do not depend on today's date.
 

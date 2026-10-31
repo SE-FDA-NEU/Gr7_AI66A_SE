@@ -1,254 +1,163 @@
+# Mini LMS: Testing (Milestone 4)
 
-# Mini LMS - Test Plan & Test Cases
+**Team 07 · Group 7 · Sprint 4**
+**Repository:** https://github.com/SE-FDA-NEU/Gr7_AI66A_SE
 
-| Phiên bản | Ngày giờ | Người cập nhật | Nội dung |
-|---|---|---|---|
-| 1.0 | 2026-10-25 | Dao Ngoc Hien | Tạo tài liệu; thêm US09 (issue #112) |
-| 1.1 | 2026-10-28 | Nguyen Ngan An | Bổ sung US10 (#113) và US11 (#114) |
 
-Tài liệu này ghi các test case được thiết kế theo slide Software Testing tuần 11 (equivalence partitioning, boundary value analysis, decision table, unhappy path).
-
-Test case được xây dựng dựa trên acceptance criteria (AC) và business rule (BR). Cột **Expected** mô tả hành vi mong đợi, không sao chép từ kết quả chạy code.
+> **How to read this document.** Section 2 lists every test case of every P0 story (US01, US02, US03, US04, US06, US08). Each test case ID, for example `US02-03`, appears in the name or in a comment of exactly one pytest test in `tests/`. Section 3 shows how to run them all with one command. Section 4 records what the tests found.
 
 ---
 
 ## 1. What we test, and why
 
-| Layer | Testing approach | Reason |
-|---|---|---|
-| Services | Unit tests với pytest | Kiểm tra business rules, tính điểm, thống kê và giới hạn thời gian |
-| Repository | Integration tests với SQLite tạm | Kiểm tra dữ liệu được lưu và cập nhật chính xác |
-| Routes | Flask test client | Kiểm tra HTTP response, phân quyền và điều hướng |
-| Interface | Manual testing và kiểm tra HTML response | Xác nhận số liệu và đồng hồ hiển thị đúng |
-
-### Risk Analysis
-
-Các chức năng tính điểm, thống kê và giới hạn thời gian có mức độ rủi ro cao vì ảnh hưởng trực tiếp đến kết quả học tập.
-
-US10 cần kiểm tra độ chính xác của điểm trung bình, tỷ lệ trả lời đúng và phân quyền giảng viên.
-
-US11 cần kiểm tra đặc biệt tại mốc hết giờ vì sai lệch một giây có thể khiến bài làm bị nộp sớm hoặc cho phép làm quá thời gian.
-
----
-
-## 2. Test Cases for P0 Stories
-
-## US09 - Student sees an automatically calculated result
-
-Issue: #112
-
-Test file: `tests/test_us09.py`
-
-### Acceptance Criteria
-
-| AC | Given | When | Then |
+| Layer | Location | What kind of test it gets | Why |
 |---|---|---|---|
-| AC1 | Bài đã nộp, đúng 8/10 câu | SV mở trang kết quả | Hiện `8/10` và `80%` |
-| AC2 | Giảng viên bật answer review | SV mở kết quả | Cả 10 câu hiện đáp án đã chọn và đúng/sai |
-| AC3 | Giảng viên tắt answer review | SV mở kết quả | Thấy điểm, không thấy đáp án đúng |
-| AC4 | Bài chưa nộp | SV mở route kết quả | Không hiện điểm cuối cùng |
+| Services | `src/services/` | Unit tests with pytest, using a temporary SQLite database | All business rules live here (quiz validation, publish rules, attempt timing, scoring); a mistake here costs the most |
+| Repository | `src/repositories/`, `src/db.py` | Integration tests on a temporary SQLite file (`tmp_path`) | Checks the SQL, the database constraints and that data is stored and updated correctly |
+| Routes | `src/routes/` | Flask test client, no running server | Checks status codes, redirects, role-based access (BR1, BR2) and the messages shown to the user |
+| Interface | `src/templates/`, `src/static/` | None automated | `<reason: for example, checked by hand with real users in Milestone 3; layout changes too often for automated tests>` |
 
-### Business Rules
+**Risk.** `<2–3 sentences.>` Suggested content: we tested most the parts where a mistake changes a student's result or exposes data, namely sign-in and role checks (US01), the attempt timer and deadline (US06), and submission and scoring (US08), because an error there directly affects grades and access. Publishing rules (US04) were tested next, since a quiz published without valid questions cannot be taken correctly. The interface was tested least because it only presents what the services already decide.
 
-- `attempt.score` = số câu đúng / tổng số câu, tỷ lệ 0–1.
-- Phần trăm hiển thị = `score × 100`, làm tròn half-up.
-- BR1: Khách chuyển tới `/login`, giảng viên nhận 403.
-- BR5: Mỗi sinh viên có tối đa một bài đã nộp cho mỗi quiz.
-- BR6: Điểm bài đã nộp không thay đổi.
-- US11/US13: Hết giờ, bài tự động nộp với các đáp án đã lưu.
-
-### Chênh lệch với requirements.md
-
-`requirements.md` liệt kê route `/student/quiz/:id/grade`.
-
-Nhóm quyết định hiển thị kết quả trên `/student/quiz/:id/submitted`.
-
-Định dạng: `Score: 8/10 (80%)`.
-
-### Test Cases
-
-| ID | Precondition | Input | Expected | Technique | Test function |
-|---|---|---|---|---|---|
-| US09-01 | — | correct=10, total=10 | `10/10`, `100%` | EP + BVA max | `test_result_summary[10-10-10/10-100]` |
-| US09-02 | — | correct=8, total=10 | `8/10`, `80%` | EP | `test_result_summary[8-10-8/10-80]` |
-| US09-03 | — | correct=0, total=10 | `0/10`, `0%` | EP + BVA min | `test_result_summary[0-10-0/10-0]` |
-| US09-04 | — | correct=2, total=3 | `2/3`, `67%` | BVA rounding | `test_result_summary[2-3-2/3-67]` |
-| US09-05 | — | correct=1, total=3 | `1/3`, `33%` | BVA rounding | `test_result_summary[1-3-1/3-33]` |
-| US09-06 | — | correct=1, total=8 | `1/8`, `13%` | BVA half-up | `test_result_summary[1-8-1/8-13]` |
-| US09-07 | — | correct=0, total=0 | `0/0`, `0%` | Error boundary | `test_result_summary[0-0-0/0-0]` |
-| US09-08 | Không trả lời câu nào | GET `/submitted` | `Score: 0/3 (0%)` | EP | `test_unanswered_attempt_scores_zero` |
-| US09-09 | Đúng 1/1, đã nộp | GET `/submitted` hai lần | Điểm giữ nguyên | Integration | `test_submitted_page_shows_score` |
-| US09-10 | Đúng 2/3, hết 20 phút | GET `/take?q=1` | Auto-submit, `67%` | Timeout | `test_auto_submitted_attempt_shows_score` |
-| US09-11 | Đã bắt đầu nhưng chưa nộp | GET `/submitted` | 404, không hiện điểm | Decision table | `test_unsubmitted_attempt_shows_no_score` |
-| US09-12 | Sinh viên khác chưa làm | GET `/submitted` | 404, không lộ điểm | Authorization | `test_other_students_result_is_not_visible` |
-| US09-13 | Giảng viên đăng nhập | GET `/submitted` | 403 | Error | `test_lecturer_cannot_open_result` |
-| US09-14 | Chưa đăng nhập | GET `/submitted` | 302 tới `/login` | Error | `test_guest_result_redirects_to_login` |
-| US09-15 | Answer review bật | Mở kết quả | Blocked: chờ chức năng review | — | — |
-| US09-16 | Answer review tắt | Mở kết quả | Blocked: chờ chức năng review | — | — |
-
-### Decision Table - Result Access
-
-| Rule | Logged in | Student | Own submitted attempt | Expected |
-|---|---|---|---|---|
-| R1 | Yes | Yes | Yes | 200 + score |
-| R2 | Yes | Yes | No | 404 |
-| R3 | Yes | Yes | Only another student's | 404 |
-| R4 | Yes | No | — | 403 |
-| R5 | No | — | — | Redirect to login |
+**Known deviation from the requirements.** BR3 says a question needs at least 2 choices, but the question form always requires exactly 4 filled choices (`CHOICE_COUNT = 4` in `question_service.py`). The US03 boundary tests therefore use 3 filled choices (refused) and 4 filled choices (accepted).
 
 ---
 
-## US10 - Lecturer views quiz statistics
+## 2. Test cases for every P0 story
 
-Issue: #113
+**Kind** is one of: `normal`, `error`, `boundary, just below`, `boundary, on the limit`, `boundary, just above`.
+Every P0 story has at least three test cases: one normal case, one error case, and, where the rule contains a number, boundary cases on both sides of it.
 
-Test file: `tests/test_quiz_features.py`
+### 2.1 US01: Sign in and receive the correct role
 
-### Acceptance Criteria
-
-| AC | Given | When | Then |
-|---|---|---|---|
-| AC1 | Quiz có các bài đã nộp | Giảng viên mở thống kê | Hiển thị tổng số lượt nộp |
-| AC2 | Các bài đã nộp có điểm | Giảng viên mở thống kê | Hiển thị điểm trung bình chính xác |
-| AC3 | Câu hỏi có dữ liệu trả lời | Giảng viên mở thống kê | Hiển thị tỷ lệ trả lời đúng từng câu |
-| AC4 | Quiz chưa có bài nộp | Giảng viên mở thống kê | Hiển thị 0 và không gây lỗi |
-| AC5 | Giảng viên không sở hữu quiz | Truy cập trang thống kê | Từ chối truy cập |
-
-### Test Cases
-
-| ID | Story | Input | Expected | Kind |
+| ID | Story | Input | Expected result | Kind |
 |---|---|---|---|---|
-| US10-01 | Lecturer views quiz statistics | 20 submitted attempts | Total submitted = 20 | Normal |
-| US10-02 | Lecturer views quiz statistics | Scores: 60%, 80%, 100% | Average score = 80% | Normal |
-| US10-03 | Lecturer views quiz statistics | 15 correct out of 20 answers | Correct rate = 75% | Normal |
-| US10-04 | Lecturer views another lecturer's quiz | Unauthorized lecturer | HTTP 403 | Error |
-| US10-05 | Lecturer views quiz with no submissions | 0 submitted attempts | Total = 0, no division-by-zero error | Boundary |
+| US01-01 | US01 Sign in | Lecturer enters a valid email and password | Redirect to `/lecturer/dashboard` | normal |
+| US01-02 | US01 Sign in | Student enters a valid email and password | Redirect to `/student/dashboard` | normal |
+| US01-03 | US01 Sign in | Valid email, wrong password (1st failure) | 401, friendly error message, account not locked | error |
+| US01-04 | US01 Sign in | 4 wrong passwords within 10 minutes, then the correct password | Sign-in succeeds | boundary, just below |
+| US01-05 | US01 Sign in | 5th wrong password within 10 minutes | Account locked; message "Too many failed attempts. Try again in 15 minutes." | boundary, on the limit |
+| US01-06 | US01 Sign in | 4 recent wrong passwords plus 1 older than 10 minutes | Account not locked (old failure is outside the window) | boundary, just above |
+| US01-07 | US01 Sign in | Locked account tries again at 14:59 and at 15:01 after locking | At 14:59 still blocked; at 15:01 sign-in allowed | boundary, both sides |
+| US01-08 | US01 Sign in | Student opens `/quiz/create`; guest opens `/student/dashboard` | 403 for the student; guest redirected to `/login` (BR1) | error |
+| US01-09 | US01 Sign in | Lecturer edits a quiz owned by another lecturer | Rejected: "You do not have permission to edit this quiz." (BR2) | error |
 
-### Test Design
+### 2.2 US02: Lecturer creates a quiz
 
-- Equivalence Partitioning: Quiz có bài nộp và chưa có bài nộp.
-- Boundary Value Analysis: 0 submissions.
-- Unhappy Path: Giảng viên truy cập quiz không thuộc quyền sở hữu.
-- Integration Testing: Kiểm tra dữ liệu thống kê qua service, route và giao diện.
-
-### Business Rules
-
-- Chỉ tính các attempts đã submitted.
-- Điểm trung bình được tính từ các attempts hợp lệ.
-- Tỷ lệ đúng từng câu dựa trên số câu trả lời đúng so với tổng số câu trả lời hợp lệ tương ứng.
-- Không chia cho 0 khi quiz chưa có submissions.
-- Giảng viên chỉ được xem thống kê quiz thuộc quyền sở hữu.
-
-### Decision Table - Quiz Statistics
-
-| Rule | Lecturer | Owns quiz | Submitted attempts | Expected |
+| ID | Story | Input | Expected result | Kind |
 |---|---|---|---|---|
-| R1 | Yes | Yes | > 0 | Display statistics |
-| R2 | Yes | Yes | 0 | Display zero statistics |
-| R3 | Yes | No | Any | HTTP 403 |
+| US02-01 | US02 Create quiz | Title "Midterm Quiz 1", description "Week 5 review" | Quiz created with status Draft | normal |
+| US02-02 | US02 Create quiz | Duration 30 minutes | Duration stored as 30 | normal |
+| US02-03 | US02 Create quiz | Empty title | Rejected: "Quiz title is required."; no quiz created | error |
+| US02-04 | US02 Create quiz | Title with only spaces | Rejected, same as US02-03 | error |
+| US02-05 | US02 Create quiz | Duration 0 | Rejected; no quiz created | boundary, just below |
+| US02-06 | US02 Create quiz | Duration 1 | Accepted; stored as 1 | boundary, on the limit |
+| US02-07 | US02 Create quiz | Duration -1 | Rejected | error |
+| US02-08 | US02 Create quiz | Student submits the create-quiz form | 403; no quiz created | error |
+
+### 2.3 US03: Lecturer adds multiple-choice questions
+
+| ID | Story | Input | Expected result | Kind |
+|---|---|---|---|---|
+| US03-01 | US03 Add questions | Quiz with 0 questions, add 1 valid question | Question count becomes 1 | normal |
+| US03-02 | US03 Add questions | Question with 4 choices and 1 correct answer | Exactly 4 choices and 1 correct answer stored | normal |
+| US03-03 | US03 Add questions | No correct answer selected | Rejected: "Please select one correct option."; nothing saved | error |
+| US03-04 | US03 Add questions | Only 3 of the 4 choices filled in | Rejected; nothing saved | boundary, just below |
+| US03-05 | US03 Add questions | All 4 choices filled in | Accepted | boundary, on the limit |
+| US03-06 | US03 Add questions | Points = 0 | Rejected | boundary, just below |
+| US03-07 | US03 Add questions | Points = 1; another lecturer adds a question to the quiz | 1 accepted; other lecturer gets 403 | boundary, on the limit + error |
+
+### 2.4 US04: Lecturer publishes a quiz
+
+| ID | Story | Input | Expected result | Kind |
+|---|---|---|---|---|
+| US04-01 | US04 Publish | Owner publishes a quiz with 10 valid questions | Status becomes published | normal |
+| US04-02 | US04 Publish | Quiz with exactly 1 valid question | Publish succeeds | boundary, on the limit |
+| US04-03 | US04 Publish | Quiz with 0 questions | Rejected: "A quiz must contain at least 1 question."; status stays draft | boundary, just below |
+| US04-04 | US04 Publish | Quiz with a question that has 0 correct choices | Rejected (BR3); status stays draft | error |
+| US04-05 | US04 Publish | Quiz is closed; student tries to start it | Rejected; no attempt created | error |
+| US04-06 | US04 Publish | Published quiz with 1 submitted attempt; lecturer closes it | Status closed; submitted attempt still accessible | normal |
+| US04-07 | US04 Publish | Another lecturer publishes the quiz | 403; quiz unchanged (BR2) | error |
+| US04-08 | US04 Publish | Publish a quiz that is already published | 409 | error |
+
+### 2.5 US06: Student starts a quiz attempt
+
+| ID | Story | Input | Expected result | Kind |
+|---|---|---|---|---|
+| US06-01 | US06 Start attempt | Student starts a published quiz of 10 questions | Question 1 shown; questions displayed one at a time | normal |
+| US06-02 | US06 Start attempt | Quiz with a 30-minute limit, attempt just started | Timer starts at 30:00 (1800 s) | normal |
+| US06-03 | US06 Start attempt | Select B on question 3, move away and come back | B is still selected | normal |
+| US06-04 | US06 Start attempt | Refresh the page mid-attempt | Same question and same remaining time restored | normal |
+| US06-05 | US06 Start attempt | Quiz of 10 questions: open question 0, 1, 10, 11 | 0 and 11 return 404; 1 and 10 open | boundary, both sides |
+| US06-06 | US06 Start attempt | Access the attempt at 29:59, 30:00 and 30:01 after the start | 29:59 still open; 30:00 auto-submitted; 30:01 cannot continue | boundary, three points |
+| US06-07 | US06 Start attempt | Start a draft quiz, then a closed quiz | Rejected; no attempt created | error |
+| US06-08 | US06 Start attempt | Attempt limit is 2: start a 2nd and a 3rd attempt | 2nd allowed; 3rd rejected (BR5) | boundary, both sides |
+
+### 2.6 US08: Student submits a quiz
+
+| ID | Story | Input | Expected result | Kind |
+|---|---|---|---|---|
+| US08-01 | US08 Submit | All 10 questions answered, student confirms | Status Submitted; exactly 1 submission timestamp stored | normal |
+| US08-02 | US08 Submit | Question 7 unanswered, student requests submission | "Question 7" listed; explicit confirmation required; not yet submitted | error |
+| US08-03 | US08 Submit | Question 7 unanswered, student confirms | Submitted; question 7 scores 0 | normal |
+| US08-04 | US08 Submit | Submit the same attempt a second time | Rejected; score and answers unchanged | error |
+| US08-05 | US08 Submit | Change an answer after submission | Rejected (BR6) | error |
+| US08-06 | US08 Submit | Time limit 30 minutes: submit at 29:59 and at 30:01 | 29:59 submitted normally; at 30:01 the attempt was already auto-submitted and the late answer is not saved | boundary, both sides |
+| US08-07 | US08 Submit | A different student submits this attempt | Rejected; attempt unchanged | error |
+
+### Appendix: P1 stories (extra coverage, not required for P0)
+
+`<Move the existing US09, US10 and US11 tables here unchanged.>`
 
 ---
 
-## US11 - Quiz time limit
+## 3. Automated tests
 
-Issue: #114
+**Where.** All tests are in `tests/`. Every test case in Section 2 is a pytest test, with its ID in the test name (for example `test_us02_05_duration_0_is_rejected`) or in a comment (`# US02-05`).
 
-Test file: `tests/test_time_limit.py`
+| Story | Test file |
+|---|---|
+| US01 | `tests/test_p0_us01_login.py` |
+| US02 | `tests/test_p0_us02_create_quiz.py` |
+| US03 | `tests/test_p0_us03_questions.py` |
+| US04 | `tests/test_p0_us04_publish.py` |
+| US06 | `tests/test_p0_us06_start_attempt.py` |
+| US08 | `tests/test_p0_us08_submit.py` |
 
-### Acceptance Criteria
+**No server and no real database.** The tests use the Flask test client and a temporary SQLite file created in pytest's `tmp_path` by `init_db`. They never read `data/minilms.db` and do not depend on today's date.
 
-| AC | Given | When | Then |
-|---|---|---|---|
-| AC1 | Quiz có giới hạn 30 phút | Sinh viên bắt đầu | Đồng hồ bắt đầu tại 30:00 |
-| AC2 | Sinh viên đang làm quiz | Thời gian đạt 30 phút | Bài được tự động nộp |
-| AC3 | Giảng viên nhập thời lượng không hợp lệ | Tạo quiz | Hệ thống từ chối |
-| AC4 | Sinh viên refresh trang | Quiz chưa hết giờ | Thời gian không bị reset |
-| AC5 | Quiz chưa tới deadline | Sinh viên tiếp tục làm | Attempt vẫn active |
-| AC6 | Quiz đã quá deadline | Sinh viên truy cập lại | Không được tiếp tục làm |
+**One command runs them all** (from the repository root, after the setup steps in `docs/SETUP.md`):
 
-### Test Cases
+```bash
+python -m pytest -v
+```
 
-| ID | Story | Input | Expected | Kind |
-|---|---|---|---|---|
-| US11-01 | Countdown starts correctly | Start a 30-minute quiz | Countdown = 1800 seconds | Normal |
-| US11-02 | Automatic submission at deadline | Elapsed = 30:00 | Attempt submitted exactly once | Boundary, at limit |
-| US11-03 | Reject invalid quiz duration | Duration = 0 | Reject, no quiz created | Error, zero |
-| US11-04 | Reject invalid quiz duration | Duration = -1 | Reject, no quiz created | Error, below minimum |
-| US11-05 | Reject invalid quiz duration | Duration = -5 | Reject, no quiz created | Error, negative |
-| US11-06 | Refresh preserves remaining time | Elapsed = 18:00 | Remaining approximately 12:00, same attempt | Normal |
-| US11-07 | Attempt active before deadline | Elapsed = 29:59 | Not submitted, approximately 1 second remains | Boundary, below limit |
-| US11-08 | Attempt expired after deadline | Elapsed = 30:01 | Submitted, cannot continue answering | Boundary, above limit |
+**Output** (clean clone, `<date>`):
 
+![(SM thêm ảnh vào đây) Full output of python -m pytest -v](images/testing/pytest-output.png)
 
-### Test Design
-
-**Equivalence Partitioning**
-
-- Valid duration: 30 minutes.
-- Invalid duration: zero or negative.
-- Active attempt: current time is before deadline.
-- Expired attempt: current time is at or after deadline.
-
-**Boundary Value Analysis**
-
-- 29:59: Just below the 30-minute limit.
-- 30:00: Exactly at the limit.
-- 30:01: Just above the limit.
-
-**Unhappy Path**
-
-- Duration = 0.
-- Duration = -1.
-- Duration = -5.
-- Accessing the quiz after expiration.
-
-### Business Rules
-
-- Quiz duration must be positive unless unlimited duration is explicitly supported.
-- The countdown is based on the original attempt start time.
-- Refreshing the page must not restart the countdown.
-- An expired attempt must be submitted.
-- An attempt must not be submitted more than once.
-- Students cannot continue answering after the deadline.
-
-### Decision Table - Quiz Time Limit
-
-| Rule | Valid duration | Attempt started | Deadline reached | Expected |
-|---|---|---|---|---|
-| R1 | Yes | No | No | Allow starting quiz |
-| R2 | Yes | Yes | No | Continue quiz |
-| R3 | Yes | Yes | Yes | Auto-submit |
-| R4 | No | No | — | Reject invalid duration |
-| R5 | Yes | Yes | Already expired | No further answering |
-
-### Test Results
-
-| Story | Result | Status |
-|---|---|---|
-| US09 | See actual pytest output | Verify |
-| US10 | 5 tests passed in prior verification | Passed previously |
-| US11 | 8 tests passed | Passed |
-
-The full pytest suite must be rerun after merging changes into main.
-
-### Test Evidence
-
-- US10: 5 automated tests passed.
-- US11: 8 automated tests passed.
-- Full test suite: `python -m pytest -v`.
-- Test screenshots are included in the Milestone 4 submission.
+`<N> passed in <T> s` (SM thay số)
 
 ---
 
-## 3. What the Tests Found
+## 4. What the tests found
 
-### Mutation Testing – US11
+### Entry 1: `<short title>`
 
-To verify that automated tests can detect incorrect business rules, the quiz expiration condition is intentionally modified.
+`<Choose ONE of the two options below and delete the other.>`
 
-- Original rule: A quiz is automatically submitted when the time limit is reached.
-- Mutation: Change the expiration condition to allow the quiz to continue at the exact deadline.
-- Expected result: The boundary test at 30:00 fails.
-- Recovery: Restore the original condition and rerun the tests.
+**Option A: a bug found by the tests**
 
-**Mutation test result:** Pending verification.
+- **Issue:** `<#number and one sentence: what was wrong>`
+- **Fix:** `<PR #number and what changed>`
+- **Test that now guards it:** `<test_name> (<test case ID>)`
+
+**Option B: a rule broken on purpose**
+
+- **Rule broken:** `<for example: in src/services/quiz_service.py, changed "if len(questions) < 1" to "< 0">`
+- **Test that went red:** `<test_name> (<test case ID>)`
+- **Red output:**
+
+  ![Failing test output after the deliberate change](images/testing/mutation-red.png)
+
+- **Reverted:** the code was restored and the same test passes again (`<N> passed`).

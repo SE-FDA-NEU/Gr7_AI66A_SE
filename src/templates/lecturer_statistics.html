@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Quiz statistics - {{ quiz.title }} - Mini LMS</title>
+</head>
+<body>
+    <main>
+        <a href="{{ url_for('lecturer.lecturer_dashboard') }}">Back to dashboard</a>
+        <h1>Quiz statistics</h1>
+        <h2>{{ quiz.title }}</h2>
+        <p>Total submitted attempts: <strong>{{ submitted_attempts }}</strong></p>
+        <p>Average score: <strong>{{ "%.0f"|format(average_score * 100) }}%</strong></p>
+
+        <h2>Question statistics</h2>
+        {% if questions %}
+        <table>
+            <thead><tr><th>Question</th><th>Correct answers</th><th>Correct-answer rate</th></tr></thead>
+            <tbody>
+            {% for question in questions %}
+            <tr>
+                <td>{{ question.position }}. {{ question.content }}</td>
+                <td>{{ question.correct_answers }} / {{ question.submitted_attempts }}</td>
+                <td>{{ "%.0f"|format(question.correct_rate * 100) }}%</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No questions have been added to this quiz.</p>
+        {% endif %}
+    </main>
+</body>
+</html>

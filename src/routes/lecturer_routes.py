@@ -31,6 +31,12 @@ from src.services.quiz_service import (
     publish_quiz,
     update_quiz_schedule,
 )
+from src.services.lecturer_attempt_service import (
+    LecturerAttemptError,
+    get_quiz_attempt_detail,
+    get_quiz_attempts,
+    get_quiz_statistics,
+)
 
 lecturer_bp = Blueprint("lecturer", __name__)
 
@@ -80,6 +86,19 @@ def quiz_attempt_detail(quiz_id: int, attempt_id: int):
     return render_template("lecturer_attempt_detail.html", **data)
 
 
+@lecturer_bp.get("/lecturer/quiz/<int:quiz_id>/statistics")
+@role_required("lecturer")
+def quiz_statistics(quiz_id: int):
+    try:
+        data = get_quiz_statistics(
+            current_app.config["DATABASE_PATH"],
+            session["user_id"],
+            quiz_id,
+        )
+    except LecturerAttemptError as error:
+        return render_error(error.status_code, error.message)
+
+    return render_template("lecturer_statistics.html", **data)
 @lecturer_bp.get("/lecturer/quiz/<int:quiz_id>/attempts/<int:attempt_id>/audit")
 @role_required("lecturer")
 def view_attempt_audit_history(quiz_id: int, attempt_id: int):

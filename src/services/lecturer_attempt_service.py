@@ -83,3 +83,57 @@ def get_quiz_attempt_detail(
         )
         answers = attempt_repository.get_attempt_answers(connection, attempt_id)
         return {"quiz": quiz, "attempt": attempt_data, "answers": answers}
+
+
+def get_quiz_statistics(
+    db_path: str | Path,
+    lecturer_id: int,
+    quiz_id: int,
+) -> dict:
+    """Return submitted-attempt and per-question statistics for an owned quiz."""
+    with closing(get_connection(db_path)) as connection:
+        quiz = _owned_quiz(connection, lecturer_id, quiz_id)
+        summary = connection.execute(
+            """
+            SELECT COUNT(*) AS submitted_attempts,
+                   COALESCE(AVG(score), 0) AS average_score
+            FROM attempt
+            WHERE quiz_id = ? AND submitted_at IS NOT NULL
+            """,
+            (quiz_id,),
+        ).fetchone()
+
+        questions = connection.execute(
+            """
+            SELECT q.question_id, q.position, q.content,
+                   COUNT(DISTINCT a.attempt_id) AS submitted_attempts,
+                   COALESCE(SUM(CASE WHEN c.is_correct = 1 THEN 1 ELSE 0 END), 0)
+                       AS correct_answers
+            FROM question q
+            LEFT JOIN attempt a
+                ON a.quiz_id = q.quiz_id AND a.submitted_at IS NOT NULL
+            LEFT JOIN answer ans
+                ON ans.attempt_id = a.attempt_id AND ans.question_id = q.question_id
+            LEFT JOIN choice c ON c.choice_id = ans.choice_id
+            WHERE q.quiz_id = ?
+            GROUP BY q.question_id
+            ORDER BY q.position
+            """,
+            (quiz_id,),
+        ).fetchall()
+
+        question_statistics = []
+        for question in questions:
+            question_data = dict(question)
+            denominator = question_data["submitted_attempts"]
+            question_data["correct_rate"] = (
+                question_data["correct_answers"] / denominator if denominator else 0
+            )
+            question_statistics.append(question_data)
+
+        return {
+            "quiz": quiz,
+            "submitted_attempts": summary["submitted_attempts"],
+            "average_score": summary["average_score"],
+            "questions": question_statistics,
+        }

@@ -47,28 +47,36 @@ Each US01 case ID appears in both its test function name and a comment in
 
 ### 2.2 US02: Lecturer creates a quiz
 
-| ID | Story | Input | Expected result | Kind |
-|---|---|---|---|---|
-| US02-01 | US02 Create quiz | Title "Midterm Quiz 1", description "Week 5 review" | Quiz created with status Draft | normal |
-| US02-02 | US02 Create quiz | Duration 30 minutes | Duration stored as 30 | normal |
-| US02-03 | US02 Create quiz | Empty title | Rejected: "Quiz title is required."; no quiz created | error |
-| US02-04 | US02 Create quiz | Title with only spaces | Rejected, same as US02-03 | error |
-| US02-05 | US02 Create quiz | Duration 0 | Rejected; no quiz created | boundary, just below |
-| US02-06 | US02 Create quiz | Duration 1 | Accepted; stored as 1 | boundary, on the limit |
-| US02-07 | US02 Create quiz | Duration -1 | Rejected | error |
-| US02-08 | US02 Create quiz | Student submits the create-quiz form | 403; no quiz created | error |
+
+### 2.2 US02: Lecturer creates a quiz
+
+| ID | Story | Input | Expected result | Kind | Test function |
+|---|---|---|---|---|---|
+| US02-01 | US02 Create quiz | Title "Midterm Quiz 1", description "Week 5 review" | Quiz created with status Draft | normal | test_us02_01_create_quiz_as_draft |
+| US02-02 | US02 Create quiz | Duration 30 minutes | Duration stored as 30 | normal | test_us02_02_store_duration_30 |
+| US02-03 | US02 Create quiz | Empty title | Rejected: "Quiz title is required."; no quiz created | error | test_us02_03_reject_empty_title |
+| US02-04 | US02 Create quiz | Title with only spaces | Rejected, same as US02-03 | error | test_us02_04_reject_whitespace_title |
+| US02-05 | US02 Create quiz | Duration 0 | Rejected; no quiz created | boundary, just below | test_us02_05_reject_duration_zero |
+| US02-06 | US02 Create quiz | Duration 1 | Accepted; stored as 1 | boundary, on the limit | test_us02_06_accept_duration_one |
+| US02-07 | US02 Create quiz | Duration -1 | Rejected; no quiz created | error | test_us02_07_reject_negative_duration |
+| US02-08 | US02 Create quiz | Student submits the create-quiz form | 403; no quiz created | error | test_us02_08_student_cannot_create_quiz |
+
 
 ### 2.3 US03: Lecturer adds multiple-choice questions
 
-| ID | Story | Input | Expected result | Kind |
-|---|---|---|---|---|
-| US03-01 | US03 Add questions | Quiz with 0 questions, add 1 valid question | Question count becomes 1 | normal |
-| US03-02 | US03 Add questions | Question with 4 choices and 1 correct answer | Exactly 4 choices and 1 correct answer stored | normal |
-| US03-03 | US03 Add questions | No correct answer selected | Rejected: "Please select one correct option."; nothing saved | error |
-| US03-04 | US03 Add questions | Only 3 of the 4 choices filled in | Rejected; nothing saved | boundary, just below |
-| US03-05 | US03 Add questions | All 4 choices filled in | Accepted | boundary, on the limit |
-| US03-06 | US03 Add questions | Points = 0 | Rejected | boundary, just below |
-| US03-07 | US03 Add questions | Points = 1; another lecturer adds a question to the quiz | 1 accepted; other lecturer gets 403 | boundary, on the limit + error |
+
+### 2.3 US03: Lecturer adds multiple-choice questions
+
+| ID | Story | Input | Expected result | Kind | Test function |
+|---|---|---|---|---|---|
+| US03-01 | US03 Add questions | Quiz with 0 questions, add 1 valid question | Question count becomes 1 | normal | test_us03_01_add_valid_question |
+| US03-02 | US03 Add questions | Question with 4 choices and 1 correct answer | Exactly 4 choices and 1 correct answer stored | normal | test_us03_02_save_four_choices |
+| US03-03 | US03 Add questions | No correct answer selected | Rejected: "Please select one correct option."; nothing saved | error | test_us03_03_reject_missing_correct_answer |
+| US03-04 | US03 Add questions | Only 3 of the 4 choices filled in | Rejected; nothing saved | boundary, just below | test_us03_04_reject_three_choices |
+| US03-05 | US03 Add questions | All 4 choices filled in | Accepted; question saved | boundary, on the limit | test_us03_05_accept_four_choices |
+| US03-06 | US03 Add questions | Points = 0 | Rejected; nothing saved | boundary, just below | test_us03_06_reject_zero_points |
+| US03-07 | US03 Add questions | Points = 1; another lecturer attempts to add a question | 1 point accepted; other lecturer receives 403 | boundary, on the limit + error | test_us03_07_minimum_points_and_ownership |
+
 
 ### 2.4 US04: Lecturer publishes a quiz
 
@@ -90,11 +98,11 @@ Each US01 case ID appears in both its test function name and a comment in
 | US06-01 | US06 Start attempt | Student starts a published quiz of 10 questions | Question 1 shown; questions displayed one at a time | normal |
 | US06-02 | US06 Start attempt | Quiz with a 30-minute limit, attempt just started | Timer starts at 30:00 (1800 s) | normal |
 | US06-03 | US06 Start attempt | Select B on question 3, move away and come back | B is still selected | normal |
-| US06-04 | US06 Start attempt | Refresh the page mid-attempt | Same question and same remaining time restored | normal |
+| US06-04 | US06 Start attempt | Refresh the page mid-attempt | Same question shown; started_at unchanged (timer not reset) | normal |
 | US06-05 | US06 Start attempt | Quiz of 10 questions: open question 0, 1, 10, 11 | 0 and 11 return 404; 1 and 10 open | boundary, both sides |
-| US06-06 | US06 Start attempt | Access the attempt at 29:59, 30:00 and 30:01 after the start | 29:59 still open; 30:00 auto-submitted; 30:01 cannot continue | boundary, three points |
+| US06-06 | US06 Start attempt | Access the attempt at 29:59, 30:00 and 30:01 after the start | 29:59 still open (200); 30:00 and 30:01 auto-submitted (302), submitted_at = 30:00 | boundary, three points |
 | US06-07 | US06 Start attempt | Start a draft quiz, then a closed quiz | Rejected; no attempt created | error |
-| US06-08 | US06 Start attempt | Attempt limit is 2: start a 2nd and a 3rd attempt | 2nd allowed; 3rd rejected (BR5) | boundary, both sides |
+| US06-08 | US06 Start attempt | Attempt limit is 2: start and submit 1st, start and submit 2nd, then start a 3rd | 3rd rejected (409, BR5) | boundary, both sides |
 
 ### 2.6 US08: Student submits a quiz
 
@@ -118,6 +126,7 @@ Each US01 case ID appears in both its test function name and a comment in
 
 **Where.** All tests are in `tests/`. Every test case in Section 2 is a pytest test, with its ID in the test name (for example `test_us02_05_duration_0_is_rejected`) or in a comment (`# US02-05`).
 
+
 | Story | Test file |
 |---|---|
 | US01 | `tests/test_p0_us01_publish.py` |
@@ -126,6 +135,7 @@ Each US01 case ID appears in both its test function name and a comment in
 | US04 | `tests/test_p0_us04_publish.py` |
 | US06 | `tests/test_p0_us06_start_attempt.py` |
 | US08 | `tests/test_p0_us08_publish.py` (issue #137) |
+
 
 **No server and no real database.** The tests use the Flask test client and a temporary SQLite file created in pytest's `tmp_path` by `init_db`. They never read `data/minilms.db` and do not depend on today's date.
 

@@ -121,12 +121,12 @@ Each US01 case ID appears in both its test function name and a comment in
 
 | Story | Test file |
 |---|---|
-| US01 | `tests/test_p0_us01_publish.py` |
-| US02 | `tests/test_p0_us02_publish.py` |
+| US01 | `tests/test_p0_us01_login.py` |
+| US02 | `tests/test_p0_us02_create_quiz.py` |
 | US03 | `tests/test_p0_us03_questions.py` |
 | US04 | `tests/test_p0_us04_publish.py` |
 | US06 | `tests/test_p0_us06_start_attempt.py` |
-| US08 | `tests/test_p0_us08_publish.py`  |
+| US08 | `tests/test_p0_us08_submit.py`  |
 
 
 **No server and no real database.**  All test cases execute independently using temporary SQLite databases (`tmp_path`) initialized by `init_db`. They do not require a running web server, never read or write to `data/minilms.db`, and do not depend on system dates.

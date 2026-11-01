@@ -285,3 +285,110 @@ workflows were tested successfully
 | @dnghien            | Yes      | Yes    | Yes   |
 | @ngthanhlan06-droid | Yes      | Yes    | Yes   |
 | @khangtrannf        | Yes      | Yes    | Yes   |
+
+---
+
+## Sprint 4 - 2026-10-20 to 2026-11-02
+
+### Sprint goal
+
+Prove that Mini LMS keeps working when we change it: every P0 story (US01,
+US02, US03, US04, US06, US08) is covered by at least three automated pytest
+tests, including an error case and, where a rule has a number, boundary cases
+on both sides of it. All tests run with one command, without a server and
+without the real database, and pass on a clean clone. The results are
+documented in `docs/testing.md`, and `docs/SETUP.md` explains how to run them.
+
+### Two mandatory chore issue
+
+| Issue                                   | Assignee                      | Closed?          |
+| --------------------------------------- | ----------------------------- | ---------------- |
+| #129 [Chore] Refine backlog for Sprint 4 | @anhthu0910 (PO)              | `<Yes>`     |
+| #130 [Chore] Sprint 4 wrap-up            | @anhthu0910 (SM)      | `<Yes>`     |
+
+### Committed (Sprint Planning, `<date>`)
+
+| Issue | Story                                                          | Story ID     | Points | Owner               |
+| ----- | -------------------------------------------------------------- | ------------ | ------ | ------------------- |
+| #__   | [Chore] Refine backlog for Sprint 4                            | -            | 2      | @anhthu0910         |
+| #__   | [Chore] Sprint 4 wrap-up                                       | -            | 2      | @ngthanhlan06-droid |
+| #__   | [Task] testing.md: four-section skeleton and Section 1         | -            | 3      | @anhthu0910         |
+| #__   | [Task] US01: tests for sign-in and lockout, pytest.ini, SETUP  | US01 (P0)    | 3      | @khangtrannf        |
+| #__   | [Task] US02: tests for quiz creation                           | US02 (P0)    | 3      | @nganannn           |
+| #__   | [Task] US03: tests for adding questions                        | US03 (P0)    | 3      | @nganannn           |
+| #__   | [Task] US06: tests for starting an attempt                     | US06 (P0)    | 3      | @dnghien            |
+| #__   | [Task] US04: tests for publishing and closing a quiz           | US04 (P0)    | 3      | @anhthu0910         |
+| #__   | [Task] US08: tests for submitting an attempt                   | US08 (P0)    | 3      | @ngthanhlan06-droid |
+| #__   | [Task] Section 4: bug found by the tests or rule broken        | -            | 2      | @dnghien            |
+| #__   | [Task] Section 3: test command and pytest output screenshot    | -            | 2      | @ngthanhlan06-droid |
+| #__   | [Task] Sprint 4 sprint-log and README Scrum Master             | -            | 2      | @ngthanhlan06-droid |
+
+**Total committed: 31 points**
+
+_The GitHub issues do not record point estimates. Chores and documentation
+tasks use the Sprint 2 and Sprint 3 calibration (2 points for refinement and
+wrap-up, 3 for a test file of one story). Replace the issue numbers `#__` with
+the real ones._
+
+### Scope changes during the sprint
+
+- `<List every issue added or dropped after planning, with the reason and the
+  date. Example: "#__ [Task] Make test_publish_quiz independent of today's date
+  added on 2026-10-31, 2 points, found by the tests (see testing.md Section 4)".
+  If there were none, write "None.">`
+
+### Result
+
+| Issue | Points | Status                         | If not done, why |
+| ----- | ------ | ------------------------------ | ---------------- |
+| #__   | 2      | `<Done - PR #__ / Not done>`   |                  |
+| #__   | 2      | `<Done - PR #__ / Not done>`   |                  |
+| #__   | 3      | `<Done - PR #__ / Not done>`   |                  |
+| #__   | 3      | `<Done - PR #__ / Not done>`   |                  |
+| #__   | 3      | `<Done - PR #__ / Not done>`   |                  |
+| #__   | 3      | `<Done - PR #__ / Not done>`   |                  |
+| #__   | 3      | `<Done - PR #__ / Not done>`   |                  |
+| #__   | 3      | `<Done - PR #__ / Not done>`   |                  |
+| #__   | 3      | `<Done - PR #__ / Not done>`   |                  |
+| #__   | 2      | `<Done - PR #__ / Not done>`   |                  |
+| #__   | 2      | `<Done - PR #__ / Not done>`   |                  |
+| #__   | 2      | `<Done - PR #__ / Not done>`   |                  |
+
+**Completed: `<N>` points (of 31 committed). Velocity this sprint: `<N>`**
+
+### Sprint Review
+
+- What we demonstrated: `<for example: clone of the repository onto a clean
+  folder, setup following docs/SETUP.md, then "python -m pytest -v" with
+  <N> tests passing; one P0 story from docs/testing.md traced from its test case
+  ID to the pytest test that checks it; one deliberate rule change turning a
+  test red>`.
+- Feedback received: `<what the instructor or the team said, or "None recorded">`.
+- Backlog changes as a result: `<new or changed backlog items, or "None">`.
+
+### Retrospective
+
+| Keep doing | Stop doing | Start doing |
+| ---------- | ---------- | ----------- |
+| `<Example: write one test file per story, with the test case ID in the test name>` | `<Example: letting tests rely on dates stored in the seed data>` | `<Example: run pytest on a clean clone before every merge to main>` |
+
+**Action for Sprint 5:** `<one concrete action>`; **owner:** `@<github-username>`.
+
+_Suggested action from what the tests found in Sprint 4: the existing publish
+test failed from 2026-10-31 because quiz 13 in the seed data has a deadline of
+2026-10-30. Action: new tests clear `start_at` and `end_at` or fix the clock,
+and the reviewer runs the tests on a clean clone. Keep or replace this after the
+team agrees on it in the retrospective._
+
+**Test verification:** `<date>`, clean clone of `main`, following
+`docs/SETUP.md`: `python -m pytest -v` -> `<N> passed`.
+
+### Attendance
+
+| Member              | Planning | Review | Retro |
+| ------------------- | -------- | ------ | ----- |
+| @anhthu0910         | `<Yes/No>` | `<Yes/No>` | `<Yes/No>` |
+| @nganannn           | `<Yes/No>` | `<Yes/No>` | `<Yes/No>` |
+| @dnghien            | `<Yes/No>` | `<Yes/No>` | `<Yes/No>` |
+| @ngthanhlan06-droid | `<Yes/No>` | `<Yes/No>` | `<Yes/No>` |
+| @khangtrannf        | `<Yes/No>` | `<Yes/No>` | `<Yes/No>` |

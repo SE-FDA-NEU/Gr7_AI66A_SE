@@ -98,9 +98,9 @@ Every P0 story has at least three test cases: one normal case, one error case, a
 | ID | Story | Input | Expected result | Kind |
 |---|---|---|---|---|
 | US08-01 | US08 Submit | All 10 questions answered, student confirms | Status Submitted; exactly 1 submission timestamp stored | normal |
-| US08-02 | US08 Submit | Question 7 unanswered, student requests submission | "Question 7" listed; explicit confirmation required; not yet submitted | error |
-| US08-03 | US08 Submit | Question 7 unanswered, student confirms | Submitted; question 7 scores 0 | normal |
-| US08-04 | US08 Submit | Submit the same attempt a second time | Rejected; score and answers unchanged | error |
+| US08-02 | US08 Submit | Question 1 unanswered; student submits without confirmation | 422; question listed and confirmation shown; attempt remains unsubmitted with no answers | error |
+| US08-03 | US08 Submit | Question 1 unanswered; student confirms submission | Submitted with a timestamp; unanswered question scores 0 and result shows 0/1 (0%) | normal |
+| US08-04 | US08 Submit | Submit the same answered attempt a second time | 409; submission timestamp, score, answers, and submitted-attempt count stay unchanged | error |
 | US08-05 | US08 Submit | Change an answer after submission | Rejected (BR6) | error |
 | US08-06 | US08 Submit | Time limit 30 minutes: submit at 29:59 and at 30:01 | 29:59 submitted normally; at 30:01 the attempt was already auto-submitted and the late answer is not saved | boundary, both sides |
 | US08-07 | US08 Submit | A different student submits this attempt | Rejected; attempt unchanged | error |
@@ -122,7 +122,7 @@ Every P0 story has at least three test cases: one normal case, one error case, a
 | US03 | `tests/test_p0_us03_questions.py` |
 | US04 | `tests/test_p0_us04_publish.py` |
 | US06 | `tests/test_p0_us06_start_attempt.py` |
-| US08 | `tests/test_p0_us08_submit.py` |
+| US08 | `tests/test_p0_us08_publish.py` (issue #137) |
 
 **No server and no real database.** The tests use the Flask test client and a temporary SQLite file created in pytest's `tmp_path` by `init_db`. They never read `data/minilms.db` and do not depend on today's date.
 
@@ -142,7 +142,7 @@ python -m pytest -v
 
 ## 4. What the tests found
 
-### Entry 1: `<short title>`
+### Bug #<PR-number>: `<short title>`
 
 `<Choose ONE of the two options below and delete the other.>`
 
@@ -159,5 +159,30 @@ python -m pytest -v
 - **Red output:**
 
   ![Failing test output after the deliberate change](images/testing/mutation-red.png)
+
+- **Reverted:** the code was restored and the same test passes again (`<N> passed`).
+
+
+### Bug #143: Test dependent on the current date
+
+**A bug found by the tests**
+
+- **Issue:** #135 - The test `test_publish_valid_quiz_updates_status_to_published` in `tests/test_publish_quiz.py` is returning a 422 status code instead of 200. This is because quiz 13 in the seed data has an `end_at` timestamp of `2026-10-30T23:59`, which has already passed by the time the test is run. This is a classic example of a "date-dependent test". As of yesterday (October 30), 232 tests were passing, but from October 31 onwards, they will fail.
+- **Fix:** PR #143 - The fix consists of adding two lines to the test, right after `init_db(db_path)`.
+``` python
+with get_connection(db_path) as connection:
+    connection.execute("UPDATE quiz SET end_at = NULL WHERE quiz_id = 13")
+    connection.commit()
+```
+
+### Bug #143: Quiz 0 question were published
+
+**A rule broken on purpose**
+
+- **Rule broken:** In src/services/quiz_service.py, changed "if len(questions) < 1" to "< 0"
+- **Test that went red:** Quiz 0 question has been set to 'published'. (US04-03)
+- **Red output:**
+
+  ![Failing test output after the deliberate change](images\testing\US04-03.png)
 
 - **Reverted:** the code was restored and the same test passes again (`<N> passed`).

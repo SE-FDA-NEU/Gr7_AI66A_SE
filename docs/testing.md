@@ -150,47 +150,17 @@ python -m pytest -v
 
 ## 4. What the tests found
 
-### Bug #<PR-number>: `<short title>`
+### Mutation test: question number must be in 1..N (take page)
 
-`<Choose ONE of the two options below and delete the other.>`
+- **Rule broken on purpose:** question numbers outside the quiz (0 and N+1) must be rejected with 404 `QUESTION_NOT_FOUND` (US06 AC, design.md).
+- **Line changed (temporary):** `src/services/attempt_service.py`, line 237, `if not 1 <= question_number <= len(questions):` → `if not 0 <= question_number <= len(questions):`
+- **Test that caught it:** `tests/test_us07.py::test_take_page_rejects_question_outside_quiz[0]`
+- **Output with the mutation (red):**
+  ```
+  FAILED tests/test_us07.py::test_take_page_rejects_question_outside_quiz[0] - Failed: DID NOT RAISE <class 'AttemptError'>
+  ```
+  ![Red](images/testing/US06-mutation-red.png)
+- **Output after restoring (green):** `16 passed` ![Green](images/testing/US06-mutation-green.png)
+- **Restored with:** `git checkout -- src/services/attempt_service.py` (confirmed with `git status`, no change in `src/`)
 
-**Option A: a bug found by the tests**
-
-- **Issue:** `<#number and one sentence: what was wrong>`
-- **Fix:** `<PR #number and what changed>`
-- **Test that now guards it:** `<test_name> (<test case ID>)`
-
-**Option B: a rule broken on purpose**
-
-- **Rule broken:** `<for example: in src/services/quiz_service.py, changed "if len(questions) < 1" to "< 0">`
-- **Test that went red:** `<test_name> (<test case ID>)`
-- **Red output:**
-
-  ![Failing test output after the deliberate change](images/testing/mutation-red.png)
-
-- **Reverted:** the code was restored and the same test passes again (`<N> passed`).
-
-
-### Bug #143: Test dependent on the current date
-
-**A bug found by the tests**
-
-- **Issue:** #135 - The test `test_publish_valid_quiz_updates_status_to_published` in `tests/test_publish_quiz.py` is returning a 422 status code instead of 200. This is because quiz 13 in the seed data has an `end_at` timestamp of `2026-10-30T23:59`, which has already passed by the time the test is run. This is a classic example of a "date-dependent test". As of yesterday (October 30), 232 tests were passing, but from October 31 onwards, they will fail.
-- **Fix:** PR #143 - The fix consists of adding two lines to the test, right after `init_db(db_path)`.
-``` python
-with get_connection(db_path) as connection:
-    connection.execute("UPDATE quiz SET end_at = NULL WHERE quiz_id = 13")
-    connection.commit()
-```
-
-### Bug #143: Quiz 0 question were published
-
-**A rule broken on purpose**
-
-- **Rule broken:** In src/services/quiz_service.py, changed "if len(questions) < 1" to "< 0"
-- **Test that went red:** Quiz 0 question has been set to 'published'. (US04-03)
-- **Red output:**
-
-  ![Failing test output after the deliberate change](images\testing\US04-03.png)
-
-- **Reverted:** the code was restored and the same test passes again (`<N> passed`).
+Why this matters: an off-by-one at the lower edge would let a request for question 0 load a wrong question instead of returning 404. Only the boundary test at q=0 notices it.

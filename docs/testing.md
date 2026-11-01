@@ -15,9 +15,9 @@
 | Services | `src/services/` | Unit tests with pytest, using a temporary SQLite database | All business rules live here (quiz validation, publish rules, attempt timing, scoring); a mistake here costs the most |
 | Repository | `src/repositories/`, `src/db.py` | Integration tests on a temporary SQLite file (`tmp_path`) | Checks the SQL, the database constraints and that data is stored and updated correctly |
 | Routes | `src/routes/` | Flask test client, no running server | Checks status codes, redirects, role-based access (BR1, BR2) and the messages shown to the user |
-| Interface | `src/templates/`, `src/static/` | None automated | `<reason: for example, checked by hand with real users in Milestone 3; layout changes too often for automated tests>` |
+| Interface | `src/templates/`, `src/static/` | None automated | Checked by hand with real users in Milestone 3; layout changes too often for automated tests |
 
-**Risk.** `<2–3 sentences.>` Suggested content: we tested most the parts where a mistake changes a student's result or exposes data, namely sign-in and role checks (US01), the attempt timer and deadline (US06), and submission and scoring (US08), because an error there directly affects grades and access. Publishing rules (US04) were tested next, since a quiz published without valid questions cannot be taken correctly. The interface was tested least because it only presents what the services already decide.
+**Risk.** `We tested most the parts where a mistake changes a student's result or exposes data, namely sign-in and role checks (US01), the attempt timer and deadline (US06), and submission and scoring (US08), because an error there directly affects grades and access. Publishing rules (US04) were tested next, since a quiz published without valid questions cannot be taken correctly. The interface was tested least because it only presents what the services already decide.
 
 **Known deviation from the requirements.** BR3 says a question needs at least 2 choices, but the question form always requires exactly 4 filled choices (`CHOICE_COUNT = 4` in `question_service.py`). The US03 boundary tests therefore use 3 filled choices (refused) and 4 filled choices (accepted).
 
@@ -111,9 +111,6 @@ Each US01 case ID appears in both its test function name and a comment in
 | US08-06 | US08 Submit | Time limit 30 minutes: submit at 29:59 and at 30:01 | 29:59 submitted normally; at 30:01 the attempt was already auto-submitted and the late answer is not saved | boundary, both sides |
 | US08-07 | US08 Submit | A different student submits this attempt | Rejected; attempt unchanged | error |
 
-### Appendix: P1 stories (extra coverage, not required for P0)
-
-`<Move the existing US09, US10 and US11 tables here unchanged.>`
 
 ---
 
@@ -124,12 +121,12 @@ Each US01 case ID appears in both its test function name and a comment in
 
 | Story | Test file |
 |---|---|
-| US01 | `tests/test_p0_us01_publish.py` |
-| US02 | `tests/test_p0_us02_publish.py` |
+| US01 | `tests/test_p0_us01_login.py` |
+| US02 | `tests/test_p0_us02_create_quiz.py` |
 | US03 | `tests/test_p0_us03_questions.py` |
 | US04 | `tests/test_p0_us04_publish.py` |
 | US06 | `tests/test_p0_us06_start_attempt.py` |
-| US08 | `tests/test_p0_us08_publish.py`  |
+| US08 | `tests/test_p0_us08_submit.py`  |
 
 
 **No server and no real database.**  All test cases execute independently using temporary SQLite databases (`tmp_path`) initialized by `init_db`. They do not require a running web server, never read or write to `data/minilms.db`, and do not depend on system dates.
@@ -154,7 +151,7 @@ python -m pytest -v
 
 - **Rule broken on purpose:** question numbers outside the quiz (0 and N+1) must be rejected with 404 `QUESTION_NOT_FOUND` (US06 AC, design.md).
 - **Line changed (temporary):** `src/services/attempt_service.py`, line 237, `if not 1 <= question_number <= len(questions):` → `if not 0 <= question_number <= len(questions):`
-- **Test that caught it:** `tests/test_us07.py::test_take_page_rejects_question_outside_quiz[0]`
+- **Test that caught it:** US06-05 (`test_us06_05_question_number_boundaries`). Also covered by `tests/test_us07.py::test_take_page_rejects_question_outside_quiz[0]` (P1)
 - **Output with the mutation (red):**
   ```
   FAILED tests/test_us07.py::test_take_page_rejects_question_outside_quiz[0] - Failed: DID NOT RAISE <class 'AttemptError'>

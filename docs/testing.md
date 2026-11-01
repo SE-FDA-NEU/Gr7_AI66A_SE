@@ -42,6 +42,9 @@ Every P0 story has at least three test cases: one normal case, one error case, a
 | US01-08 | US01 Sign in | Student opens `/quiz/create`; guest opens `/student/dashboard` | 403 for the student; guest redirected to `/login` (BR1) | error |
 | US01-09 | US01 Sign in | Lecturer edits a quiz owned by another lecturer | Rejected: "You do not have permission to edit this quiz." (BR2) | error |
 
+Each US01 case ID appears in both its test function name and a comment in
+`tests/test_p0_us01_publish.py`.
+
 ### 2.2 US02: Lecturer creates a quiz
 
 | ID | Story | Input | Expected result | Kind |
@@ -117,7 +120,7 @@ Every P0 story has at least three test cases: one normal case, one error case, a
 
 | Story | Test file |
 |---|---|
-| US01 | `tests/test_p0_us01_login.py` |
+| US01 | `tests/test_p0_us01_publish.py` |
 | US02 | `tests/test_p0_us02_create_quiz.py` |
 | US03 | `tests/test_p0_us03_questions.py` |
 | US04 | `tests/test_p0_us04_publish.py` |

@@ -44,6 +44,14 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
+### Step 2.4: Run the Automated Tests
+From the repository root, run:
+```bash
+python -m pytest -v
+```
+The tests use temporary databases and do not require initializing `data/minilms.db`
+or starting the web server.
+
 ---
 
 ## 3. Configuration

@@ -44,28 +44,36 @@ Every P0 story has at least three test cases: one normal case, one error case, a
 
 ### 2.2 US02: Lecturer creates a quiz
 
-| ID | Story | Input | Expected result | Kind |
-|---|---|---|---|---|
-| US02-01 | US02 Create quiz | Title "Midterm Quiz 1", description "Week 5 review" | Quiz created with status Draft | normal |
-| US02-02 | US02 Create quiz | Duration 30 minutes | Duration stored as 30 | normal |
-| US02-03 | US02 Create quiz | Empty title | Rejected: "Quiz title is required."; no quiz created | error |
-| US02-04 | US02 Create quiz | Title with only spaces | Rejected, same as US02-03 | error |
-| US02-05 | US02 Create quiz | Duration 0 | Rejected; no quiz created | boundary, just below |
-| US02-06 | US02 Create quiz | Duration 1 | Accepted; stored as 1 | boundary, on the limit |
-| US02-07 | US02 Create quiz | Duration -1 | Rejected | error |
-| US02-08 | US02 Create quiz | Student submits the create-quiz form | 403; no quiz created | error |
+
+### 2.2 US02: Lecturer creates a quiz
+
+| ID | Story | Input | Expected result | Kind | Test function |
+|---|---|---|---|---|---|
+| US02-01 | US02 Create quiz | Title "Midterm Quiz 1", description "Week 5 review" | Quiz created with status Draft | normal | test_us02_01_create_quiz_as_draft |
+| US02-02 | US02 Create quiz | Duration 30 minutes | Duration stored as 30 | normal | test_us02_02_store_duration_30 |
+| US02-03 | US02 Create quiz | Empty title | Rejected: "Quiz title is required."; no quiz created | error | test_us02_03_reject_empty_title |
+| US02-04 | US02 Create quiz | Title with only spaces | Rejected, same as US02-03 | error | test_us02_04_reject_whitespace_title |
+| US02-05 | US02 Create quiz | Duration 0 | Rejected; no quiz created | boundary, just below | test_us02_05_reject_duration_zero |
+| US02-06 | US02 Create quiz | Duration 1 | Accepted; stored as 1 | boundary, on the limit | test_us02_06_accept_duration_one |
+| US02-07 | US02 Create quiz | Duration -1 | Rejected; no quiz created | error | test_us02_07_reject_negative_duration |
+| US02-08 | US02 Create quiz | Student submits the create-quiz form | 403; no quiz created | error | test_us02_08_student_cannot_create_quiz |
+
 
 ### 2.3 US03: Lecturer adds multiple-choice questions
 
-| ID | Story | Input | Expected result | Kind |
-|---|---|---|---|---|
-| US03-01 | US03 Add questions | Quiz with 0 questions, add 1 valid question | Question count becomes 1 | normal |
-| US03-02 | US03 Add questions | Question with 4 choices and 1 correct answer | Exactly 4 choices and 1 correct answer stored | normal |
-| US03-03 | US03 Add questions | No correct answer selected | Rejected: "Please select one correct option."; nothing saved | error |
-| US03-04 | US03 Add questions | Only 3 of the 4 choices filled in | Rejected; nothing saved | boundary, just below |
-| US03-05 | US03 Add questions | All 4 choices filled in | Accepted | boundary, on the limit |
-| US03-06 | US03 Add questions | Points = 0 | Rejected | boundary, just below |
-| US03-07 | US03 Add questions | Points = 1; another lecturer adds a question to the quiz | 1 accepted; other lecturer gets 403 | boundary, on the limit + error |
+
+### 2.3 US03: Lecturer adds multiple-choice questions
+
+| ID | Story | Input | Expected result | Kind | Test function |
+|---|---|---|---|---|---|
+| US03-01 | US03 Add questions | Quiz with 0 questions, add 1 valid question | Question count becomes 1 | normal | test_us03_01_add_valid_question |
+| US03-02 | US03 Add questions | Question with 4 choices and 1 correct answer | Exactly 4 choices and 1 correct answer stored | normal | test_us03_02_save_four_choices |
+| US03-03 | US03 Add questions | No correct answer selected | Rejected: "Please select one correct option."; nothing saved | error | test_us03_03_reject_missing_correct_answer |
+| US03-04 | US03 Add questions | Only 3 of the 4 choices filled in | Rejected; nothing saved | boundary, just below | test_us03_04_reject_three_choices |
+| US03-05 | US03 Add questions | All 4 choices filled in | Accepted; question saved | boundary, on the limit | test_us03_05_accept_four_choices |
+| US03-06 | US03 Add questions | Points = 0 | Rejected; nothing saved | boundary, just below | test_us03_06_reject_zero_points |
+| US03-07 | US03 Add questions | Points = 1; another lecturer attempts to add a question | 1 point accepted; other lecturer receives 403 | boundary, on the limit + error | test_us03_07_minimum_points_and_ownership |
+
 
 ### 2.4 US04: Lecturer publishes a quiz
 
@@ -115,14 +123,16 @@ Every P0 story has at least three test cases: one normal case, one error case, a
 
 **Where.** All tests are in `tests/`. Every test case in Section 2 is a pytest test, with its ID in the test name (for example `test_us02_05_duration_0_is_rejected`) or in a comment (`# US02-05`).
 
+
 | Story | Test file |
 |---|---|
 | US01 | `tests/test_p0_us01_login.py` |
-| US02 | `tests/test_p0_us02_create_quiz.py` |
+| US02 | `tests/test_create_quiz.py` |
 | US03 | `tests/test_p0_us03_questions.py` |
 | US04 | `tests/test_p0_us04_publish.py` |
 | US06 | `tests/test_p0_us06_start_attempt.py` |
 | US08 | `tests/test_p0_us08_publish.py` (issue #137) |
+
 
 **No server and no real database.** The tests use the Flask test client and a temporary SQLite file created in pytest's `tmp_path` by `init_db`. They never read `data/minilms.db` and do not depend on today's date.
 

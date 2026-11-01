@@ -151,7 +151,7 @@ python -m pytest -v
 
 - **Rule broken on purpose:** question numbers outside the quiz (0 and N+1) must be rejected with 404 `QUESTION_NOT_FOUND` (US06 AC, design.md).
 - **Line changed (temporary):** `src/services/attempt_service.py`, line 237, `if not 1 <= question_number <= len(questions):` → `if not 0 <= question_number <= len(questions):`
-- **Test that caught it:** `tests/test_us07.py::test_take_page_rejects_question_outside_quiz[0]`
+- **Test that caught it:** US06-05 (`test_us06_05_question_number_boundaries`). Also covered by `tests/test_us07.py::test_take_page_rejects_question_outside_quiz[0]` (P1)
 - **Output with the mutation (red):**
   ```
   FAILED tests/test_us07.py::test_take_page_rejects_question_outside_quiz[0] - Failed: DID NOT RAISE <class 'AttemptError'>

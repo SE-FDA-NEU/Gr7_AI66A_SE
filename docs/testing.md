@@ -45,8 +45,6 @@ Every P0 story has at least three test cases: one normal case, one error case, a
 Each US01 case ID appears in both its test function name and a comment in
 `tests/test_p0_us01_publish.py`.
 
-### 2.2 US02: Lecturer creates a quiz
-
 
 ### 2.2 US02: Lecturer creates a quiz
 
@@ -60,9 +58,6 @@ Each US01 case ID appears in both its test function name and a comment in
 | US02-06 | US02 Create quiz | Duration 1 | Accepted; stored as 1 | boundary, on the limit | test_us02_06_accept_duration_one |
 | US02-07 | US02 Create quiz | Duration -1 | Rejected; no quiz created | error | test_us02_07_reject_negative_duration |
 | US02-08 | US02 Create quiz | Student submits the create-quiz form | 403; no quiz created | error | test_us02_08_student_cannot_create_quiz |
-
-
-### 2.3 US03: Lecturer adds multiple-choice questions
 
 
 ### 2.3 US03: Lecturer adds multiple-choice questions
@@ -130,14 +125,14 @@ Each US01 case ID appears in both its test function name and a comment in
 | Story | Test file |
 |---|---|
 | US01 | `tests/test_p0_us01_publish.py` |
-| US02 | `tests/test_p0_us02_create_quiz.py` |
+| US02 | `tests/test_p0_us02_publish.py` |
 | US03 | `tests/test_p0_us03_questions.py` |
 | US04 | `tests/test_p0_us04_publish.py` |
 | US06 | `tests/test_p0_us06_start_attempt.py` |
-| US08 | `tests/test_p0_us08_publish.py` (issue #137) |
+| US08 | `tests/test_p0_us08_publish.py`  |
 
 
-**No server and no real database.** The tests use the Flask test client and a temporary SQLite file created in pytest's `tmp_path` by `init_db`. They never read `data/minilms.db` and do not depend on today's date.
+**No server and no real database.**  All test cases execute independently using temporary SQLite databases (`tmp_path`) initialized by `init_db`. They do not require a running web server, never read or write to `data/minilms.db`, and do not depend on system dates.
 
 **One command runs them all** (from the repository root, after the setup steps in `docs/SETUP.md`):
 
@@ -145,11 +140,11 @@ Each US01 case ID appears in both its test function name and a comment in
 python -m pytest -v
 ```
 
-**Output** (clean clone, `<date>`):
+**Output** (clean clone, `Nov 01, 2026`):
 
-![(SM thêm ảnh vào đây) Full output of python -m pytest -v](images/testing/pytest-output.png)
+![Full output of python -m pytest -v](images/testing/pytest-output.png)
 
-`<N> passed in <T> s` (SM thay số)
+`252 passed in 29.53 s`
 
 ---
 

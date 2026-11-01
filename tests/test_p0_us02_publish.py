@@ -180,3 +180,4 @@ def test_us02_08_student_cannot_create_quiz(client, db_path):
 
     assert response.status_code == 403
     assert len(get_quizzes(db_path)) == 0
+    

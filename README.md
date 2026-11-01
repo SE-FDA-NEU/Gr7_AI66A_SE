@@ -1,15 +1,15 @@
 # Mini LMS
 
-Nền tảng giúp giảng viên dễ dàng tạo, quản lý và chấm quiz, đồng thời cung cấp cho sinh viên môi trường làm bài và nhận kết quả, thống kê học tập nhanh chóng.
+A platform that enables instructors to easily create, manage, and grade quizzes, while providing students with an environment to take assessments, receive results, and view learning statistics.
 
-- **Nhóm:** Group 7 ·
-- **Thành viên:** Lê Ngọc Anh Thư, Nguyễn Ngân An, Đào Ngọc Hiền, Nguyễn Thành Lân, Trần Tuệ Khang
-- **Product Owner (cố định cả kỳ):** Lê Ngọc Anh Thư
-- **Scrum Master (luân phiên mỗi sprint):** Nguyễn Ngân An (Sprint 1) | Đào Ngọc Hiền (Sprint 2) | Trần Tuệ Khang (Sprint 3) 
+- **Group:** Group 7 ·
+- **Members:** Lê Ngọc Anh Thư, Nguyễn Ngân An, Đào Ngọc Hiền, Nguyễn Thành Lân, Trần Tuệ Khang
+- **Product Owner (fixed for the entire term):** Lê Ngọc Anh Thư
+- **Scrum Master (rotating each sprint):** Nguyễn Ngân An (Sprint 1) | Đào Ngọc Hiền (Sprint 2) | Trần Tuệ Khang (Sprint 3) | Lê Ngọc Anh Thư (Sprint 4)
 - **Board:** https://github.com/orgs/SE-FDA-NEU/projects/17
 - **Definition of Done:** [docs/definition-of-done.md](docs/definition-of-done.md)
 - **Requirements:** [docs/requirements.md](docs/requirements.md)
 
-## Chạy thử
+## Getting Started
 
-Hướng dẫn cài đặt đầy đủ trên máy mới: **[docs/SETUP.md](docs/SETUP.md)**
+For full setup instructions on a new machine, please refer to: **[docs/SETUP.md](docs/SETUP.md)**

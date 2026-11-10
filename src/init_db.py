@@ -2,6 +2,7 @@
 from __future__ import annotations
 import csv
 import os
+import sqlite3
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -65,6 +66,33 @@ def init_db(db_path: str | Path) -> dict[str, int]:
         ).fetchone()[0]
 
     return {table: counts.get(table, 0) for table in TABLE_NAMES}
+
+
+def _has_user_table(db_path: Path) -> bool:
+    """Return True when the database file already contains the user table."""
+    connection = sqlite3.connect(db_path)
+    try:
+        return connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'user'"
+        ).fetchone() is not None
+    finally:
+        connection.close()
+
+
+def ensure_database(db_path: str | Path) -> bool:
+    """Create and seed the database only when it is missing.
+
+    An existing database that already has the user table is left untouched,
+    because init_db() drops every table first. Returns True when seeding ran.
+    """
+    db_path = Path(db_path)
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if db_path.exists() and _has_user_table(db_path):
+        return False
+
+    init_db(db_path)
+    return True
 
 
 def _display_path(db_path: Path) -> str:

@@ -15,6 +15,7 @@ load_dotenv(PROJECT_ROOT / ".env")
 
 from src.errors import render_error
 from src.db import ensure_quiz_schema_columns, get_connection
+from src.init_db import ensure_database
 from src.routes.api_routes import api_bp
 from src.routes.auth_routes import auth_bp
 from src.routes.lecturer_routes import lecturer_bp
@@ -36,6 +37,7 @@ def create_app(test_config=None):
         app.config.update(test_config)
 
     database_path = Path(app.config["DATABASE_PATH"])
+    ensure_database(database_path)
     if database_path.exists():
         connection = get_connection(database_path)
         try:

@@ -1,12 +1,16 @@
 from __future__ import annotations
 import os
+import json
 import secrets
+import sqlite3
 import sys
+from contextlib import closing
 from pathlib import Path
+from time import perf_counter
 
 from dotenv import load_dotenv
 
-from flask import Flask, redirect, url_for
+from flask import Flask, g, redirect, request, url_for
 from werkzeug.exceptions import HTTPException
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -51,9 +55,34 @@ def create_app(test_config=None):
     app.register_blueprint(student_bp)
     app.register_blueprint(api_bp)
 
+    @app.before_request
+    def start_request_timer():
+        g.request_started_at = perf_counter()
+
+    @app.after_request
+    def log_request(response):
+        # Route templates omit user-controlled path values; never log raw URLs,
+        # query strings, headers, cookies, bodies, or response content.
+        print(json.dumps({
+            "event": "http_request",
+            "method": request.method if request.method in {
+                "GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
+            } else "OTHER",
+            "path": request.url_rule.rule if request.url_rule else "<unmatched>",
+            "status_code": response.status_code,
+            "duration_ms": round((perf_counter() - g.request_started_at) * 1000, 3),
+        }), flush=True)
+        return response
+
     @app.errorhandler(HTTPException)
     def handle_http_error(error):
         return render_error(error.code or 500)
+
+    @app.errorhandler(Exception)
+    def handle_server_error(error):
+        # Exception messages and tracebacks may contain credentials or answers.
+        print(json.dumps({"event": "server_exception", "status_code": 500}), flush=True)
+        return render_error(500)
 
     @app.route('/')
     def index():
@@ -61,7 +90,14 @@ def create_app(test_config=None):
 
     @app.route('/health')
     def health():
-        return {"status": "ok"}
+        try:
+            # Read-only mode must not recreate a lost database or seed tables.
+            uri = Path(app.config["DATABASE_PATH"]).resolve().as_uri() + "?mode=ro"
+            with closing(sqlite3.connect(uri, uri=True)) as connection:
+                connection.execute('SELECT 1 FROM "user" LIMIT 1').fetchone()
+        except sqlite3.Error:
+            return {"status": "error", "database": "unavailable"}, 503
+        return {"status": "ok", "database": "ok"}
 
     return app
 

@@ -1,6 +1,8 @@
 from __future__ import annotations
 import sqlite3
 
+import pytest
+
 from src.app import create_app
 
 
@@ -13,6 +15,22 @@ def test_health(client):
     response = client.get('/health')
     assert response.status_code == 200
     assert response.json == {"status": "ok"}
+
+
+def test_app_requires_secret_key_outside_testing(monkeypatch, tmp_path):
+    monkeypatch.delenv("SECRET_KEY", raising=False)
+    test_config = {
+        "DEBUG": False,
+        "DATABASE_PATH": tmp_path / "secret-key.db",
+    }
+
+    with pytest.raises(RuntimeError, match="SECRET_KEY must be set"):
+        create_app(test_config)
+
+    monkeypatch.setenv("SECRET_KEY", "configured-test-secret")
+    app = create_app(test_config)
+
+    assert app.config["SECRET_KEY"] == "configured-test-secret"
 
 
 def test_index_redirects_signed_in_users_to_their_dashboard(client):

@@ -51,7 +51,8 @@ def create_app(test_config=None):
     app = Flask(__name__)
 
     app.config.from_mapping(
-        SECRET_KEY=os.environ.get("SECRET_KEY") or secrets.token_hex(32),
+        DEBUG=False,
+        SECRET_KEY=os.environ.get("SECRET_KEY"),
         DATABASE_PATH=os.environ.get('DATABASE_PATH', 'data/minilms.db'),
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
@@ -59,6 +60,15 @@ def create_app(test_config=None):
 
     if test_config:
         app.config.update(test_config)
+
+    if not app.config["SECRET_KEY"]:
+        if app.testing or app.debug:
+            app.config["SECRET_KEY"] = secrets.token_hex(32)
+        else:
+            raise RuntimeError(
+                "SECRET_KEY must be set in the environment or .env file "
+                "when running outside testing or local debug mode."
+            )
 
     database_path = Path(app.config["DATABASE_PATH"])
     ensure_database(database_path)
@@ -125,5 +135,5 @@ def create_app(test_config=None):
 
 
 if __name__ == '__main__':
-    app = create_app()
+    app = create_app({"DEBUG": True})
     app.run(debug=True, port=5000)

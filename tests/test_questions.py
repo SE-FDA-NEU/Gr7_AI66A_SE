@@ -182,8 +182,9 @@ def test_failed_choice_insert_rolls_back_the_question(client, db_path, monkeypat
 
     monkeypatch.setattr(question_repository, "insert_choice", fail_insert)
 
-    with pytest.raises(RuntimeError, match="Choice insert failed"):
-        post_question(client)
+    response = post_question(client)
+    assert response.status_code == 500
+    assert "Choice insert failed" not in response.get_data(as_text=True)
 
     assert question_count(db_path) == 1
     assert count_rows(db_path, "SELECT COUNT(*) FROM choice") == 60

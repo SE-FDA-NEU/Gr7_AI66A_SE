@@ -137,6 +137,14 @@ Each US01 case ID appears in both its test function name and a comment in
 python -m pytest -v
 ```
 
+**Issue #156 regression checks.** Run `python -m pytest tests/test_health_logging.py -v`
+to check public readiness, request log fields, filtered stack traces for server
+errors, and credential privacy. Stack trace tests verify frame locations while
+excluding request secrets and exception text. The wrong-password test posts to
+the real `/login` route with a seeded user, checks HTTP 401, no authenticated
+session, and a stored failed attempt, then verifies that stdout, stderr, and
+Python logs contain neither the submitted password nor the email.
+
 **Output** (clean clone, `Nov 01, 2026`):
 
 ![Full output of python -m pytest -v](images/testing/pytest-output.png)

@@ -21,6 +21,39 @@ Every screen traces back to a feature and forward to the issue that built it.
 
 ## Story tests
 
+### Issue #156: health and operational logging
+
+`/health` is public (G). It returns HTTP 200 with
+`{"status":"ok","database":"ok"}` when SQLite and the `user` table can be
+queried, or HTTP 503 with `{"status":"error","database":"unavailable"}`.
+The check opens SQLite read-only and closes the connection; it never creates,
+repairs, or seeds the database. Issue #155 startup initialization is preserved.
+
+Requests emit JSON to stdout with `method`, `path`, `status_code`, and
+`duration_ms` (monotonic elapsed time). Paths use route templates; unmatched
+paths are recorded as `<unmatched>` to exclude sensitive URL values. Query
+strings, headers, cookies, request/response bodies, and session contents are
+excluded. Server exceptions (including HTTP 5xx exceptions and database failures
+in `/health`) emit a `server_exception` event with a filtered `stack_trace`.
+Each frame contains only a project-relative file, function name, and line number;
+external file paths become `<external>`. Exception messages, source lines, local
+variables, notes, and chained exception text are excluded because they can contain
+passwords, emails, session tokens, or quiz answers. Error responses retain their
+existing status and safe content.
+
+| Requirement | Implemented in | Tested by |
+| --- | --- | --- |
+| Public readiness success and empty user table | `src/app.py` | `tests/test_app.py::test_health`, `tests/test_health_logging.py::test_health_is_available_to_guest`, `test_health_accepts_empty_user_table` |
+| Safe failure for missing database/table, corruption, connection error; no reseeding | `src/app.py` | `tests/test_health_logging.py::test_health_database_failure_is_safe` |
+| Request fields and elapsed milliseconds on stdout | `src/app.py` | `tests/test_health_logging.py::test_request_log_fields_and_duration` |
+| Safe exception handling and sensitive-data exclusion | `src/app.py` | `tests/test_health_logging.py::test_sensitive_request_data_and_exceptions_are_not_logged` |
+| HTTP 5xx exception stack trace without sensitive descriptions | `src/app.py` | `tests/test_health_logging.py::test_http_server_error_logs_filtered_stack_trace` |
+| Real wrong-password login returns 401 without logging credentials | `src/routes/auth_routes.py`, `src/app.py` | `tests/test_health_logging.py::test_wrong_password_login_does_not_leak_credentials` |
+| Preserve HTTP error status | `src/app.py` | `tests/test_health_logging.py::test_http_errors_keep_their_status_without_exception_log` |
+| Preserve question transaction rollback while returning safe HTTP 500 | `src/app.py`, existing question service | `tests/test_questions.py::test_failed_choice_insert_rolls_back_the_question` |
+
+Run all automated tests with `python -m pytest -q`.
+
 | Story | Route | Implemented in | Test issue | Tested by | Status |
 | --- | --- | --- | --- | --- | --- |
 | US09 - Student sees an automatically calculated result | `/student/quiz/:id/submitted` | `attempt_service.result_summary()`, `get_submitted_data()`, `quiz_submitted.html` | [#112](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/112) | `tests/test_us09.py` (US09-01..14 in `docs/testing.md`) | AC1, AC4 done · AC2, AC3 blocked (need `quiz.show_answers` and lecturer UI) |

@@ -14,7 +14,7 @@ def test_index(client):
 def test_health(client):
     response = client.get('/health')
     assert response.status_code == 200
-    assert response.json == {"status": "ok"}
+    assert response.json == {"status": "ok", "database": "ok"}
 
 
 def test_app_requires_secret_key_outside_testing(monkeypatch, tmp_path):

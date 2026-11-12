@@ -44,6 +44,10 @@ def test_health_database_failure_is_safe(health_app, failure, monkeypatch, capsy
     assert response.json == {"status": "error", "database": "unavailable"}
     captured = capsys.readouterr()
     assert "private" not in captured.out + captured.err + response.get_data(as_text=True)
+    records = [json.loads(line) for line in captured.out.splitlines()]
+    assert records[0]["event"] == "server_exception"
+    assert records[0]["status_code"] == 503
+    assert records[0]["stack_trace"]
     if failure == "missing":
         assert not path.exists()
     elif failure == "missing_table":
@@ -81,7 +85,12 @@ def test_sensitive_request_data_and_exceptions_are_not_logged(health_app, capsys
 
     @health_app.post("/explode/<value>")
     def explode(value):
-        raise RuntimeError(" ".join(secrets.values()))
+        try:
+            raise ValueError("private-password private@example.com private-quiz-answer")
+        except ValueError as cause:
+            error = RuntimeError(" ".join(secrets.values()))
+            error.add_note("private-token")
+            raise error from cause
 
     client = health_app.test_client()
     client.set_cookie("session", secrets["session_token"])
@@ -97,13 +106,64 @@ def test_sensitive_request_data_and_exceptions_are_not_logged(health_app, capsys
     for secret in secrets.values():
         assert secret not in captured.out + captured.err + response.get_data(as_text=True)
     records = [json.loads(line) for line in captured.out.splitlines()]
-    assert records[0] == {"event": "server_exception", "status_code": 500}
+    assert records[0]["event"] == "server_exception"
+    assert records[0]["status_code"] == 500
+    frames = records[0]["stack_trace"]
+    assert frames
+    assert frames[-1]["file"] == "tests/test_health_logging.py"
+    assert frames[-1]["function"] == "explode"
+    assert all(set(frame) == {"file", "function", "line"} for frame in frames)
+    assert all(isinstance(frame["line"], int) and frame["line"] > 0 for frame in frames)
     assert records[1]["path"] == "/explode/<value>"
     assert records[1]["method"] == "POST"
     assert records[1]["status_code"] == 500
     assert records[1]["duration_ms"] >= 0
     assert records[2]["path"] == "<unmatched>"
     assert not captured.err
+
+
+def test_wrong_password_login_does_not_leak_credentials(health_app, capsys, caplog):
+    email = "duc.student@example.edu"
+    password = "private-wrong-login-password"
+    client = health_app.test_client()
+    response = client.post("/login", data={"email": email, "password": password})
+
+    assert response.status_code == 401
+    assert "Incorrect email or password." in response.get_data(as_text=True)
+    with client.session_transaction() as session:
+        assert "user_id" not in session
+    # Confirm the real authentication flow recorded a failed attempt.
+    with sqlite3.connect(health_app.config["DATABASE_PATH"]) as connection:
+        assert connection.execute(
+            "SELECT COUNT(*) FROM user WHERE email = ?", (email,)
+        ).fetchone()[0] == 1
+        assert connection.execute(
+            "SELECT COUNT(*) FROM login_failure WHERE email = ?", (email,)
+        ).fetchone()[0] == 1
+    captured = capsys.readouterr()
+    logs = captured.out + captured.err + caplog.text
+    assert password not in logs
+    assert email not in logs
+    record = json.loads(captured.out)
+    assert record["event"] == "http_request"
+    assert record["method"] == "POST"
+    assert record["path"] == "/login"
+    assert record["status_code"] == 401
+
+
+def test_http_server_error_logs_filtered_stack_trace(health_app, capsys):
+    @health_app.get("/unavailable")
+    def unavailable():
+        abort(503, description="private-password private@example.com")
+
+    response = health_app.test_client().get("/unavailable")
+    assert response.status_code == 503
+    captured = capsys.readouterr()
+    assert "private" not in captured.out + captured.err + response.get_data(as_text=True)
+    records = [json.loads(line) for line in captured.out.splitlines()]
+    assert records[0]["status_code"] == 503
+    assert any(frame["function"] == "unavailable" for frame in records[0]["stack_trace"])
+    assert records[1]["status_code"] == 503
 
 
 def test_http_errors_keep_their_status_without_exception_log(health_app, capsys):

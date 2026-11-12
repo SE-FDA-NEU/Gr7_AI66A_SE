@@ -33,10 +33,13 @@ Requests emit JSON to stdout with `method`, `path`, `status_code`, and
 `duration_ms` (monotonic elapsed time). Paths use route templates; unmatched
 paths are recorded as `<unmatched>` to exclude sensitive URL values. Query
 strings, headers, cookies, request/response bodies, and session contents are
-excluded. Unhandled exceptions emit a generic `server_exception` event and
-return the existing generic 500 page; messages and tracebacks are excluded
-because they can contain passwords, emails, session tokens, or quiz answers.
-HTTP errors retain their existing handling.
+excluded. Server exceptions (including HTTP 5xx exceptions and database failures
+in `/health`) emit a `server_exception` event with a filtered `stack_trace`.
+Each frame contains only a project-relative file, function name, and line number;
+external file paths become `<external>`. Exception messages, source lines, local
+variables, notes, and chained exception text are excluded because they can contain
+passwords, emails, session tokens, or quiz answers. Error responses retain their
+existing status and safe content.
 
 | Requirement | Implemented in | Tested by |
 | --- | --- | --- |
@@ -44,6 +47,8 @@ HTTP errors retain their existing handling.
 | Safe failure for missing database/table, corruption, connection error; no reseeding | `src/app.py` | `tests/test_health_logging.py::test_health_database_failure_is_safe` |
 | Request fields and elapsed milliseconds on stdout | `src/app.py` | `tests/test_health_logging.py::test_request_log_fields_and_duration` |
 | Safe exception handling and sensitive-data exclusion | `src/app.py` | `tests/test_health_logging.py::test_sensitive_request_data_and_exceptions_are_not_logged` |
+| HTTP 5xx exception stack trace without sensitive descriptions | `src/app.py` | `tests/test_health_logging.py::test_http_server_error_logs_filtered_stack_trace` |
+| Real wrong-password login returns 401 without logging credentials | `src/routes/auth_routes.py`, `src/app.py` | `tests/test_health_logging.py::test_wrong_password_login_does_not_leak_credentials` |
 | Preserve HTTP error status | `src/app.py` | `tests/test_health_logging.py::test_http_errors_keep_their_status_without_exception_log` |
 | Preserve question transaction rollback while returning safe HTTP 500 | `src/app.py`, existing question service | `tests/test_questions.py::test_failed_choice_insert_rolls_back_the_question` |
 

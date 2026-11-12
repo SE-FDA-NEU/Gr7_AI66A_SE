@@ -7,6 +7,7 @@ import sys
 from contextlib import closing
 from pathlib import Path
 from time import perf_counter
+from traceback import walk_tb
 
 from dotenv import load_dotenv
 
@@ -25,6 +26,25 @@ from src.routes.auth_routes import auth_bp
 from src.routes.lecturer_routes import lecturer_bp
 from src.routes.quiz_routes import quiz_bp
 from src.routes.student_routes import student_bp
+
+
+def log_server_exception(error: Exception, status_code: int = 500):
+    # Allow only frame locations. Messages, source lines, locals, exception
+    # notes and chained exception text can all contain credentials or answers.
+    frames = []
+    for frame, lineno in walk_tb(error.__traceback__):
+        filename = Path(frame.f_code.co_filename)
+        try:
+            filename = filename.resolve().relative_to(PROJECT_ROOT).as_posix()
+        except ValueError:
+            filename = "<external>"
+        frames.append({
+            "file": filename, "function": frame.f_code.co_name, "line": lineno,
+        })
+    print(json.dumps({
+        "event": "server_exception", "status_code": status_code,
+        "stack_trace": frames,
+    }), flush=True)
 
 
 def create_app(test_config=None):
@@ -76,12 +96,13 @@ def create_app(test_config=None):
 
     @app.errorhandler(HTTPException)
     def handle_http_error(error):
+        if (error.code or 500) >= 500:
+            log_server_exception(error, error.code or 500)
         return render_error(error.code or 500)
 
     @app.errorhandler(Exception)
     def handle_server_error(error):
-        # Exception messages and tracebacks may contain credentials or answers.
-        print(json.dumps({"event": "server_exception", "status_code": 500}), flush=True)
+        log_server_exception(error)
         return render_error(500)
 
     @app.route('/')
@@ -95,7 +116,8 @@ def create_app(test_config=None):
             uri = Path(app.config["DATABASE_PATH"]).resolve().as_uri() + "?mode=ro"
             with closing(sqlite3.connect(uri, uri=True)) as connection:
                 connection.execute('SELECT 1 FROM "user" LIMIT 1').fetchone()
-        except sqlite3.Error:
+        except sqlite3.Error as error:
+            log_server_exception(error, 503)
             return {"status": "error", "database": "unavailable"}, 503
         return {"status": "ok", "database": "ok"}
 

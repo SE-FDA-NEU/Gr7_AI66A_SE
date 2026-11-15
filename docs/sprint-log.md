@@ -311,20 +311,24 @@ documented in `docs/testing.md`, and `docs/SETUP.md` explains how to run them.
 
 ### Committed (Sprint Planning, 2026-10-20)
 
+### Committed (Sprint Planning, 2026-10-20)
+
 | Issue | Story | Story ID | Points | Owner |
 | --- | --- | --- | --- | --- |
-| #130 | [Chore] Refine backlog for Sprint 4 | - | 2 | @anhthu0910 |
-| #140 | [Chore] Sprint 4 wrap-up | - | 2 | @ngthanhlan06-droid |
-| #131 | [Task] testing.md: four-section skeleton and Section 1 | - | 3 | @anhthu0910 |
+| #129 | [Chore] Refine backlog for Sprint 4 | - | 2 | @anhthu0910 |
+| #130 | [Chore] Sprint 4 wrap-up | - | 2 | @anhthu0910 |
+| #131 | [Task] testing.md: 4 sections + Section 1 | - | 3 | @anhthu0910 |
 | #132 | [Task] US01: tests for sign-in and lockout, pytest.ini, SETUP | US01 (P0) | 3 | @khangtrannf |
 | #133 | [Task] US02: tests for quiz creation | US02 (P0) | 3 | @nganannn |
-| #134 | [Task] US03: tests for adding questions | US03 (P0) | 3 | @nganannn |
-| #136 | [Task] US06: tests for starting an attempt | US06 (P0) | 3 | @dnghien |
-| #135 | [Task] US04: tests for publishing and closing a quiz | US04 (P0) | 3 | @anhthu0910 |
-| #137 | [Task] US08: tests for submitting an attempt | US08 (P0) | 3 | @ngthanhlan06-droid |
-| #138 | [Task] Section 4: bug found by the tests or rule broken | - | 2 | @dnghien |
-| #139 | [Task] Section 3: test command and pytest output screenshot | - | 2 | @ngthanhlan06-droid |
-| #129 | [Task] Sprint 4 sprint-log and README Scrum Master | - | 2 | @ngthanhlan06-droid |
+| #134 | [Task] US03: Add more questions | US03 (P0) | 3 | @nganannn |
+| #136 | [Task] US06: Test start attempt | US06 (P0) | 3 | @dnghien |
+| #135 | [Task] US04: test publish và close quiz | US04 (P0) | 3 | @anhthu0910 |
+| #137 | [Task] US08: Test submission | US08 (P0) | 3 | @ngthanhlan06-droid |
+| #138 | [Task] Section 4: Mutation test or discovered bugs | - | 2 | @dnghien |
+| #139 | [Task] Section 3: Run command, pytest image | - | 2 | @ngthanhlan06-droid |
+| #140 | [Task] sprint-log Sprint 4 + README Scrum Master | - | 2 | @ngthanhlan06-droid |
+
+**Total committed: 31 points**
 
 **Total committed: 31 points**
 
@@ -334,20 +338,24 @@ documented in `docs/testing.md`, and `docs/SETUP.md` explains how to run them.
 
 ### Result
 
+### Result
+
 | Issue | Points | Status |
 | --- | --- | --- |
-| #130 | 2 | Done - PR #130 |
-| #140 | 2 | Done - PR #140 |
-| #131 | 3 | Done - PR #131 |
-| #132 | 3 | Done - PR #132 |
-| #133 | 3 | Done - PR #133 |
-| #134 | 3 | Done - PR #134 |
-| #136 | 3 | Done - PR #136 |
-| #135 | 3 | Done - PR #135 |
-| #137 | 3 | Done - PR #137 |
-| #138 | 2 | Done - PR #138 |
-| #139 | 2 | Done - PR #139 |
-| #129 | 2 | Done - PR #129 |
+| #129 | 2 | Done |
+| #130 | 2 | Done |
+| #131 | 3 | Done - PR #152 |
+| #132 | 3 | Done - PR #147 |
+| #133 | 3 | Done - PR #145 |
+| #134 | 3 | Done - PR #148 |
+| #136 | 3 | Done - PR #141 |
+| #135 | 3 | Done - PR #144 |
+| #137 | 3 | Done - PR #146 |
+| #138 | 2 | Done - PR #150 |
+| #139 | 2 | Done - PR #149 |
+| #140 | 2 | Done - PR #151 |
+
+**Completed: 31 points (of 31 committed). Velocity this sprint: 31**
 
 **Completed: 31 points (of 31 committed). Velocity this sprint: 31**
 

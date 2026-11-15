@@ -2,7 +2,7 @@
 
 URL bắt đầu duy nhất: **https://minilms-nhom7.onrender.com/**. URL giảng viên được cung cấp: https://minilms-nhom7.onrender.com/lecturer/dashboard.
 
-Lượt tự động: Chrome headless, context mới không chia sẻ cookie (tương đương phiên ẩn danh), desktop 1365×900 và giả lập cảm ứng 390×844. Tài khoản demo seed trong `SETUP.md` đăng nhập thành công. Không nhập URL trang con; script chỉ `goto` trang đầu rồi bấm liên kết, nút và xác nhận. Reload dùng để kiểm tra F5. Lượt điện thoại thật do Nguyễn Ngân An báo cáo, kèm 8 ảnh gốc, được ghi riêng bên dưới; chưa thay thế reviewer độc lập với An.
+Phương pháp lượt tự động: **automated browser-based functional testing** bằng Playwright và Chrome headless, context mới không chia sẻ cookie (tương đương phiên ẩn danh), desktop 1365×900 và giả lập cảm ứng 390×844. Tài khoản demo seed trong `SETUP.md` đăng nhập thành công. Không nhập URL trang con; script chỉ `goto` trang đầu rồi bấm liên kết, nút và xác nhận. Reload dùng để kiểm tra F5. Lượt điện thoại thật là **manual mobile testing** do Nguyễn Ngân An báo cáo, kèm 8 ảnh gốc, được ghi riêng bên dưới; được phân biệt với các mục reviewer độc lập bên dưới.
 
 ## Kết quả story
 
@@ -17,7 +17,7 @@ Lượt tự động: Chrome headless, context mới không chia sẻ cookie (t�
 
 Đợt chạy mobile đầy đủ: quiz **18**, nhãn `LIVE CHECK 20261115-150924`. Các quiz `LIVE CHECK` là dữ liệu kiểm tra thật, không phải dữ liệu dựng ảnh. Các lần chạy thử trước có thể để lại quiz nháp riêng; không xóa dữ liệu hay lượt nộp của người khác. Log đích đến: [mobile/results.json](images/live-check/mobile/results.json). Ảnh desktop và log được lưu riêng trong `images/live-check/desktop/`.
 
-**6/6 story đi được bằng bấm trên URL thật trong trình duyệt tự động.** Đã bổ sung kết quả điện thoại thật do An cung cấp. Chưa ký nghiệm thu reviewer độc lập, triển khai bản sửa H9 hoặc đối chiếu phiếu M3.
+**6/6 story đi được bằng bấm trên URL thật trong trình duyệt tự động.** Đã bổ sung kết quả điện thoại thật do An cung cấp và các mục kết quả reviewer độc lập bên dưới. Chưa xác nhận triển khai bản sửa H9 hoặc đối chiếu phiếu M3.
 
 ## Tạo dữ liệu rồi tải lại
 
@@ -37,11 +37,11 @@ Không nhận đã thử live tình huống nộp hai lần. Chọn ba tình hu�
 
 | Lỗi                                                | Issue                                                      | Bản sửa                                                                                          | Test                                                                                                                                                   | Trạng thái                                                                                                                  |
 | --------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| H9: lỗi quiz rỗng thiếu hướng dẫn khắc phục | [Nội dung issue, nhãn bug](review/live-check-h9-issue.md) | `src/errors.py`: bổ sung bước Add Questions, lưu câu có đáp án đúng rồi publish lại | `test_us04_03_quiz_with_0_questions_cannot_be_published`: kiểm tra cả POST bị từ chối và GET trang quản lý; red trước sửa, green sau sửa | Đã sửa local; chưa có issue/PR online vì không có xác thực GitHub. [Nội dung PR riêng](review/live-check-h9-pr.md) |
+| H9: lỗi quiz rỗng thiếu hướng dẫn khắc phục | [Issue #172 — bug](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/172) | [PR #176](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/176): bổ sung bước Add Questions, lưu câu có đáp án đúng rồi publish lại trong `src/errors.py` | `test_us04_03_quiz_with_0_questions_cannot_be_published`: kiểm tra cả POST bị từ chối và GET trang quản lý; red trước sửa, green sau sửa | PR #176 đang mở, chưa merge/deploy; chỉ gồm hai file code/test. PR #171 giữ tài liệu và bằng chứng, không chứa thay đổi triển khai H9. [Chi tiết](review/live-check-h9-pr.md) |
 
 Không tìm thấy ngõ cụt hoặc bước buộc nhập URL trong các luồng đã chạy. Không tính lỗi selector của script hay lỗi quyền thư mục tạm của môi trường là bug sản phẩm.
 
-Kiểm tra local: bộ test nền **273 passed** (538,56 giây); lượt này bắt đầu trước khi sửa thông báo. Sau sửa, chạy riêng toàn bộ `tests/test_p0_us04_publish.py`: **8 passed** (27,86 giây). Test hồi quy quiz rỗng đã được chạy red trước sửa. `git diff --check`, kiểm tra cú pháp script và các liên kết bằng chứng đều đạt. Chưa chạy CI trên nhánh PR vì chưa có PR online.
+Kiểm tra local: bộ test nền **273 passed** (538,56 giây); lượt này bắt đầu trước khi sửa thông báo. Sau sửa, chạy riêng toàn bộ `tests/test_p0_us04_publish.py`: **8 passed** (27,86 giây). Test hồi quy quiz rỗng đã được chạy red trước sửa. `git diff --check`, kiểm tra cú pháp script và các liên kết bằng chứng đều đạt. Các số liệu này là kết quả lịch sử, không phải lượt chạy mới. CI của [PR #171](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/171) và [PR #176](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/176) đã xanh tại thời điểm kiểm tra trước cập nhật tài liệu này; xem kết quả CI của commit mới trên GitHub.
 
 ## Hai thay đổi sau M3
 
@@ -80,16 +80,16 @@ Tên quiz thực tế trong ảnh là **`iphone 14 pro + safari`**, thay cho tê
 | BR3 — không publish quiz 0 câu | Đạt về ngăn xuất bản: nút Publish bị khóa, thông báo ít nhất 1 câu | [Nút bị khóa và lý do](images/live-check/iphone-14-pro-safari/04-empty-quiz-publish-blocked.jpg). Thông báo Render trong ảnh vẫn thiếu câu hướng dẫn phục hồi của bản sửa H9 trong repo; chưa xác nhận H9 đã triển khai |
 | Validation bổ sung | Chặn nội dung câu hỏi rỗng và chưa chọn đáp án đúng | [Trường câu hỏi bắt buộc](images/live-check/iphone-14-pro-safari/02-required-question.jpg), [chọn đáp án đúng bắt buộc](images/live-check/iphone-14-pro-safari/05-required-correct-choice.jpg); đây là thông báo validation gốc của trình duyệt |
 
-Kết quả này ghi nhận kiểm tra **điện thoại thật bởi An**, không phải lượt tự chạy của trợ lý. Vì yêu cầu reviewer phải độc lập với bảng của An, vẫn cần người khác thực hiện ít nhất 2 story và 1 luật, rồi điền bảng dưới.
+Kết quả này ghi nhận kiểm tra **điện thoại thật bởi An**, không phải lượt tự chạy của trợ lý. Kết quả của An được ghi riêng với các mục do reviewer khác bổ sung trong bảng dưới.
 
-## Reviewer độc lập với An — chưa thực hiện
+## Reviewer độc lập với An — kết quả do reviewer bổ sung
 
-Reviewer dùng điện thoại của mình, không sao chép kết quả của An. Chỉ nhập URL trang đầu một lần; làm lại ít nhất US01 + US06 (nên thêm US08), rồi phá một luật bất kỳ.
+Các lượt kiểm tra trong bảng này là **manual mobile testing** do reviewer bổ sung. Yêu cầu: reviewer dùng điện thoại của mình, không sao chép kết quả của An; chỉ nhập URL trang đầu một lần, làm lại ít nhất 2 story, rồi phá một luật bất kỳ. Giữ nguyên các kết quả và ảnh mà reviewer đã cung cấp.
 
 | Người kiểm tra | Ngày/giờ +07 | Thiết bị/trình duyệt | Story 1 + kết quả/ảnh                                                         | Story 2 + kết quả/ảnh                                                           | Luật + kết quả/ảnh                                                                                                                              |
 | ----------------- | -------------- | ------------------------ | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Le Ngoc Anh Thu   | 16:56          | Honor X6C - Chrome       | [US04](Gr7_AI66A_SE/docs/images/live-check/reviewer/thu-01-student-dashboard.png) | [US08](Gr7_AI66A_SE/docs/images/live-check/reviewer/thu-03-submitted.png)           | [BR3 - A quiz cannot be published unless it contains at least 1 question](Gr7_AI66A_SE/docs/images/live-check/reviewer/thu-04-empty-quiz-rule.png)   |
-| Nguyen Thanh Lan  | 17:05          | Honor X7C - Chrome       | [US06](Gr7_AI66A_SE/docs/images/live-check/reviewer/lan-02-take-timer.png)        | [US01](Gr7_AI66A_SE/docs/images/live-check/reviewer/lan-06-too-many-login-item.png) | [BR5 - Each student may submit up to the quiz&#39;s configured attempt limit](Gr7_AI66A_SE/docs/images/live-check/reviewer/lan-05-double-submit.png) |
+| Le Ngoc Anh Thu   | 16:56          | Honor X6C - Chrome       | [US04](images/live-check/reviewer/thu-01-student-dashboard.png) | [US08](images/live-check/reviewer/thu-03-submitted.png)           | [BR3 - A quiz cannot be published unless it contains at least 1 question](images/live-check/reviewer/thu-04-empty-quiz-rule.png)   |
+| Nguyen Thanh Lan  | 17:05          | Honor X7C - Chrome       | [US06](images/live-check/reviewer/lan-02-take-timer.png)        | [US01](images/live-check/reviewer/lan-06-too-many-login-item.png) | [BR5 - Each student may submit up to the quiz&#39;s configured attempt limit](images/live-check/reviewer/lan-05-double-submit.png) |
 
 ## Chạy lại tự động
 

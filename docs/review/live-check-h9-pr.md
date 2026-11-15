@@ -1,6 +1,8 @@
 # fix: explain how to recover from an empty quiz publication
 
-Status: prepared locally; no GitHub PR has been created. Submit this fix separately from live-check evidence. Attach the actual bug issue number when available.
+Status: submitted as [PR #176](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/176) for [Issue #172](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/172). The PR is open and not merged; its head branch is `172-h9-recovery`, targeting `main`. PR #171 retains testing documentation and evidence separately.
+
+Closes #172
 
 An empty quiz blocks publishing but the message lacks an explicit next step. Add instructions to open Add Questions, save a question with one correct answer, and publish again. Keep the existing acceptance-criteria text and publication validation.
 

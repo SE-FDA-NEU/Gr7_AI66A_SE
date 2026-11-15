@@ -2,7 +2,7 @@
 
 Label: `bug`
 
-Status: prepared locally; no GitHub issue has been created.
+Status: tracked in [Issue #172](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/172), labelled `bug`. The dedicated fix is [PR #176](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/176), currently open and not merged.
 
 URL: https://minilms-nhom7.onrender.com/
 

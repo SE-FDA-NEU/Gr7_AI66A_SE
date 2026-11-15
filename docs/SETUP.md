@@ -38,6 +38,13 @@ cd Gr7_AI66A_SE
   .venv\Scripts\activate
   ```
 
+  If the default Windows PowerShell security policy (`ExecutionPolicy`) is blocking the execution of script files (`.ps1`), run the following command to grant permission for the current user to run local scripts:
+
+  ```powershell
+  Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+  .venv\Scripts\activate
+  ```
+
 ### Step 2.3: Install Dependencies
 ```bash
 pip install --upgrade pip
@@ -74,20 +81,20 @@ The system uses an `.env` file to manage environment-specific variables without 
 > `DATABASE_PATH` defaults to `data/minilms.db`; the Flask development server
 > uses port 5000.
 
-## Chạy như server thật
+## Running like a production server
 
-Gunicorn không chạy trên Windows thuần. Hãy dùng WSL hoặc Codespaces, cài dependencies
-từ `requirements.txt`, rồi cấu hình `SECRET_KEY` bằng một giá trị riêng tư trước khi
-khởi động server:
+Gunicorn does not run natively on Windows. Please use WSL or Codespaces, install the dependencies
+from `requirements.txt`, and configure a private `SECRET_KEY` before
+starting the server:
 
 ```bash
 gunicorn "src.app:create_app()" --bind 0.0.0.0:8000
 ```
 
-Mở [http://localhost:8000/health](http://localhost:8000/health); server trả về
-`{"status":"ok"}` khi ứng dụng sẵn sàng. Gunicorn tạo app qua factory và không chạy
-khối `if __name__ == '__main__'`, vì vậy `app.run(debug=True, port=5000)` chỉ dùng
-khi chạy cục bộ trực tiếp, còn debug không bật trên server Gunicorn.
+Open [http://localhost:8000/health](http://localhost:8000/health); the server will return
+`{"status":"ok"}` when the application is ready. Gunicorn creates the app via a factory function
+and does not execute the `if __name__ == '__main__'` block; therefore, `app.run(debug=True, port=5000)`
+is only intended for direct local execution, and debug mode is not enabled when running on a Gunicorn server.
 
 ---
 

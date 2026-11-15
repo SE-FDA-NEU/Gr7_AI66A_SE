@@ -2,7 +2,7 @@
 
 URL bắt đầu duy nhất: **https://minilms-nhom7.onrender.com/**. URL giảng viên được cung cấp: https://minilms-nhom7.onrender.com/lecturer/dashboard.
 
-Kiểm tra bằng Chrome headless, context mới không chia sẻ cookie (tương đương phiên ẩn danh), desktop 1365×900 và giả lập cảm ứng 390×844. Đây **chưa phải kiểm tra trên điện thoại vật lý**. Tài khoản demo seed trong `SETUP.md` đăng nhập thành công. Không nhập URL trang con; script chỉ `goto` trang đầu rồi bấm liên kết, nút và xác nhận. Reload dùng để kiểm tra F5.
+Lượt tự động: Chrome headless, context mới không chia sẻ cookie (tương đương phiên ẩn danh), desktop 1365×900 và giả lập cảm ứng 390×844. Tài khoản demo seed trong `SETUP.md` đăng nhập thành công. Không nhập URL trang con; script chỉ `goto` trang đầu rồi bấm liên kết, nút và xác nhận. Reload dùng để kiểm tra F5. Lượt điện thoại thật do Nguyễn Ngân An báo cáo, kèm 8 ảnh gốc, được ghi riêng bên dưới; chưa thay thế reviewer độc lập với An.
 
 ## Kết quả story
 
@@ -17,7 +17,7 @@ Kiểm tra bằng Chrome headless, context mới không chia sẻ cookie (tươn
 
 Đợt chạy mobile đầy đủ: quiz **18**, nhãn `LIVE CHECK 20261115-150924`. Các quiz `LIVE CHECK` là dữ liệu kiểm tra thật, không phải dữ liệu dựng ảnh. Các lần chạy thử trước có thể để lại quiz nháp riêng; không xóa dữ liệu hay lượt nộp của người khác. Log đích đến: [mobile/results.json](images/live-check/mobile/results.json). Ảnh desktop và log được lưu riêng trong `images/live-check/desktop/`.
 
-**6/6 story đi được bằng bấm trên URL thật trong trình duyệt tự động.** Chưa ký nghiệm thu thiết bị vật lý, reviewer độc lập, triển khai bản sửa H9 hoặc đối chiếu phiếu M3.
+**6/6 story đi được bằng bấm trên URL thật trong trình duyệt tự động.** Đã bổ sung kết quả điện thoại thật do An cung cấp. Chưa ký nghiệm thu reviewer độc lập, triển khai bản sửa H9 hoặc đối chiếu phiếu M3.
 
 ## Tạo dữ liệu rồi tải lại
 
@@ -63,7 +63,26 @@ Commit [47805a1](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/commit/47805a14d4835
 5. 3:45–4:30: trình bày hai cặp ảnh, commit 24/10 và phiếu M3 khi có.
 6. 4:30–5:00: phá một luật theo chỉ định. Với luật khóa đăng nhập, dùng tài khoản demo phụ; với quiz đóng, chuẩn bị sẵn dashboard sinh viên chưa reload và phiên giảng viên.
 
-## Reviewer độc lập — chưa thực hiện
+## Kiểm tra điện thoại thật — Nguyễn Ngân An
+
+Ngày **15/11/2026**, thiết bị **iPhone 14 Pro**, trình duyệt **Safari** (theo người kiểm tra cung cấp). Giờ hiển thị trên các ảnh: **16:41–16:49**; kết quả nộp ghi rõ **16:49 UTC+7**. Người kiểm tra báo đã làm toàn bộ các bước tạo quiz, tải lại, thử publish khi chưa có câu hỏi, thêm câu, xuất bản, đăng nhập sinh viên, làm và nộp bài; không gặp lỗi ngoài các validation dự kiến.
+
+Tên quiz thực tế trong ảnh là **`iphone 14 pro + safari`**, thay cho tên gợi ý `PHONE REVIEW`. Ảnh được sao chép nguyên bản từ các tệp người dùng gửi, không dựng lại hoặc chỉnh sửa.
+
+| Hạng mục | Kết quả do người kiểm tra báo cáo | Bằng chứng và giới hạn |
+| --- | --- | --- |
+| US01 — đăng nhập, đổi vai trò | Đạt: đăng nhập giảng viên, đăng xuất rồi đăng nhập sinh viên | [Dashboard sinh viên](images/live-check/iphone-14-pro-safari/01-student-dashboard.jpg); các ảnh quản lý quiz chứng minh truy cập vai trò giảng viên, không có ảnh riêng màn hình đăng nhập |
+| US02 — tạo quiz và tải lại | Đạt: tạo quiz 30 phút, tải lại vẫn còn | [Quiz vừa tạo, Draft, 0 câu](images/live-check/iphone-14-pro-safari/03-created-empty-quiz.jpg). Persistence sau tải lại là xác nhận của người kiểm tra; chưa có cặp ảnh riêng trước/sau reload |
+| US03 — thêm câu hỏi | Đạt: thêm câu `1+1`, 4 lựa chọn, 1 đáp án đúng | [Validation chưa chọn đáp án đúng](images/live-check/iphone-14-pro-safari/05-required-correct-choice.jpg); câu hỏi xuất hiện trên màn hình làm bài |
+| US04 — xuất bản | Đạt: xuất bản rồi quiz xuất hiện cho sinh viên | [Nút Publish được bật](images/live-check/iphone-14-pro-safari/06-publish-enabled.jpg), [dashboard sinh viên có quiz](images/live-check/iphone-14-pro-safari/01-student-dashboard.jpg); ảnh nút bật chưa phải ảnh xác nhận Published |
+| US06 — bắt đầu và chọn đáp án | Đạt: timer nhìn thấy và chọn đáp án được | [Màn hình làm bài, timer 29:54](images/live-check/iphone-14-pro-safari/07-take-quiz-timer.jpg). Ảnh chụp trước khi chọn radio; thao tác chọn được xác nhận qua báo cáo và kết quả chấm điểm |
+| US08 — nộp bài | Đạt: review, xác nhận nộp, nhận điểm | [Quiz submitted, 1/1 (100%), 16:49 UTC+7](images/live-check/iphone-14-pro-safari/08-submitted-result.jpg) |
+| BR3 — không publish quiz 0 câu | Đạt về ngăn xuất bản: nút Publish bị khóa, thông báo ít nhất 1 câu | [Nút bị khóa và lý do](images/live-check/iphone-14-pro-safari/04-empty-quiz-publish-blocked.jpg). Thông báo Render trong ảnh vẫn thiếu câu hướng dẫn phục hồi của bản sửa H9 trong repo; chưa xác nhận H9 đã triển khai |
+| Validation bổ sung | Chặn nội dung câu hỏi rỗng và chưa chọn đáp án đúng | [Trường câu hỏi bắt buộc](images/live-check/iphone-14-pro-safari/02-required-question.jpg), [chọn đáp án đúng bắt buộc](images/live-check/iphone-14-pro-safari/05-required-correct-choice.jpg); đây là thông báo validation gốc của trình duyệt |
+
+Kết quả này ghi nhận kiểm tra **điện thoại thật bởi An**, không phải lượt tự chạy của trợ lý. Vì yêu cầu reviewer phải độc lập với bảng của An, vẫn cần người khác thực hiện ít nhất 2 story và 1 luật, rồi điền bảng dưới.
+
+## Reviewer độc lập với An — chưa thực hiện
 
 Reviewer dùng điện thoại của mình, không sao chép kết quả của An. Chỉ nhập URL trang đầu một lần; làm lại ít nhất US01 + US06 (nên thêm US08), rồi phá một luật bất kỳ.
 

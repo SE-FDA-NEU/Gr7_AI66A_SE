@@ -73,7 +73,8 @@ NOT_QUIZ_OWNER = (
 )
 QUIZ_NO_QUESTIONS = (
     "Chưa thể publish: bài quiz phải có ít nhất 1 câu hỏi. "
-    "(A quiz must contain at least 1 question.)"
+    "(A quiz must contain at least 1 question.) "
+    "Open Add Questions, save a question with one correct answer, then publish again."
 )
 QUIZ_ALREADY_PUBLISHED = (
     "Bài quiz này đã được publish trước đó. "

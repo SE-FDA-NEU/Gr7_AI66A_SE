@@ -128,6 +128,13 @@ def test_us04_03_quiz_with_0_questions_cannot_be_published(client, db_path):
 
     assert response.status_code == 422
     assert NO_QUESTIONS_MESSAGE in response.get_data(as_text=True)
+    recovery = (
+        "Open Add Questions, save a question with one correct answer, "
+        "then publish again."
+    )
+    assert recovery in response.get_data(as_text=True)
+    page = client.get(f"/lecturer/quiz/{quiz_id}/publish")
+    assert recovery in page.get_data(as_text=True)
     assert quiz_status(db_path, quiz_id) == "draft"
 
 

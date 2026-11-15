@@ -42,7 +42,7 @@ lecturer_bp = Blueprint("lecturer", __name__)
 
 
 @lecturer_bp.get("/lecturer/dashboard")
-@role_required("lecturer")
+@role_required("lecturer", "ta")
 def lecturer_dashboard():
     quizzes = get_lecturer_dashboard_data(
         current_app.config["DATABASE_PATH"],
@@ -56,7 +56,7 @@ def lecturer_dashboard():
 
 
 @lecturer_bp.get("/lecturer/quiz/<int:quiz_id>/attempts")
-@role_required("lecturer")
+@role_required("lecturer", "ta")
 def quiz_attempts(quiz_id: int):
     try:
         data = get_quiz_attempts(
@@ -71,7 +71,7 @@ def quiz_attempts(quiz_id: int):
 
 
 @lecturer_bp.get("/lecturer/quiz/<int:quiz_id>/attempts/<int:attempt_id>")
-@role_required("lecturer")
+@role_required("lecturer", "ta")
 def quiz_attempt_detail(quiz_id: int, attempt_id: int):
     try:
         data = get_quiz_attempt_detail(
@@ -100,7 +100,7 @@ def quiz_statistics(quiz_id: int):
 
     return render_template("lecturer_statistics.html", **data)
 @lecturer_bp.get("/lecturer/quiz/<int:quiz_id>/attempts/<int:attempt_id>/audit")
-@role_required("lecturer")
+@role_required("lecturer", "ta")
 def view_attempt_audit_history(quiz_id: int, attempt_id: int):
     """US12: Lecturer views an append-only attempt audit history."""
     db_path = current_app.config["DATABASE_PATH"]

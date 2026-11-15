@@ -41,7 +41,7 @@ def authenticate_user(
             return AuthenticationResult(error_code=429)
 
         user = get_user_by_email(connection, email)
-        if user is not None and user["role"] in {"lecturer", "student"}:
+        if user is not None and user["role"] in {"lecturer", "student", "ta"}:
             password_is_valid = check_password_hash(user["password_hash"], password)
         else:
             password_is_valid = False
@@ -59,8 +59,8 @@ def authenticate_user(
         raise
 
 
-def role_required(role: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-    """Require an authenticated user with the requested role."""
+def role_required(*roles: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    """Require an authenticated user whose role is one of the given roles."""
 
     def decorate(view: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(view)
@@ -68,7 +68,7 @@ def role_required(role: str) -> Callable[[Callable[..., Any]], Callable[..., Any
             if session.get("user_id") is None:
                 return redirect(url_for("auth.login"))
 
-            if session.get("role") != role:
+            if session.get("role") not in roles:
                 return render_error(403)
 
             return view(*args, **kwargs)

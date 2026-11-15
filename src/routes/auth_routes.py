@@ -19,7 +19,7 @@ auth_bp = Blueprint("auth", __name__)
 
 
 def _dashboard_for_role(role: str) -> str:
-    if role == "lecturer":
+    if role in {"lecturer", "ta"}:
         return url_for("lecturer.lecturer_dashboard")
     return url_for("student.student_dashboard")
 

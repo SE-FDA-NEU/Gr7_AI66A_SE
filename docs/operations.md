@@ -6,7 +6,9 @@ Live app: [minilms-nhom7.onrender.com](https://minilms-nhom7.onrender.com), a Re
 
 To roll back a merged change, create a branch from `main`, run `git revert -m 1 <merge-commit>` for the merge commit, open a PR, wait for green CI, then merge it; Render deploys the reverted version automatically.
 
-Issue [#158](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/158) records one measured deployment: PR #169 merged at 15:40 and Render showed Live at 15:41 (about 1 minute). A separate 5-minute merge-click-to-updated-server duration was reported for this task; exact t1/t2 clock times, date, and timezone were not supplied (**TODO: record them and confirm the Thursday trial**). Do not treat these as the same run.
+Issue [#158](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/158) records PR #169 merged at 15:40 and Render showing Live at 15:41 (about 1 minute). A later observation tracked PR [#170](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/pull/170) creation to Render Live on 2026-11-13 (Friday): t1 was 19:15:53 UTC+07 (Asia/Ho_Chi_Minh), when the PR was created; t2 was 19:20 UTC+07, when Render showed Live (minute precision). Elapsed time was about 5 minutes. This measures PR-creation-to-Live, not merge-to-Live, and was not a Thursday trial.
+
+![Render Events showing PR #170 Live on 2026-11-13 at 19:20](images/deploy-pr-170-render-live.jpg)
 
 ## 2 The CI pipeline
 
@@ -19,7 +21,7 @@ The workflow runs on pushes and PRs targeting `main` or `develop`.
 | Install dependencies | Upgrades pip and installs `requirements.txt`. |
 | Run tests with pytest | Runs `pytest --cov=src tests/` with the repository on `PYTHONPATH`; collects coverage for `src`. |
 
-Latest successful run on `main`: [CI Pipeline #43424034123](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/actions/runs/43424034123), **1m 07s** in Actions.
+Latest successful run on `main`: [CI Pipeline #43700445212](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/actions/runs/43700445212), **1m 09s** in Actions.
 
 ![Branch protection settings](images/branch-protection.png)
 
@@ -31,4 +33,4 @@ Each request writes a JSON log to stdout with method, route-template path, statu
 
 Track the **5xx error rate** (5xx responses divided by all requests) and **response time** (`duration_ms`, summarized as p95) from request logs. Treat a sustained rise in either versus its recent baseline as deterioration; no numeric alert threshold is configured. The Render Free plan provides only basic Render notifications; this app has no custom alerting.
 
-**TODO before review:** Add verified live-check results from [#159](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/159); that issue currently has no execution results. Record the exact date, timezone, and t1/t2 clock times for the reported 5-minute run and confirm it was the Thursday trial.
+Issue [#159](https://github.com/SE-FDA-NEU/Gr7_AI66A_SE/issues/159) is closed but contains no execution results. This guide describes the live health and monitoring checks; it does not claim that the issue's six-story live smoke test was completed.

@@ -1,0 +1,50 @@
+[
+  {
+    "step": "US01-lecturer",
+    "url": "https://minilms-nhom7.onrender.com/lecturer/dashboard"
+  },
+  {
+    "step": "US02-created",
+    "url": "https://minilms-nhom7.onrender.com/lecturer/quiz/18/publish"
+  },
+  {
+    "step": "US02-after-F5",
+    "url": "https://minilms-nhom7.onrender.com/lecturer/quiz/18/publish"
+  },
+  {
+    "step": "rule-empty-quiz",
+    "url": "https://minilms-nhom7.onrender.com/lecturer/quiz/18/publish"
+  },
+  {
+    "step": "US03-added",
+    "url": "https://minilms-nhom7.onrender.com/lecturer/quiz/18/publish"
+  },
+  {
+    "step": "m3-edit-question-after",
+    "url": "https://minilms-nhom7.onrender.com/lecturer/quiz/18/publish"
+  },
+  {
+    "step": "m3-attempt-limit-after",
+    "url": "https://minilms-nhom7.onrender.com/lecturer/quiz/18/publish"
+  },
+  {
+    "step": "US04-published",
+    "url": "https://minilms-nhom7.onrender.com/lecturer/quiz/18/publish"
+  },
+  {
+    "step": "US01-student-mobile",
+    "url": "https://minilms-nhom7.onrender.com/student/dashboard"
+  },
+  {
+    "step": "US06-mobile-answer",
+    "url": "https://minilms-nhom7.onrender.com/student/quiz/18/take?q=1"
+  },
+  {
+    "step": "US08-mobile-submitted",
+    "url": "https://minilms-nhom7.onrender.com/student/quiz/18/submitted"
+  },
+  {
+    "step": "rule-closed-quiz",
+    "url": "https://minilms-nhom7.onrender.com/student/quiz/18/start"
+  }
+]

@@ -1,0 +1,39 @@
+diff --git a/src/errors.py b/src/errors.py
+index a4f95b6..899dcd3 100644
+--- a/src/errors.py
++++ b/src/errors.py
+@@ -73,7 +73,8 @@ NOT_QUIZ_OWNER = (
+ )
+ QUIZ_NO_QUESTIONS = (
+     "Chưa thể publish: bài quiz phải có ít nhất 1 câu hỏi. "
+-    "(A quiz must contain at least 1 question.)"
++    "(A quiz must contain at least 1 question.) "
++    "Open Add Questions, save a question with one correct answer, then publish again."
+ )
+ QUIZ_ALREADY_PUBLISHED = (
+     "Bài quiz này đã được publish trước đó. "
+diff --git a/tests/test_p0_us04_publish.py b/tests/test_p0_us04_publish.py
+index 1bd7b4d..c55a274 100644
+--- a/tests/test_p0_us04_publish.py
++++ b/tests/test_p0_us04_publish.py
+@@ -128,6 +128,13 @@ def test_us04_03_quiz_with_0_questions_cannot_be_published(client, db_path):
+ 
+     assert response.status_code == 422
+     assert NO_QUESTIONS_MESSAGE in response.get_data(as_text=True)
++    recovery = (
++        "Open Add Questions, save a question with one correct answer, "
++        "then publish again."
++    )
++    assert recovery in response.get_data(as_text=True)
++    page = client.get(f"/lecturer/quiz/{quiz_id}/publish")
++    assert recovery in page.get_data(as_text=True)
+     assert quiz_status(db_path, quiz_id) == "draft"
+ 
+ 
+@@ -199,4 +206,4 @@ def test_us04_08_publishing_an_already_published_quiz_is_refused(client, db_path
+     response = client.post(f"/lecturer/quiz/{quiz_id}/publish")
+ 
+     assert response.status_code == 409
+-    assert quiz_status(db_path, quiz_id) == "published"
+\ No newline at end of file
++    assert quiz_status(db_path, quiz_id) == "published"

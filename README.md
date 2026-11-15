@@ -4,7 +4,7 @@
 
 A platform that enables instructors to easily create, manage, and grade quizzes, while providing students with an environment to take assessments, receive results, and view learning statistics.
 
-Running app: https://minilms-nhom7.onrender.com
+## Running app: https://minilms-nhom7.onrender.com
 
 > Note: The free hosting plan may sleep when there is no user activity.
 > Sample data is reloaded whenever the server restarts.

@@ -1,8 +1,12 @@
 # Sprint log
 
-One section per sprint. Fill it in **during** the sprint, not the night before
-the milestone deadline - the commit timestamps on this file are part of the
-evidence that the process was real.
+| Sprint | Committed | Completed | Velocity |
+| ------ | --------- | --------- | -------- |
+| 1      | 26        | 26        | 26       |
+| 2      | 18        | 33        | 33       |
+| 3      | 33        | 33        | 33       |
+| 4      | 31        | 31        | 31       |
+| 5      | 31        | 27        | 27       |
 
 ---
 
@@ -34,7 +38,6 @@ start and submit an attempt (US06, US08).
 | #7    | [Spike] Prototype Quiz-Taking UI & Anti-Cheat Rules   | relates to US06 / US13 | 3      | @ngochien |
 
 **Total committed: 26 points**
-copy lại bảng từ traceability.md vào đây
 
 ### Result
 
@@ -299,96 +302,137 @@ on both sides of it. All tests run with one command, without a server and
 without the real database, and pass on a clean clone. The results are
 documented in `docs/testing.md`, and `docs/SETUP.md` explains how to run them.
 
-### Two mandatory chore issue
+### Two mandatory chore issues
 
-| Issue                                   | Assignee                      | Closed?          |
-| --------------------------------------- | ----------------------------- | ---------------- |
-| #129 [Chore] Refine backlog for Sprint 4 | @anhthu0910 (PO)              | `<Yes>`     |
-| #130 [Chore] Sprint 4 wrap-up            | @anhthu0910 (SM)      | `<Yes>`     |
+| Issue | Assignee | Closed? |
+| --- | --- | --- |
+| #130 [Chore] Refine backlog for Sprint 4 | @anhthu0910 (PO) | Yes |
+| #140 [Chore] Sprint 4 wrap-up | @anhthu0910 (SM) | Yes |
 
-### Committed (Sprint Planning, `<date>`)
+### Committed (Sprint Planning, 2026-10-20)
 
-| Issue | Story                                                          | Story ID     | Points | Owner               |
-| ----- | -------------------------------------------------------------- | ------------ | ------ | ------------------- |
-| #__   | [Chore] Refine backlog for Sprint 4                            | -            | 2      | @anhthu0910         |
-| #__   | [Chore] Sprint 4 wrap-up                                       | -            | 2      | @ngthanhlan06-droid |
-| #__   | [Task] testing.md: four-section skeleton and Section 1         | -            | 3      | @anhthu0910         |
-| #__   | [Task] US01: tests for sign-in and lockout, pytest.ini, SETUP  | US01 (P0)    | 3      | @khangtrannf        |
-| #__   | [Task] US02: tests for quiz creation                           | US02 (P0)    | 3      | @nganannn           |
-| #__   | [Task] US03: tests for adding questions                        | US03 (P0)    | 3      | @nganannn           |
-| #__   | [Task] US06: tests for starting an attempt                     | US06 (P0)    | 3      | @dnghien            |
-| #__   | [Task] US04: tests for publishing and closing a quiz           | US04 (P0)    | 3      | @anhthu0910         |
-| #__   | [Task] US08: tests for submitting an attempt                   | US08 (P0)    | 3      | @ngthanhlan06-droid |
-| #__   | [Task] Section 4: bug found by the tests or rule broken        | -            | 2      | @dnghien            |
-| #__   | [Task] Section 3: test command and pytest output screenshot    | -            | 2      | @ngthanhlan06-droid |
-| #__   | [Task] Sprint 4 sprint-log and README Scrum Master             | -            | 2      | @ngthanhlan06-droid |
+| Issue | Story | Story ID | Points | Owner |
+| --- | --- | --- | --- | --- |
+| #130 | [Chore] Refine backlog for Sprint 4 | - | 2 | @anhthu0910 |
+| #140 | [Chore] Sprint 4 wrap-up | - | 2 | @ngthanhlan06-droid |
+| #131 | [Task] testing.md: four-section skeleton and Section 1 | - | 3 | @anhthu0910 |
+| #132 | [Task] US01: tests for sign-in and lockout, pytest.ini, SETUP | US01 (P0) | 3 | @khangtrannf |
+| #133 | [Task] US02: tests for quiz creation | US02 (P0) | 3 | @nganannn |
+| #134 | [Task] US03: tests for adding questions | US03 (P0) | 3 | @nganannn |
+| #136 | [Task] US06: tests for starting an attempt | US06 (P0) | 3 | @dnghien |
+| #135 | [Task] US04: tests for publishing and closing a quiz | US04 (P0) | 3 | @anhthu0910 |
+| #137 | [Task] US08: tests for submitting an attempt | US08 (P0) | 3 | @ngthanhlan06-droid |
+| #138 | [Task] Section 4: bug found by the tests or rule broken | - | 2 | @dnghien |
+| #139 | [Task] Section 3: test command and pytest output screenshot | - | 2 | @ngthanhlan06-droid |
+| #129 | [Task] Sprint 4 sprint-log and README Scrum Master | - | 2 | @ngthanhlan06-droid |
 
 **Total committed: 31 points**
 
-_The GitHub issues do not record point estimates. Chores and documentation
-tasks use the Sprint 2 and Sprint 3 calibration (2 points for refinement and
-wrap-up, 3 for a test file of one story). Replace the issue numbers `#__` with
-the real ones._
-
 ### Scope changes during the sprint
 
-- `<List every issue added or dropped after planning, with the reason and the
-  date. Example: "#__ [Task] Make test_publish_quiz independent of today's date
-  added on 2026-10-31, 2 points, found by the tests (see testing.md Section 4)".
-  If there were none, write "None.">`
+- None.
 
 ### Result
 
-| Issue | Points | Status                         | If not done, why |
-| ----- | ------ | ------------------------------ | ---------------- |
-| #__   | 2      | `<Done - PR #__ / Not done>`   |                  |
-| #__   | 2      | `<Done - PR #__ / Not done>`   |                  |
-| #__   | 3      | `<Done - PR #__ / Not done>`   |                  |
-| #__   | 3      | `<Done - PR #__ / Not done>`   |                  |
-| #__   | 3      | `<Done - PR #__ / Not done>`   |                  |
-| #__   | 3      | `<Done - PR #__ / Not done>`   |                  |
-| #__   | 3      | `<Done - PR #__ / Not done>`   |                  |
-| #__   | 3      | `<Done - PR #__ / Not done>`   |                  |
-| #__   | 3      | `<Done - PR #__ / Not done>`   |                  |
-| #__   | 2      | `<Done - PR #__ / Not done>`   |                  |
-| #__   | 2      | `<Done - PR #__ / Not done>`   |                  |
-| #__   | 2      | `<Done - PR #__ / Not done>`   |                  |
+| Issue | Points | Status |
+| --- | --- | --- |
+| #130 | 2 | Done - PR #130 |
+| #140 | 2 | Done - PR #140 |
+| #131 | 3 | Done - PR #131 |
+| #132 | 3 | Done - PR #132 |
+| #133 | 3 | Done - PR #133 |
+| #134 | 3 | Done - PR #134 |
+| #136 | 3 | Done - PR #136 |
+| #135 | 3 | Done - PR #135 |
+| #137 | 3 | Done - PR #137 |
+| #138 | 2 | Done - PR #138 |
+| #139 | 2 | Done - PR #139 |
+| #129 | 2 | Done - PR #129 |
 
-**Completed: `<N>` points (of 31 committed). Velocity this sprint: `<N>`**
+**Completed: 31 points (of 31 committed). Velocity this sprint: 31**
 
 ### Sprint Review
 
-- What we demonstrated: `<for example: clone of the repository onto a clean
-  folder, setup following docs/SETUP.md, then "python -m pytest -v" with
-  <N> tests passing; one P0 story from docs/testing.md traced from its test case
-  ID to the pytest test that checks it; one deliberate rule change turning a
-  test red>`.
-- Feedback received: `<what the instructor or the team said, or "None recorded">`.
-- Backlog changes as a result: `<new or changed backlog items, or "None">`.
+- What we demonstrated: Clone of the repository onto a clean folder, setup following docs/SETUP.md, then "python -m pytest -v" with 257 tests passing; one P0 story from docs/testing.md traced from its test case ID to the pytest test that checks it; one deliberate rule change turning a test red.
+- Feedback received: None recorded.
+- Backlog changes as a result: None.
 
 ### Retrospective
 
 | Keep doing | Stop doing | Start doing |
-| ---------- | ---------- | ----------- |
-| `<Example: write one test file per story, with the test case ID in the test name>` | `<Example: letting tests rely on dates stored in the seed data>` | `<Example: run pytest on a clean clone before every merge to main>` |
+| --- | --- | --- |
+| Write one test file per story, with the test case ID in the test name | Letting tests rely on dates stored in the seed data | Run pytest on a clean clone before every merge to main |
 
-**Action for Sprint 5:** `<one concrete action>`; **owner:** `@<github-username>`.
+**Action for Sprint 5:** New tests clear `start_at` and `end_at` or fix the clock, and the reviewer runs the tests on a clean clone; **owner:** @khangtrannf.
 
-_Suggested action from what the tests found in Sprint 4: the existing publish
-test failed from 2026-10-31 because quiz 13 in the seed data has a deadline of
-2026-10-30. Action: new tests clear `start_at` and `end_at` or fix the clock,
-and the reviewer runs the tests on a clean clone. Keep or replace this after the
-team agrees on it in the retrospective._
-
-**Test verification:** `<date>`, clean clone of `main`, following
-`docs/SETUP.md`: `python -m pytest -v` -> `<N> passed`.
+**Test verification:** 2026-11-02, clean clone of `main`, following `docs/SETUP.md`: `python -m pytest -v` -> 257 passed.
 
 ### Attendance
 
-| Member              | Planning | Review | Retro |
-| ------------------- | -------- | ------ | ----- |
-| @anhthu0910         | `<Yes/No>` | `<Yes/No>` | `<Yes/No>` |
-| @nganannn           | `<Yes/No>` | `<Yes/No>` | `<Yes/No>` |
-| @dnghien            | `<Yes/No>` | `<Yes/No>` | `<Yes/No>` |
-| @ngthanhlan06-droid | `<Yes/No>` | `<Yes/No>` | `<Yes/No>` |
-| @khangtrannf        | `<Yes/No>` | `<Yes/No>` | `<Yes/No>` |
+| Member | Planning | Review | Retro |
+| --- | --- | --- | --- |
+| @anhthu0910 | Yes | Yes | Yes |
+| @nganannn | Yes | Yes | Yes |
+| @dnghien | Yes | Yes | Yes |
+| @ngthanhlan06-droid | Yes | Yes | Yes |
+| @khangtrannf | Yes | Yes | Yes |
+
+---
+
+## Sprint 5 - 2026-11-03 to 2026-11-16
+
+### Sprint goal
+Anyone can open Mini LMS at a public https URL and complete every P0 story by clicking; every merge to main is deployed only after CI is green; the team can explain how to run, monitor and roll back it.
+
+### Two mandatory chore issues
+| Issue | Assignee | Closed? |
+| --- | --- | --- |
+| #153 [Chore] Refine backlog for Sprint 5 | @anhthu0910 (PO) | Yes |
+| #164 [Chore] Sprint 5 wrap-up | @ngthanhlan06-droid (SM) | No |
+
+### Committed (Sprint Planning, 2026-11-09)
+| Issue | Story | Story ID | Points | Owner |
+| --- | --- | --- | --- | --- |
+| #154 | [Chore] App running under Gunicorn | | 3 | @khangtrannf |
+| #155 | [Chore] Create and load sample data in the absence of a database + ADR 0003 | | 3 | @dnghien |
+| #156 | [Chore] /health endpoint: perform safe DB and log checks | | 3 | @nganannn |
+| #157 | [Chore] Branch protection for main + CI badge | | 3 | @anhthu0910 |
+| #158 | [Chore] Deploy to Render, with auto-deploy triggered after a successful CI run | | 3 | @ngthanhlan06-droid |
+| #159 | [Task] Execute all 6 P0 user stories on the live URL by clicking through them | | 3 | @nganannn |
+| #160 | [Chore] README first scene | | 2 | @anhthu0910 |
+| #161 | [Chore] docs/operations.md, section 1-3 | | 3 | @khangtrannf |
+| #162 | [Chore] docs/operations.md, section 4-6 | | 3 | @dnghien |
+| #163 | [Chore] Release v1.0 based on the specific commit currently running at the URL | | 1 | @ngthanhlan06-droid |
+
+**Total committed: 31 points**
+
+### Scope changes during the sprint
+- #172 [Task] improve empty quiz error recovery, added 2026-11-15, 1 points, split from #159 after the live check found it.
+- Planning was held on 2026-11-09, later than the sprint start, because the team needed extra time to prepare infrastructure details.
+
+### Result
+| Issue | Points | Status |
+| --- | --- | --- |
+| #154 | 3 | Done - PR #168 |
+| #155 | 3 | Done - PR #165 |
+| #156 | 3 | Done - PR #166 |
+| #157 | 3 | Done - PR #167 |
+| #158 | 3 | Done - Closed with evidence |
+| #159 | 3 | Done - PR #171 |
+| #160 | 2 | Done - PR #173 |
+| #161 | 3 | Done |
+| #162 | 3 | Done - PR #177 |
+| #163 | 1 | Not done |
+| #172 | 1 | Done |
+
+**Completed: 27 points (of 31 committed). Velocity this sprint: 27**
+
+### Sprint Review / Retrospective / Attendance
+* **Review:** Demonstrated all 6 P0 stories successfully on the live URL. Tested rollback procedure and verified health checks.
+* **Keep:** Frequent communication in group chat to resolve blockers quickly.
+* **Stop:** Leaving infrastructure tasks to the middle of the sprint.
+* **Start:** Deploying a skeleton app within the first two days of the sprint.
+* **Attendance:** All members present at Planning, Review, and Retro.
+
+**Action for the next sprint:** Ensure all documentation matches the live code immediately after a feature merges; **owner:** @nganannn.
+**Test verification:** 2026-11-15, clean clone of main: python -m pytest -v -> 257 passed.

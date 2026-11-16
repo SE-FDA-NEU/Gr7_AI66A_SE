@@ -119,7 +119,7 @@ def test_ta_cannot_write_or_use_student_pages(client, method, url):
 
     assert response.status_code == 403
 
-def test_ta_can_view_quiz_statistics(client, TA_EMAIL):
+def test_ta_can_view_quiz_statistics(client):
     login(client, TA_EMAIL)
 
     response = client.get("/lecturer/quiz/1/statistics")

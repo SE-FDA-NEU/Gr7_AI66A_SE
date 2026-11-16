@@ -9,6 +9,7 @@ DROP TABLE IF EXISTS attempt;
 DROP TABLE IF EXISTS choice;
 DROP TABLE IF EXISTS question;
 DROP TABLE IF EXISTS quiz;
+DROP TABLE IF EXISTS client_lockout;
 DROP TABLE IF EXISTS login_lockout;
 DROP TABLE IF EXISTS login_failure;
 DROP TABLE IF EXISTS user;
@@ -24,14 +25,30 @@ CREATE TABLE user (
 CREATE TABLE login_failure (
     failure_id INTEGER PRIMARY KEY,
     email TEXT NOT NULL,
+    client_key TEXT NOT NULL DEFAULT '',
     failed_at INTEGER NOT NULL
 );
 
 CREATE INDEX login_failure_email_failed_at
-    ON login_failure(email, failed_at);
+    ON login_failure(email, client_key, failed_at);
 
+CREATE INDEX login_failure_client_failed_at
+    ON login_failure(client_key, failed_at);
+
+CREATE INDEX login_failure_failed_at
+    ON login_failure(failed_at);
+
+-- Lock one client out of one account (BR: 5 failures in 10 min -> 15 min).
 CREATE TABLE login_lockout (
-    email TEXT PRIMARY KEY,
+    email TEXT NOT NULL,
+    client_key TEXT NOT NULL DEFAULT '',
+    locked_until INTEGER NOT NULL,
+    PRIMARY KEY (email, client_key)
+);
+
+-- Lock one client out of the whole login form (many different accounts tried).
+CREATE TABLE client_lockout (
+    client_key TEXT PRIMARY KEY,
     locked_until INTEGER NOT NULL
 );
 

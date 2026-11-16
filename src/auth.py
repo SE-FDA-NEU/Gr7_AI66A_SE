@@ -11,6 +11,7 @@ from werkzeug.security import check_password_hash
 
 from src.errors import render_error
 from src.repositories.auth_repository import (
+    DEFAULT_CLIENT_FAILURE_LIMIT,
     clear_login_failures,
     get_active_lockout,
     get_user_by_email,
@@ -30,13 +31,19 @@ def authenticate_user(
     connection: sqlite3.Connection,
     email: str,
     password: str,
+    client_key: str = "",
+    client_failure_limit: int = DEFAULT_CLIENT_FAILURE_LIMIT,
 ) -> AuthenticationResult:
-    """Authenticate credentials and persist failed attempts in a rolling window."""
+    """Authenticate credentials and persist failed attempts in a rolling window.
+
+    Failed attempts are counted per (email, client_key), so someone who guesses
+    wrong passwords for an account only locks themselves out of it.
+    """
     now = int(time.time())
     connection.execute("BEGIN IMMEDIATE")
 
     try:
-        if get_active_lockout(connection, email, now) is not None:
+        if get_active_lockout(connection, email, now, client_key) is not None:
             connection.commit()
             return AuthenticationResult(error_code=429)
 
@@ -47,11 +54,13 @@ def authenticate_user(
             password_is_valid = False
 
         if password_is_valid:
-            clear_login_failures(connection, email)
+            clear_login_failures(connection, email, client_key)
             connection.commit()
             return AuthenticationResult(user=user)
 
-        locked_until = record_login_failure(connection, email, now)
+        locked_until = record_login_failure(
+            connection, email, now, client_key, client_failure_limit
+        )
         connection.commit()
         return AuthenticationResult(error_code=429 if locked_until else 401)
     except Exception:

@@ -82,7 +82,7 @@
             <a class="btn btn-secondary" href="{{ url_for('student.student_dashboard') }}">Back to dashboard</a>
         </p>
     </main>
-    <script>
+    <script nonce="{{ csp_nonce }}">
         // Warn once if the student switches away from the active quiz tab.
         (function () {
             var warning = document.getElementById("anti-cheat-warning");

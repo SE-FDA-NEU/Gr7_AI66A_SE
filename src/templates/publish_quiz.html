@@ -291,7 +291,7 @@
         {% endif %}
     </section>
 </main>
-<script>
+<script nonce="{{ csp_nonce }}">
     (function () {
         var unlimited = document.getElementById("duration_unlimited");
         var durationInput = document.getElementById("duration");

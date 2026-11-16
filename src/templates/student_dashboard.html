@@ -94,7 +94,7 @@
         </div>
     </main>
 
-    <script>
+    <script nonce="{{ csp_nonce }}">
         (function () {
             var API_URL = "{{ url_for('api.student_quizzes') }}";
             var states = ["loading", "empty", "error", "data"];

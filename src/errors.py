@@ -1,3 +1,8 @@
+"""Thông điệp lỗi dùng chung và bộ dựng trang lỗi của ứng dụng.
+
+Route/service truyền mã HTTP cùng thông điệp phù hợp; module này chọn tiêu đề
+và render một template chung để giao diện lỗi nhất quán.
+"""
 from __future__ import annotations
 from flask import render_template
 
@@ -120,14 +125,17 @@ ERROR_TITLES = {
 
 
 def error_title(status_code: int) -> str:
+    """Lấy tiêu đề thân thiện theo mã HTTP, có giá trị mặc định nếu chưa khai báo."""
     return ERROR_TITLES.get(status_code, "Thông báo lỗi (Error)")
 
 
 def error_message(status_code: int) -> str:
+    """Lấy thông điệp mặc định cho mã lỗi."""
     return ERROR_MESSAGES.get(status_code, "Something went wrong. Please try again.")
 
 
 def render_error(status_code: int, message: str | None = None, title: str | None = None):
+    """Render trang lỗi và trả kèm status code để Flask gửi đúng HTTP response."""
     return (
         render_template(
             "error.html",

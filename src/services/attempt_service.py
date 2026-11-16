@@ -1,4 +1,4 @@
-"""Business rules for taking and submitting a quiz attempt (US06, US08, BR4, BR5, BR6)."""
+"""Nghiệp vụ làm bài: bắt đầu, lưu đáp án, tính giờ và nộp bài (US06, US08)."""
 from __future__ import annotations
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -53,8 +53,10 @@ def remaining_seconds(
     end_at: str | None = None,
 ) -> int | None:
     """Return seconds until the earliest configured limit, or None if unlimited."""
+    # Cho phép truyền đồng hồ giả lập trong test; bình thường dùng UTC hiện tại.
     now = now or _now()
     deadlines = []
+    # Quiz có thể có giới hạn theo thời lượng, deadline lịch, hoặc cả hai.
     if duration_minutes is not None:
         deadlines.append(
             datetime.strptime(started_at, TIMESTAMP_FORMAT)
@@ -64,6 +66,7 @@ def remaining_seconds(
         deadlines.append(parse_utc_timestamp(end_at))
     if not deadlines:
         return None
+    # Khi có nhiều giới hạn, thời điểm sớm nhất là lúc phải kết thúc.
     attempt_deadline = min(deadlines)
     return max(0, int((attempt_deadline - now).total_seconds()))
 
@@ -76,6 +79,7 @@ def format_vietnam_time(utc_text: str) -> str:
 def result_summary(correct: int, total: int) -> dict:
     """US09: 'correct/total' and the percent rounded half-up, e.g. 1/8 -> 13 (not round()'s 12)."""
     # Integer form of floor(correct * 100 / total + 0.5), so no float error creeps in.
+    # Làm tròn half-up bằng số nguyên để tránh sai số dấu phẩy động.
     percent = (200 * correct + total) // (2 * total) if total else 0
     return {
         "correct": correct,
@@ -96,6 +100,7 @@ def _check_quiz_can_start(quiz) -> None:
 
 
 def _check_schedule_allows_start(quiz, now: datetime) -> None:
+    # Không cho bắt đầu trước giờ mở hoặc tại/sau deadline.
     if quiz["start_at"] and now < parse_utc_timestamp(quiz["start_at"]):
         raise AttemptError(403, "This quiz is not open yet.")
     if quiz["end_at"] and now >= parse_utc_timestamp(quiz["end_at"]):
@@ -103,6 +108,7 @@ def _check_schedule_allows_start(quiz, now: datetime) -> None:
 
 
 def _attempt_deadline(attempt, quiz) -> datetime | None:
+    # Lượt làm chịu giới hạn thời lượng quiz và deadline lịch nếu được cấu hình.
     deadlines = []
     if not quiz["duration_unlimited"]:
         deadlines.append(
@@ -116,6 +122,7 @@ def _attempt_deadline(attempt, quiz) -> datetime | None:
 
 def _finalize(connection, attempt, submitted_at: datetime) -> bool:
     """Store the submission time and score (correct / total questions)."""
+    # Điểm là tỷ lệ câu đúng trên tổng số câu; quiz rỗng nhận điểm 0 để tránh chia 0.
     total = len(repo.list_questions_with_choices(connection, attempt["quiz_id"]))
     correct = repo.count_correct_answers(connection, attempt["attempt_id"])
     score = correct / total if total else 0.0
@@ -130,10 +137,12 @@ def _finalize(connection, attempt, submitted_at: datetime) -> bool:
 
 def _auto_submit_if_expired(connection, attempt, quiz) -> None:
     """Submit an attempt whose time is up, stamped at the moment time ran out."""
+    # Nộp tự động tại chính deadline, không phải thời điểm request tới muộn.
     deadline = _attempt_deadline(attempt, quiz)
     if deadline is None or _now() < deadline:
         return
 
+    # Ghi log audit chỉ khi trạng thái attempt thực sự được chuyển sang submitted.
     if _finalize(connection, attempt, deadline):
         record_audit_event(
             connection,
@@ -153,6 +162,7 @@ def _find_open_attempt(connection, student_id: int, quiz_id: int):
     if quiz is None:
         raise AttemptError(404, errors.QUIZ_NOT_FOUND)
 
+    # Lấy lượt đang làm; nếu không có thì xác định hết lượt hay chưa bắt đầu.
     attempt = repo.get_open_attempt(connection, student_id, quiz_id)
     if attempt is None:
         if repo.count_submitted_attempts(connection, student_id, quiz_id) >= quiz["max_attempts"]:
@@ -172,6 +182,7 @@ def _answered_numbers(questions: list[dict], selected: dict) -> list[int]:
 
 
 def _review_data(connection, quiz, attempt) -> dict:
+    # Gom thông tin câu đã/trống cho màn review và thời gian còn lại.
     questions = repo.list_questions_with_choices(connection, quiz["quiz_id"])
     selected = repo.get_selected_choices(connection, attempt["attempt_id"])
     answered = _answered_numbers(questions, selected)
@@ -200,6 +211,7 @@ def start_attempt(db_path: str | Path, student_id: int, quiz_id: int) -> dict:
             connection, _now().strftime(TIMESTAMP_FORMAT)
         )
         connection.commit()
+        # Transaction khóa kiểm tra số lượt và tạo attempt để tránh tạo trùng đồng thời.
         connection.execute("BEGIN IMMEDIATE")
         quiz = repo.get_quiz(connection, quiz_id)
         _check_quiz_can_start(quiz)
@@ -211,6 +223,7 @@ def start_attempt(db_path: str | Path, student_id: int, quiz_id: int) -> dict:
         ):
             raise AttemptError(409, errors.ALREADY_SUBMITTED)
 
+        # Nếu đã có attempt chưa nộp, người học tiếp tục thay vì tạo attempt mới.
         attempt = repo.get_open_attempt(connection, student_id, quiz_id)
         if attempt is None:
             _check_schedule_allows_start(quiz, _now())
@@ -247,6 +260,7 @@ def get_take_page_data(
     try:
         quiz, attempt = _find_open_attempt(connection, student_id, quiz_id)
 
+        # Lấy toàn bộ câu để kiểm tra chỉ số và xác định lựa chọn đã lưu.
         questions = repo.list_questions_with_choices(connection, quiz_id)
         if not 1 <= question_number <= len(questions):
             raise AttemptError(404, errors.QUESTION_NOT_FOUND)
@@ -282,6 +296,7 @@ def save_answer(
     """Save or replace the student's choice for one question of an open attempt."""
     connection = get_connection(db_path)
     try:
+        # Xác minh attempt thuộc đúng sinh viên và quiz trước khi lưu đáp án.
         attempt = repo.get_attempt(connection, attempt_id)
         if (
             attempt is None
@@ -294,9 +309,11 @@ def save_answer(
 
         # A late answer is not saved; the attempt is submitted as it stood at the deadline.
         _auto_submit_if_expired(connection, attempt, repo.get_quiz(connection, quiz_id))
+        # Không tin ID từ trình duyệt: lựa chọn phải thuộc đúng câu hỏi trong quiz.
         if not repo.choice_belongs_to_question(connection, choice_id, question_id, quiz_id):
             raise AttemptError(400, errors.INVALID_CHOICE)
 
+        # Upsert cho phép sinh viên thay đổi lựa chọn trước khi nộp.
         repo.upsert_answer(connection, attempt_id, question_id, choice_id)
         record_audit_event(
             connection,
@@ -332,6 +349,7 @@ def submit_attempt(
     connection = get_connection(db_path)
     try:
         # Lock so two simultaneous submits cannot both pass the checks below.
+        # Khóa ghi để hai request nộp đồng thời không thể cùng nộp một attempt.
         connection.execute("BEGIN IMMEDIATE")
         attempt = repo.get_attempt(connection, attempt_id)
         if (
@@ -346,10 +364,12 @@ def submit_attempt(
         quiz = repo.get_quiz(connection, quiz_id)
         _auto_submit_if_expired(connection, attempt, quiz)
 
+        # Cần xác nhận rõ nếu còn câu bỏ trống, trước khi ghi kết quả cuối cùng.
         review = _review_data(connection, quiz, attempt)
         if review["unanswered_numbers"] and not confirmed:
             raise UnansweredNotConfirmed(review)
 
+        # Tính điểm và lưu timestamp nộp trong cùng transaction với audit event.
         submitted_at = _now()
         if not _finalize(connection, attempt, submitted_at):
             raise AttemptError(409, errors.ALREADY_SUBMITTED)
@@ -372,6 +392,7 @@ def get_submitted_data(db_path: str | Path, student_id: int, quiz_id: int) -> di
     """The student's submitted attempt and its result for the confirmation page (US08, US09)."""
     connection = get_connection(db_path)
     try:
+        # Chỉ trả kết quả khi chính sinh viên này có attempt đã nộp.
         quiz = repo.get_quiz(connection, quiz_id)
         attempt = repo.get_submitted_attempt(connection, student_id, quiz_id)
         if quiz is None or attempt is None:

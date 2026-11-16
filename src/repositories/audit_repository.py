@@ -1,5 +1,5 @@
+"""Ghi và đọc nhật ký audit append-only của các lượt làm bài (US12)."""
 from __future__ import annotations
-"""Repository for managing append-only attempt audit history (US12)."""
 
 import json
 import sqlite3
@@ -21,9 +21,11 @@ def record_audit_event(
     `timestamp` lets the caller reuse the time it already stored on the attempt
     (e.g. submitted_at), so the audit row and the attempt agree exactly.
     """
+    # Nếu caller đã có timestamp nghiệp vụ thì dùng chính timestamp đó để đồng bộ.
     now_str = timestamp or utc_now_naive().strftime(TIMESTAMP_FORMAT)
     metadata_json = json.dumps(metadata) if metadata else None
 
+    # Chỉ INSERT; schema có trigger ngăn sửa/xóa bản ghi sau khi đã ghi.
     cursor = connection.execute(
         """
         INSERT INTO attempt_audit (attempt_id, actor_id, action, metadata, timestamp)
@@ -45,6 +47,7 @@ def get_attempt_audit_history(
     Enforces lecturer ownership over the quiz.
     Returns (logs, error_code).
     """
+    # Tìm quiz chủ quản để xác minh quyền trước khi đọc log.
     attempt = connection.execute(
         """
         SELECT a.attempt_id, q.quiz_id, q.lecturer_id
@@ -58,9 +61,11 @@ def get_attempt_audit_history(
     if not attempt:
         return None, "ATTEMPT_NOT_FOUND"
 
+    # TA được xem theo vai trò; giảng viên chỉ xem quiz của mình.
     if role != "ta" and attempt["lecturer_id"] != lecturer_id:
         return None, "NOT_QUIZ_OWNER"
 
+    # Sắp xếp timestamp và audit_id để thứ tự ổn định nếu thời gian trùng nhau.
     logs = connection.execute(
         """
         SELECT 

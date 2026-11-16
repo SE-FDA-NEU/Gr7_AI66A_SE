@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Trang chi tiết một lượt làm: tóm tắt trạng thái/điểm rồi đối chiếu từng đáp án. -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -9,6 +10,7 @@
 <body>
     <main>
         <nav class="question-page-actions" aria-label="Attempt detail navigation">
+            <!-- Điều hướng về danh sách, dashboard hoặc nhật ký audit của cùng lượt làm. -->
             <a class="btn btn-secondary" href="{{ url_for('lecturer.quiz_attempts', quiz_id=quiz.quiz_id) }}">Back to attempts</a>
             <a class="btn btn-secondary" href="{{ url_for('lecturer.lecturer_dashboard') }}">Dashboard</a>
             <a class="btn btn-secondary" href="{{ url_for('lecturer.view_attempt_audit_history', quiz_id=quiz.quiz_id, attempt_id=attempt.attempt_id) }}">Audit log</a>
@@ -18,6 +20,7 @@
         <p class="muted">{{ attempt.student_email }} · {{ quiz.title }}</p>
 
         <section class="attempt-summary">
+            <!-- Trạng thái, điểm và thời gian do service chuẩn bị sẵn cho template. -->
             <div>
                 <span class="attempt-summary-label">Status</span>
                 {% if attempt.submitted_at %}
@@ -45,6 +48,7 @@
         </section>
 
         <h2>Answer review</h2>
+        <!-- Mỗi câu cho biết đáp án sinh viên, đáp án đúng và trạng thái chính xác. -->
         {% if answers %}
         <div class="attempt-answer-list">
             {% for answer in answers %}

@@ -1,4 +1,4 @@
-"""Database access for authentication and login lockouts.
+"""Truy vấn database cho tài khoản và giới hạn đăng nhập sai.
 
 Lockouts are keyed by (email, client_key) so that failed attempts from one
 visitor never block the real owner of the account on another network. A
@@ -18,6 +18,7 @@ def get_user_by_email(
     connection: sqlite3.Connection,
     email: str,
 ) -> sqlite3.Row | None:
+    # Dấu ? truyền email như dữ liệu, không ghép trực tiếp vào câu SQL.
     return connection.execute(
         "SELECT user_id, name, email, password_hash, role FROM user WHERE email = ?",
         (email,),
@@ -32,7 +33,9 @@ def get_active_lockout(
 ) -> int | None:
     """Return locked_until if this client is locked out of this account, or
     out of the whole login form, otherwise None. Expired rows are removed."""
+    # Kiểm tra khóa theo cặp email-client trước.
     until = None
+    # Đồng thời kiểm tra khóa toàn client để ngăn thử nhiều tài khoản khác nhau.
     row = connection.execute(
         "SELECT locked_until FROM login_lockout WHERE email = ? AND client_key = ?",
         (email, client_key),
@@ -68,12 +71,14 @@ def record_login_failure(
     client_limit: int = DEFAULT_CLIENT_FAILURE_LIMIT,
 ) -> int | None:
     """Store one failed attempt. Return locked_until if it caused a lockout."""
+    # Xóa lỗi cũ ngoài cửa sổ thời gian rồi ghi lần thất bại hiện tại.
     window_start = now - WINDOW_SECONDS
     connection.execute("DELETE FROM login_failure WHERE failed_at <= ?", (window_start,))
     connection.execute(
         "INSERT INTO login_failure (email, client_key, failed_at) VALUES (?, ?, ?)",
         (email, client_key, now),
     )
+    # Đếm lỗi của riêng tài khoản-client và tổng lỗi của client trong cùng cửa sổ.
     account_failures = connection.execute(
         "SELECT COUNT(*) FROM login_failure "
         "WHERE email = ? AND client_key = ? AND failed_at > ?",
@@ -84,6 +89,7 @@ def record_login_failure(
         (client_key, window_start),
     ).fetchone()[0]
 
+    # Khi chạm ngưỡng, lưu thời điểm có thể thử lại vào bảng khóa tương ứng.
     locked_until = None
     if account_failures >= ACCOUNT_FAILURE_LIMIT:
         locked_until = now + LOCKOUT_SECONDS
@@ -120,6 +126,7 @@ def clear_login_failures(
     Deliberately does NOT reset the per-client counter: otherwise an attacker
     could log into their own account between guesses to start over.
     """
+    # Thành công chỉ xóa lịch sử của tài khoản hiện tại, không reset bộ đếm client.
     connection.execute(
         "DELETE FROM login_failure WHERE email = ? AND client_key = ?",
         (email, client_key),

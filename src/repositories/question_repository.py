@@ -1,3 +1,4 @@
+"""Các truy vấn SQL dùng để quản lý câu hỏi và lựa chọn trong quiz."""
 from __future__ import annotations
 import sqlite3
 
@@ -13,6 +14,7 @@ def list_questions(
     connection: sqlite3.Connection,
     quiz_id: int,
 ) -> list[dict[str, int | str]]:
+    # Subquery đếm lựa chọn để trang quản lý không cần truy vấn từng câu riêng.
     rows = connection.execute(
         """
         SELECT q.question_id, q.content, q.points, q.position,
@@ -28,6 +30,7 @@ def list_questions(
 
 
 def next_position(connection: sqlite3.Connection, quiz_id: int) -> int:
+    # MAX mặc định 0 giúp câu hỏi đầu tiên có position là 1.
     row = connection.execute(
         "SELECT COALESCE(MAX(position), 0) + 1 FROM question WHERE quiz_id = ?",
         (quiz_id,),
@@ -42,6 +45,7 @@ def insert_question(
     points: int,
     position: int,
 ) -> int:
+    # Câu hỏi và lựa chọn được thêm trong transaction của service gọi hàm này.
     cursor = connection.execute(
         "INSERT INTO question (quiz_id, content, points, position) VALUES (?, ?, ?, ?)",
         (quiz_id, content, points, position),
@@ -88,6 +92,7 @@ def update_question(
         "UPDATE question SET content = ?, points = ? WHERE question_id = ?",
         (content, points, question_id),
     )
+    # Cập nhật các lựa chọn hiện có theo ID để giữ liên kết answer ổn định.
     existing_choices = connection.execute(
         "SELECT choice_id FROM choice WHERE question_id = ? ORDER BY choice_id",
         (question_id,),
@@ -97,6 +102,7 @@ def update_question(
         (question_id,),
     )
 
+    # Ghi nội dung mới, thêm lựa chọn nếu cần, và đánh dấu đúng theo index gửi lên.
     for index, text in enumerate(choices):
         is_correct = int(index == correct_index)
         if index < len(existing_choices):
@@ -111,6 +117,7 @@ def update_question(
         else:
             insert_choice(connection, question_id, text, bool(is_correct))
 
+    # Nếu số lựa chọn giảm, các lựa chọn dư bị bỏ đánh dấu đúng để tránh đáp án cũ.
     for extra_choice in existing_choices[len(choices):]:
         connection.execute(
             "UPDATE choice SET is_correct = 0 WHERE choice_id = ?",

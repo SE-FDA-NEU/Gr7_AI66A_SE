@@ -1,5 +1,5 @@
+"""Các URL đăng nhập/đăng xuất; kết nối form HTTP với dịch vụ xác thực."""
 from __future__ import annotations
-"""Login and logout routes."""
 
 from flask import (
     Blueprint,
@@ -21,6 +21,7 @@ auth_bp = Blueprint("auth", __name__)
 
 
 def _dashboard_for_role(role: str) -> str:
+    # Trợ giảng dùng chung khu vực thao tác với giảng viên.
     if role in {"lecturer", "ta"}:
         return url_for("lecturer.lecturer_dashboard")
     return url_for("student.student_dashboard")
@@ -28,12 +29,14 @@ def _dashboard_for_role(role: str) -> str:
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
+    # Người đã có phiên không cần nhập lại thông tin đăng nhập.
     if session.get("user_id") is not None:
         return redirect(_dashboard_for_role(session["role"]))
 
     if request.method == "GET":
         return render_template("login.html")
 
+    # Chuẩn hóa email, nhưng không sửa mật khẩu vì khoảng trắng có thể có ý nghĩa.
     email = request.form.get("email", "").strip().lower()
     password = request.form.get("password", "")
     if not email or not password:
@@ -47,6 +50,7 @@ def login():
             400,
         )
 
+    # Mở kết nối chỉ trong lúc xác thực và luôn đóng kể cả khi có lỗi.
     connection = get_connection(current_app.config["DATABASE_PATH"])
     try:
         result = authenticate_user(
@@ -63,6 +67,7 @@ def login():
     finally:
         connection.close()
 
+    # Thông tin lỗi được hiển thị chung, không tiết lộ tài khoản có tồn tại.
     if result.user is None:
         status_code = result.error_code or 401
         return (
@@ -75,6 +80,7 @@ def login():
             status_code,
         )
 
+    # Xóa dữ liệu phiên cũ trước khi ghi danh tính của phiên đăng nhập mới.
     session.clear()
     session["user_id"] = result.user["user_id"]
     session["name"] = result.user["name"]
@@ -84,5 +90,6 @@ def login():
 
 @auth_bp.post("/logout")
 def logout():
+    # Xóa toàn bộ thông tin phiên để đăng xuất ở phía server/browser.
     session.clear()
     return redirect(url_for("auth.login"))

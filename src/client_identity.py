@@ -1,4 +1,6 @@
-"""Who is making this request? Used to key login lockouts by client, not only
+"""Xác định client gửi request để giới hạn đoán mật khẩu theo nguồn truy cập.
+
+Who is making this request? Used to key login lockouts by client, not only
 by email, so that a stranger cannot lock somebody else's account.
 
 Two parts:
@@ -24,6 +26,7 @@ RENDER_PROXY_HOPS = 2
 
 def trusted_proxy_count(test_config: dict | None = None) -> int:
     """Number of proxies in front of the app whose X-Forwarded-For we trust."""
+    # Cấu hình test được ưu tiên để có thể giả lập số proxy một cách rõ ràng.
     if test_config and "TRUSTED_PROXY_COUNT" in test_config:
         return int(test_config["TRUSTED_PROXY_COUNT"])
     raw = os.environ.get("TRUSTED_PROXY_COUNT", "").strip()
@@ -36,6 +39,7 @@ def trusted_proxy_count(test_config: dict | None = None) -> int:
 
 
 def apply_proxy_fix(app: Flask, test_config: dict | None = None) -> None:
+    # Chỉ bật ProxyFix khi biết chính xác có bao nhiêu proxy đáng tin.
     hops = trusted_proxy_count(test_config)
     if hops > 0:
         app.wsgi_app = ProxyFix(app.wsgi_app, x_for=hops)
@@ -49,6 +53,7 @@ def client_key(remote_addr: str | None, secret: str) -> str:
     * The raw IP is never stored: only an HMAC of it, so the database holds no
       personal data and the hash cannot be reversed without SECRET_KEY.
     """
+    # Chuẩn hóa IP trước khi băm để cùng một client có khóa ổn định.
     try:
         address = ipaddress.ip_address((remote_addr or "").strip())
         if isinstance(address, ipaddress.IPv6Address):
@@ -59,6 +64,7 @@ def client_key(remote_addr: str | None, secret: str) -> str:
         text = str(address)
     except ValueError:
         text = "unknown"
+    # HMAC dùng secret key nên DB không lưu IP thô hay hash dễ đoán.
     digest = hmac.new(
         str(secret).encode(), text.encode(), hashlib.sha256
     ).hexdigest()

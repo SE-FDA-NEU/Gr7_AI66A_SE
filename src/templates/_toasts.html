@@ -1,3 +1,4 @@
+{# Component dùng chung: lấy flash message từ Flask, render thông báo và nạp JS xử lý đóng/xác nhận form. #}
 {% with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
 <div class="toast-stack" aria-live="polite" aria-atomic="false">

@@ -1,5 +1,5 @@
+"""Các route cho giảng viên/trợ giảng: quiz, kết quả, thống kê và audit."""
 from __future__ import annotations
-"""Lecturer routes (US04, US12, Lecturer Dashboard)."""
 
 from flask import (
     Blueprint,
@@ -39,6 +39,7 @@ lecturer_bp = Blueprint("lecturer", __name__)
 @lecturer_bp.get("/lecturer/dashboard")
 @role_required("lecturer", "ta")
 def lecturer_dashboard():
+    # Dữ liệu chỉ gồm quiz của giảng viên; trợ giảng có thể xem danh sách rộng hơn.
     quizzes = get_lecturer_dashboard_data(
         current_app.config["DATABASE_PATH"],
         session["user_id"],
@@ -54,6 +55,7 @@ def lecturer_dashboard():
 @lecturer_bp.get("/lecturer/quiz/<int:quiz_id>/attempts")
 @role_required("lecturer", "ta")
 def quiz_attempts(quiz_id: int):
+    # Service xác nhận quyền xem và bổ sung thời gian hiển thị theo UTC+7.
     try:
         data = get_quiz_attempts(
             current_app.config["DATABASE_PATH"],
@@ -70,6 +72,7 @@ def quiz_attempts(quiz_id: int):
 @lecturer_bp.get("/lecturer/quiz/<int:quiz_id>/attempts/<int:attempt_id>")
 @role_required("lecturer", "ta")
 def quiz_attempt_detail(quiz_id: int, attempt_id: int):
+    # Tải một lượt làm cụ thể cùng các đáp án để giảng viên xem chi tiết.
     try:
         data = get_quiz_attempt_detail(
             current_app.config["DATABASE_PATH"],
@@ -87,6 +90,7 @@ def quiz_attempt_detail(quiz_id: int, attempt_id: int):
 @lecturer_bp.get("/lecturer/quiz/<int:quiz_id>/statistics")
 @role_required("lecturer", "ta")
 def quiz_statistics(quiz_id: int):
+    # Thống kê số lượt nộp, điểm trung bình và tỷ lệ đúng từng câu hỏi.
     try:
         data = get_quiz_statistics(
             current_app.config["DATABASE_PATH"],
@@ -102,6 +106,7 @@ def quiz_statistics(quiz_id: int):
 @role_required("lecturer", "ta")
 def view_attempt_audit_history(quiz_id: int, attempt_id: int):
     """US12: Lecturer views an append-only attempt audit history."""
+    # Audit chỉ đọc; quyền sở hữu/role được kiểm tra trong repository.
     db_path = current_app.config["DATABASE_PATH"]
     
     with get_connection(db_path) as connection:
@@ -131,6 +136,7 @@ def view_attempt_audit_history(quiz_id: int, attempt_id: int):
 @lecturer_bp.get("/lecturer/quiz/<int:quiz_id>/publish")
 @role_required("lecturer")
 def publish_page(quiz_id: int):
+    # Service tổng hợp trạng thái quiz, câu hỏi, lịch và lý do chưa thể publish.
     try:
         data = get_quiz_publish_details(
             current_app.config["DATABASE_PATH"],
@@ -157,6 +163,7 @@ def publish_page(quiz_id: int):
 @lecturer_bp.post("/lecturer/quiz/<int:quiz_id>/schedule")
 @role_required("lecturer")
 def handle_quiz_schedule(quiz_id: int):
+    # Các trường tùy chọn chỉ được cập nhật nếu form thực sự gửi chúng lên.
     db_path = current_app.config["DATABASE_PATH"]
     start_at_local = request.form.get("start_at", "")
     end_at_local = request.form.get("end_at", "")

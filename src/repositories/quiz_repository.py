@@ -1,9 +1,11 @@
+"""Các câu SQL để đọc/ghi quiz; không chứa quy tắc HTTP hay giao diện."""
 from __future__ import annotations
 def list_published_quizzes(conn):
     """
     Truy vấn danh sách các quiz có status = 'published'
     Trả về danh sách dạng dict gồm: quiz_id, title, lecturer_name, duration_minutes, end_at
     """
+    # Repository nhận connection từ service và trả dữ liệu phù hợp cho dashboard.
     cursor = conn.cursor()
     query = """
         SELECT 
@@ -22,6 +24,7 @@ def list_published_quizzes(conn):
     cursor.execute(query)
     rows = cursor.fetchall()
     
+    # Chuyển row dạng tuple thành dict có tên khóa dễ dùng trong template.
     quizzes = []
     for row in rows:
         quizzes.append({
@@ -57,6 +60,7 @@ def get_quiz_by_id(conn, quiz_id: int) -> dict | None:
         JOIN user u ON u.user_id = q.lecturer_id
         WHERE q.quiz_id = ?;
     """
+    # Dùng parameterized query để ID là giá trị, không thể làm thay đổi SQL.
     cursor.execute(query, (quiz_id,))
     row = cursor.fetchone()
     if not row:
@@ -89,6 +93,7 @@ def get_quiz_questions_with_choices(conn, quiz_id: int) -> list[dict]:
         WHERE quiz_id = ?
         ORDER BY position ASC;
     """
+    # Lấy câu hỏi có thứ tự trước, sau đó tải lựa chọn theo từng câu.
     cursor.execute(query_q, (quiz_id,))
     q_rows = cursor.fetchall()
     
@@ -105,6 +110,7 @@ def get_quiz_questions_with_choices(conn, quiz_id: int) -> list[dict]:
         c_rows = cursor.fetchall()
         
         choices = []
+        # Tính metadata kiểm tra publish ngay khi gom các lựa chọn.
         correct_count = 0
         for c in c_rows:
             is_cor = bool(c["is_correct"])
@@ -158,6 +164,7 @@ def list_quizzes_by_lecturer(conn, lecturer_id: int | None) -> list[dict]:
         WHERE (? IS NULL OR q.lecturer_id = ?)
         ORDER BY q.quiz_id ASC;
     """
+    # lecturer_id=None cho phép trợ giảng lấy danh sách của mọi giảng viên.
     cursor.execute(query, (lecturer_id, lecturer_id))
     rows = cursor.fetchall()
     
@@ -195,6 +202,7 @@ def list_published_quizzes_with_question_count(conn):
         GROUP BY q.quiz_id
         ORDER BY q.end_at ASC;
     """
+    # LEFT JOIN để quiz chưa có câu hỏi vẫn xuất hiện với question_count bằng 0.
     return [
         {
             "quiz_id": row[0],
@@ -222,6 +230,7 @@ def create_quiz(
 ):
     """Create a new draft quiz with an optional description."""
 
+    # Quiz mới luôn bắt đầu ở draft; các giá trị được truyền bằng placeholder.
     cursor = conn.execute(
         """
         INSERT INTO quiz (
@@ -261,6 +270,7 @@ def update_quiz_schedule(
     max_attempts: int | None = None,
 ) -> None:
     """Save the quiz's UTC schedule and, when provided, its time limit."""
+    # Chỉ cập nhật lịch nếu thiếu một trong các trường cấu hình mở rộng.
     if (
         duration_minutes is None
         or duration_unlimited is None
@@ -292,6 +302,7 @@ def update_quiz_schedule(
 
 def close_expired_published_quizzes(conn, now: str) -> int:
     """Mark quizzes closed when their published deadline has passed."""
+    # Chỉ quiz đã publish và deadline đã qua mới tự chuyển sang closed.
     cursor = conn.execute(
         """
         UPDATE quiz

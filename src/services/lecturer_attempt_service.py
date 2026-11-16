@@ -1,5 +1,5 @@
+"""Chuẩn bị dữ liệu chỉ đọc về lượt làm bài cho khu vực giảng viên."""
 from __future__ import annotations
-"""Read-only lecturer views of student quiz attempts."""
 
 from contextlib import closing
 from pathlib import Path
@@ -21,6 +21,7 @@ class LecturerAttemptError(Exception):
 
 
 def _owned_quiz(connection, lecturer_id: int, quiz_id: int, role: str = "lecturer"):
+    # Trợ giảng có thể xem theo vai trò; giảng viên thường chỉ xem quiz của mình.
     quiz = get_quiz_by_id(connection, quiz_id)
     if quiz is None:
         raise LecturerAttemptError(404, errors.QUIZ_NOT_FOUND)
@@ -36,6 +37,7 @@ def get_quiz_attempts(
     role: str = "lecturer"
 ) -> dict:
     with closing(get_connection(db_path)) as connection:
+        # Xác thực quyền trước khi truy vấn danh sách kết quả sinh viên.
         quiz = _owned_quiz(connection, lecturer_id, quiz_id, role)
         attempts = attempt_repository.list_quiz_attempts(connection, quiz_id)
         for attempt in attempts:
@@ -57,6 +59,7 @@ def get_quiz_attempt_detail(
 ) -> dict:
     with closing(get_connection(db_path)) as connection:
         quiz = _owned_quiz(connection, lecturer_id, quiz_id, role)
+        # Ràng buộc cả attempt_id lẫn quiz_id để ID từ URL không lộ attempt quiz khác.
         attempt = connection.execute(
             """
             SELECT
@@ -96,6 +99,7 @@ def get_quiz_statistics(
     """Return submitted-attempt and per-question statistics for an owned quiz."""
     with closing(get_connection(db_path)) as connection:
         quiz = _owned_quiz(connection, lecturer_id, quiz_id, role)
+        # Chỉ attempt đã submit được tính vào điểm trung bình và tỷ lệ đúng.
         summary = connection.execute(
             """
             SELECT COUNT(*) AS submitted_attempts,
@@ -125,6 +129,7 @@ def get_quiz_statistics(
             (quiz_id,),
         ).fetchall()
 
+        # Tính phần trăm đúng theo số lượt đã nộp; không chia khi mẫu số bằng 0.
         question_statistics = []
         for question in questions:
             question_data = dict(question)

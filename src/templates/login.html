@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Trang đăng nhập: hiển thị lỗi nếu có và gửi email/mật khẩu kèm CSRF token tới route auth.login. -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -10,9 +11,11 @@
     <main class="login-card">
         <h1>Sign in to Mini LMS</h1>
         {% if error %}
+        <!-- Thông báo lỗi do route truyền vào; email được giữ lại để người dùng không phải nhập lại. -->
         <p class="alert alert-error" role="alert">{{ error }}</p>
         {% endif %}
         <form method="post" action="{{ url_for('auth.login') }}">
+            <!-- Token CSRF xác nhận form POST được tạo từ chính ứng dụng này. -->
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <label for="email">Email</label>
             <input id="email" name="email" type="email" autocomplete="username"

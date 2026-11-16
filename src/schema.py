@@ -1,8 +1,8 @@
+"""Định nghĩa schema SQLite: các bảng, ràng buộc toàn vẹn và trigger của MiniLMS."""
 from __future__ import annotations
 
-"""SQLite schema for the MiniLMS data model."""
-
 SCHEMA_SQL = """
+-- Xóa các bảng phụ thuộc trước, rồi mới xóa bảng cha để reset đúng thứ tự khóa ngoại.
 DROP TABLE IF EXISTS attempt_audit;
 DROP TABLE IF EXISTS answer;
 DROP TABLE IF EXISTS attempt;
@@ -14,6 +14,7 @@ DROP TABLE IF EXISTS login_lockout;
 DROP TABLE IF EXISTS login_failure;
 DROP TABLE IF EXISTS user;
 
+-- Tài khoản dùng chung cho giảng viên, sinh viên và trợ giảng.
 CREATE TABLE user (
     user_id INTEGER PRIMARY KEY,
     name TEXT NOT NULL,
@@ -22,6 +23,7 @@ CREATE TABLE user (
     role TEXT NOT NULL CHECK (role IN ('lecturer', 'student', 'ta'))
 );
 
+-- Lưu các lần đăng nhập sai để giới hạn thử lại theo tài khoản và client.
 CREATE TABLE login_failure (
     failure_id INTEGER PRIMARY KEY,
     email TEXT NOT NULL,
@@ -52,6 +54,7 @@ CREATE TABLE client_lockout (
     locked_until INTEGER NOT NULL
 );
 
+-- Quiz thuộc một giảng viên; CHECK giữ trạng thái và giới hạn thời gian hợp lệ.
 CREATE TABLE quiz (
     quiz_id INTEGER PRIMARY KEY,
     lecturer_id INTEGER NOT NULL REFERENCES user(user_id),
@@ -71,6 +74,7 @@ CREATE TABLE quiz (
     CHECK (start_at IS NULL OR end_at IS NULL OR end_at > start_at)
 );
 
+-- Câu hỏi thuộc quiz, vị trí không trùng trong cùng một quiz.
 CREATE TABLE question (
     question_id INTEGER PRIMARY KEY,
     quiz_id INTEGER NOT NULL REFERENCES quiz(quiz_id),
@@ -80,6 +84,7 @@ CREATE TABLE question (
     UNIQUE (quiz_id, position)
 );
 
+-- Lựa chọn thuộc câu hỏi; partial unique index giới hạn một đáp án đúng.
 CREATE TABLE choice (
     choice_id INTEGER PRIMARY KEY,
     question_id INTEGER NOT NULL REFERENCES question(question_id),
@@ -90,6 +95,7 @@ CREATE TABLE choice (
 CREATE UNIQUE INDEX one_correct_choice_per_question
     ON choice(question_id) WHERE is_correct = 1;
 
+-- Mỗi lần làm bài gắn một sinh viên với một quiz.
 CREATE TABLE attempt (
     attempt_id INTEGER PRIMARY KEY,
     student_id INTEGER NOT NULL REFERENCES user(user_id),
@@ -99,6 +105,7 @@ CREATE TABLE attempt (
     score REAL
 );
 
+-- Mỗi câu trong một lượt làm bài chỉ có một lựa chọn được lưu.
 CREATE TABLE answer (
     answer_id INTEGER PRIMARY KEY,
     attempt_id INTEGER NOT NULL REFERENCES attempt(attempt_id),
@@ -107,6 +114,7 @@ CREATE TABLE answer (
     UNIQUE (attempt_id, question_id)
 );
 
+-- Nhật ký ghi lại các hành động quan trọng để truy vết lịch sử làm bài.
 CREATE TABLE attempt_audit (
     audit_id INTEGER PRIMARY KEY AUTOINCREMENT,
     attempt_id INTEGER NOT NULL REFERENCES attempt(attempt_id) ON DELETE CASCADE,

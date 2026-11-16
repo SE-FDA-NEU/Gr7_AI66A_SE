@@ -1,4 +1,4 @@
-<!-- src/templates/student_dashboard.html -->
+<!-- Dashboard sinh viên: JavaScript gọi API, rồi hiển thị loading/empty/error/data tương ứng. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -29,6 +29,7 @@
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/hig.css') }}">
+    <!-- Không có JS thì không thể tải API, nên chỉ dẫn người dùng bật JavaScript. -->
     <noscript>
         <style>#state-loading { display: none; }</style>
     </noscript>
@@ -55,6 +56,7 @@
             </p>
         </noscript>
 
+        <!-- Bốn trạng thái giao diện; JS chỉ hiển thị một trạng thái tại một thời điểm. -->
         <div id="status" aria-live="polite">
             <section id="state-loading" class="state">
                 <div class="spinner" aria-hidden="true"></div>
@@ -94,6 +96,7 @@
         </div>
     </main>
 
+    <!-- Script lấy quiz qua API và dựng hàng bảng bằng textContent để tránh chèn HTML không tin cậy. -->
     <script nonce="{{ csp_nonce }}">
         (function () {
             var API_URL = "{{ url_for('api.student_quizzes') }}";

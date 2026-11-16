@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Trang làm bài: hiển thị câu hiện tại, điều hướng câu hỏi, đồng hồ và lưu đáp án qua POST. -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -17,6 +18,7 @@
 </head>
 <body>
     <main>
+        <!-- Đồng hồ chỉ để hiển thị; server là nguồn quyết định hết giờ hay chưa. -->
         <div class="quiz-heading-row">
             <h1>{{ quiz.title }}</h1>
             {% if remaining_seconds is none %}
@@ -34,6 +36,7 @@
             Warning recorded: you left the quiz page or opened another tab.
         </p>
         
+        <!-- Form chứa ID attempt/câu và CSRF token; route kiểm tra lại mọi ID khi nhận request. -->
         <form method="post" action="{{ url_for('student.save_quiz_answer', quiz_id=quiz.quiz_id) }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="attempt_id" value="{{ attempt_id }}">
@@ -53,6 +56,7 @@
                     </fieldset>
                 </section>
 
+                <!-- Nút nhảy câu hiển thị câu đã trả lời và đánh dấu câu đang xem. -->
                 <nav class="jump" aria-label="Jump to question">
                     {% for number in range(1, total_questions + 1) %}
                     <button type="submit" name="go" value="{{ number }}"
@@ -82,6 +86,7 @@
             <a class="btn btn-secondary" href="{{ url_for('student.student_dashboard') }}">Back to dashboard</a>
         </p>
     </main>
+    <!-- JavaScript cảnh báo chuyển tab và cập nhật đồng hồ; không thay thế kiểm tra phía server. -->
     <script nonce="{{ csp_nonce }}">
         // Warn once if the student switches away from the active quiz tab.
         (function () {

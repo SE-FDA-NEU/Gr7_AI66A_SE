@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Bảng tổng hợp các lượt làm của quiz, gồm trạng thái, điểm và thời gian. -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -9,6 +10,7 @@
 <body>
     <main>
         <nav class="question-page-actions" aria-label="Attempt navigation">
+            <!-- Trợ giảng không có liên kết chỉnh sửa quiz; giảng viên có thể quay lại phần quản lý. -->
             <a class="btn btn-secondary" href="{{ url_for('lecturer.lecturer_dashboard') }}">Back to dashboard</a>
             {% if session.get('role') != 'ta' %}
                 <a class="btn btn-secondary" href="{{ url_for('lecturer.publish_page', quiz_id=quiz.quiz_id) }}">Quiz details</a>
@@ -19,6 +21,7 @@
         <p class="muted">{{ quiz.title }} · {{ attempts|length }} attempt{{ '' if attempts|length == 1 else 's' }}</p>
 
         {% if attempts %}
+        <!-- Dữ liệu một dòng tương ứng một lần sinh viên bắt đầu làm quiz. -->
         <div class="table-wrap">
             <table>
                 <thead>

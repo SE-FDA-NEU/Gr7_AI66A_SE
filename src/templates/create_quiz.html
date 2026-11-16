@@ -1,4 +1,5 @@
 
+<!-- Form tạo quiz nháp: nhập thông tin, thời lượng và lịch; server kiểm tra trước khi lưu. -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -181,6 +182,7 @@
             </div>
             {% endif %}
 
+            <!-- POST kèm CSRF token; data-confirm được ui.js dùng để hỏi xác nhận trước khi gửi. -->
             <form
                 action="{{ url_for('quiz.submit_create_quiz') }}"
                 method="POST"
@@ -190,7 +192,7 @@
             >
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-                <!-- QUIZ TITLE -->
+                <!-- Tên quiz là trường bắt buộc và được giữ nguyên sau lỗi validation. -->
                 <div class="form-group">
                     <label for="title">
                         Quiz Title
@@ -211,7 +213,7 @@
                     >
                 </div>
 
-                <!-- DESCRIPTION -->
+                <!-- Mô tả là tùy chọn nên không có thuộc tính required. -->
                 <div class="form-group">
                     <label for="description">
                         Description
@@ -229,7 +231,7 @@
                     </p>
                 </div>
 
-                <!-- DURATION -->
+                <!-- Chọn thời lượng cụ thể hoặc bật tùy chọn không giới hạn thời gian. -->
                 <div class="form-group">
                     <label for="duration">
                         Duration (minutes)
@@ -266,6 +268,7 @@
                     </p>
                 </div>
 
+                <!-- Hai mốc lịch độc lập; để trống start/end lần lượt nghĩa là mở ngay/không deadline. -->
                 <fieldset class="schedule-fields">
                     <legend>Quiz availability (Hanoi time, UTC+7)</legend>
                     <p class="hint">Choose either time independently. Leave Start time empty for immediate availability, or End time empty for no deadline.</p>
@@ -292,6 +295,7 @@
                     <p class="hint">Students can start only during this window. Their timer ends at the earlier of the quiz duration or the scheduled end time.</p>
                 </fieldset>
 
+                <!-- Hủy quay lại dashboard; nút submit gửi dữ liệu tạo quiz mới. -->
                 <!-- ACTIONS -->
                 <div class="actions">
                     <a
@@ -312,6 +316,7 @@
             </form>
         </div>
     </main>
+    <!-- Đồng bộ trạng thái ô thời lượng với checkbox không giới hạn (chỉ hỗ trợ trải nghiệm form). -->
     <script nonce="{{ csp_nonce }}">
         (function () {
             var unlimited = document.getElementById("duration_unlimited");

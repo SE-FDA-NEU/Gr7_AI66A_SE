@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Trang rà soát trước khi nộp: cho phép quay lại câu bỏ trống hoặc xác nhận nộp. -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -34,6 +35,7 @@
         <p class="alert" role="alert">{{ error }}</p>
         {% endif %}
 
+        <!-- Liệt kê số câu chưa trả lời để sinh viên nhảy về bổ sung trước khi nộp. -->
         {% if unanswered_numbers %}
         <section>
             <h2>Unanswered questions</h2>
@@ -47,6 +49,7 @@
         </section>
         {% endif %}
 
+        <!-- Server vẫn kiểm tra lại attempt và câu bỏ trống; checkbox là xác nhận của người dùng. -->
         <form method="post" action="{{ url_for('student.submit_quiz', quiz_id=quiz.quiz_id) }}"
               data-confirm="Are you sure you want to submit this quiz? You won't be able to change your answers afterward."
               data-confirm-title="Submit quiz" data-confirm-label="Submit quiz">

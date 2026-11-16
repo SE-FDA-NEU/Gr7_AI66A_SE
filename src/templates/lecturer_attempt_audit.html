@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- Trang lịch sử audit: mỗi hàng là một hành động đã được ghi append-only trong database. -->
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
@@ -18,6 +19,7 @@
       >
 
       <table class="table" style="margin-top: 20px">
+        <!-- Các cột thể hiện ai làm gì, vào lúc nào và metadata liên quan. -->
         <thead>
           <tr>
             <th>Audit ID</th>
@@ -29,6 +31,7 @@
           </tr>
         </thead>
         <tbody>
+          <!-- Duyệt log theo thứ tự thời gian do repository đã sắp xếp. -->
           {% for log in logs %}
           <tr>
             <td>{{ log.audit_id }}</td>

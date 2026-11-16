@@ -1,3 +1,8 @@
+"""Điểm khởi chạy ứng dụng MiniLMS và nơi ghép các thành phần Flask.
+
+Luồng tổng quát: tạo cấu hình -> chuẩn bị cơ sở dữ liệu -> đăng ký route,
+kiểm tra bảo mật và ghi log -> trả về ứng dụng cho máy chủ web.
+"""
 from __future__ import annotations
 import os
 import json
@@ -15,8 +20,11 @@ from flask import Flask, g, redirect, request, url_for
 from flask_wtf.csrf import CSRFError, CSRFProtect
 from werkzeug.exceptions import HTTPException
 
+# Tính đường dẫn từ vị trí file này để chạy app không phụ thuộc thư mục hiện tại.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# Thêm thư mục gốc vào đường dẫn tìm module để các lệnh chạy trực tiếp vẫn import được src.
 sys.path.insert(0, str(PROJECT_ROOT))
+# Đọc biến cấu hình local từ .env; biến đã có trong môi trường được giữ nguyên.
 load_dotenv(PROJECT_ROOT / ".env")
 
 from src.errors import CSRF_FAILED, render_error
@@ -40,6 +48,7 @@ csrf = CSRFProtect()
 def log_server_exception(error: Exception, status_code: int = 500):
     # Allow only frame locations. Messages, source lines, locals, exception
     # notes and chained exception text can all contain credentials or answers.
+    # Chỉ ghi vị trí stack trace, không ghi nội dung lỗi có thể chứa dữ liệu nhạy cảm.
     frames = []
     for frame, lineno in walk_tb(error.__traceback__):
         filename = Path(frame.f_code.co_filename)
@@ -57,9 +66,16 @@ def log_server_exception(error: Exception, status_code: int = 500):
 
 
 def create_app(test_config=None):
+    """Tạo Flask app theo mô hình application factory.
+
+    Hàm này được dùng cả khi chạy thật lẫn trong test; test_config cho phép
+    thay cơ sở dữ liệu và một số thiết lập mà không sửa cấu hình production.
+    """
     app = Flask(__name__)
+    # Tin cậy thông tin IP chuyển tiếp chỉ từ số proxy đã được cấu hình.
     apply_proxy_fix(app, test_config)
 
+    # Giá trị mặc định chung; thiết lập test nếu có sẽ ghi đè ở bước tiếp theo.
     app.config.from_mapping(
         DEBUG=False,
         SECRET_KEY=os.environ.get("SECRET_KEY"),
@@ -74,8 +90,10 @@ def create_app(test_config=None):
     )
 
     if test_config:
+        # Cho phép test cô lập DB, khóa bí mật và các cờ bảo mật.
         app.config.update(test_config)
 
+    # Cấu hình cookie và header sớm để áp dụng cho mọi phản hồi.
     configure_cookies(app, test_config)
     init_security_headers(app)
 
@@ -87,6 +105,7 @@ def create_app(test_config=None):
 
     if not app.config["SECRET_KEY"]:
         if app.testing or app.debug:
+            # Secret tạm chỉ dùng trong test/phát triển, không dùng khi chạy thật.
             app.config["SECRET_KEY"] = secrets.token_hex(32)
         else:
             raise RuntimeError(
@@ -94,6 +113,7 @@ def create_app(test_config=None):
                 "when running outside testing or local debug mode."
             )
 
+    # Tạo DB/seed nếu chưa có; sau đó nâng cấp schema cũ nếu cần.
     database_path = Path(app.config["DATABASE_PATH"])
     ensure_database(database_path)
     if database_path.exists():
@@ -104,6 +124,7 @@ def create_app(test_config=None):
         finally:
             connection.close()
 
+    # Blueprint chia URL theo nhóm chức năng để route không dồn vào một file.
     app.register_blueprint(auth_bp)
     app.register_blueprint(lecturer_bp)
     app.register_blueprint(quiz_bp)
@@ -112,6 +133,7 @@ def create_app(test_config=None):
 
     @app.before_request
     def start_request_timer():
+        # Lưu thời điểm bắt đầu để tính thời gian xử lý trong log sau request.
         g.request_started_at = perf_counter()
 
     # Registered after start_request_timer on purpose: Flask runs before_request
@@ -123,6 +145,7 @@ def create_app(test_config=None):
     def log_request(response):
         # Route templates omit user-controlled path values; never log raw URLs,
         # query strings, headers, cookies, bodies, or response content.
+        # Chỉ log đường dẫn mẫu từ Flask, tránh ghi URL/query do người dùng nhập.
         started_at = g.get("request_started_at")
         print(json.dumps({
             "event": "http_request",
@@ -156,12 +179,14 @@ def create_app(test_config=None):
 
     @app.route('/')
     def index():
+        # Trang gốc chuyển người dùng đến màn hình đăng nhập.
         return redirect(url_for("auth.login"))
 
     @app.route('/health')
     def health():
         try:
             # Read-only mode must not recreate a lost database or seed tables.
+            # Kiểm tra DB chỉ đọc để health check không vô tình tạo lại dữ liệu.
             uri = Path(app.config["DATABASE_PATH"]).resolve().as_uri() + "?mode=ro"
             with closing(sqlite3.connect(uri, uri=True)) as connection:
                 connection.execute('SELECT 1 FROM "user" LIMIT 1').fetchone()
@@ -174,5 +199,6 @@ def create_app(test_config=None):
 
 
 if __name__ == '__main__':
+    # Chỉ khi chạy file trực tiếp mới bật server phát triển; Gunicorn dùng factory.
     app = create_app({"DEBUG": True})
     app.run(debug=True, port=5000)

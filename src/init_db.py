@@ -1,4 +1,4 @@
-"""Create the local database and load its checked-in sample data."""
+"""Tạo cấu trúc SQLite và nạp dữ liệu mẫu từ các file CSV trong data/."""
 from __future__ import annotations
 import csv
 import os
@@ -15,8 +15,10 @@ except ModuleNotFoundError:
     from schema import SCHEMA_SQL, TABLE_NAMES
 
 
+# Xác định gốc project để đường dẫn seed không phụ thuộc nơi chạy lệnh.
 ROOT = Path(__file__).resolve().parent.parent
 
+# Ánh xạ tên bảng đến file CSV tương ứng; thứ tự này tôn trọng khóa ngoại.
 SEED_FILES = {
     "user": "seed_users.csv",
     "quiz": "seed_quizzes.csv",
@@ -27,6 +29,7 @@ SEED_FILES = {
 
 def _read_csv(path: Path) -> tuple[list[str], list[dict[str, str]]]:
     """Read a seed CSV file and return its columns and rows."""
+    # utf-8-sig cũng đọc được CSV có BOM thường được tạo bởi một số bảng tính.
     with path.open(newline="", encoding="utf-8-sig") as seed_file:
         reader = csv.DictReader(seed_file)
 
@@ -41,9 +44,11 @@ def init_db(db_path: str | Path) -> dict[str, int]:
     db_path = Path(db_path)
     counts: dict[str, int] = {}
 
+    # executescript tạo lại schema; vì vậy init_db là lệnh reset dữ liệu mẫu.
     with get_connection(db_path) as connection:
         connection.executescript(SCHEMA_SQL)
 
+        # Mỗi CSV tự khai báo cột; placeholder ? giúp truyền giá trị an toàn.
         for table, filename in SEED_FILES.items():
             columns, rows = _read_csv(ROOT / "data" / filename)
 
@@ -85,9 +90,11 @@ def ensure_database(db_path: str | Path) -> bool:
     An existing database that already has the user table is left untouched,
     because init_db() drops every table first. Returns True when seeding ran.
     """
+    # Tạo thư mục chứa database trước khi kiểm tra/tạo file.
     db_path = Path(db_path)
     db_path.parent.mkdir(parents=True, exist_ok=True)
 
+    # Không gọi init_db với DB hợp lệ vì init_db sẽ xóa và tạo lại toàn bộ bảng.
     if db_path.exists() and _has_user_table(db_path):
         return False
 
@@ -105,12 +112,14 @@ def _display_path(db_path: Path) -> str:
 
 def main() -> None:
     """Initialize the database using DATABASE_PATH from .env when available."""
+    # Đọc cấu hình khi chạy script trực tiếp để DATABASE_PATH có thể tùy chỉnh.
     load_dotenv(ROOT / ".env")
 
     configured_path = Path(
         os.getenv("DATABASE_PATH", "data/minilms.db")
     )
 
+    # Đường dẫn tương đối được tính từ gốc project, đường dẫn tuyệt đối giữ nguyên.
     if configured_path.is_absolute():
         db_path = configured_path
     else:
@@ -130,4 +139,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # Chỉ thực thi main khi file được gọi trực tiếp, không phải lúc import.
     main()

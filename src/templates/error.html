@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Trang lỗi dùng chung: hiển thị mã, tiêu đề, lời giải thích và đường quay lại theo vai trò. -->
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -83,12 +84,14 @@
 </head>
 <body>
     <main class="error-card">
+        <!-- Các giá trị status/title/message do errors.render_error truyền từ server. -->
         <span class="error-code-badge">Mã phản hồi: {{ status_code }}</span>
         <h1>{{ title or 'Thông báo lỗi' }}</h1>
         <div class="error-message-box" role="alert">
             {{ message }}
         </div>
         <div>
+            <!-- Điều hướng người dùng về dashboard phù hợp với vai trò đã lưu trong session. -->
             {% if session.get('role') == 'student' %}
             <a href="{{ url_for('student.student_dashboard') }}" class="btn">&larr; Quay lại Trang chủ Sinh viên</a>
             {% elif session.get('role') == 'lecturer' %}

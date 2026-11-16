@@ -1,4 +1,6 @@
+/* CSS chung cho các màn hình MiniLMS; class từ template quyết định nhóm quy tắc áp dụng. */
 :root {
+    /* Design tokens giúp màu sắc, font, bo góc và chuyển động thống nhất toàn site. */
     color-scheme: light;
     --font-system: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", sans-serif;
     --accent: #007aff;
@@ -44,6 +46,7 @@
 }
 
 * {
+    /* Tính cả border/padding trong kích thước để layout dễ dự đoán. */
     box-sizing: border-box;
 }
 
@@ -64,6 +67,7 @@ html {
 }
 
 body {
+    /* Kiểu chữ và màu nền mặc định được kế thừa bởi các trang. */
     min-height: 100vh;
     margin: 0;
     background: var(--background);
@@ -127,6 +131,7 @@ textarea {
 button,
 .btn,
 .button {
+    /* Chuẩn hóa nút HTML và liên kết mang dáng nút thành một hệ giao diện. */
     min-height: 44px;
     border: 1px solid transparent;
     border-radius: var(--radius-control);
@@ -168,6 +173,7 @@ button:disabled,
 }
 
 :focus-visible {
+    /* Viền rõ ràng hỗ trợ bàn phím và người dùng cần nhận biết focus. */
     outline: 3px solid rgba(0, 122, 255, 0.35);
     outline-offset: 3px;
 }
@@ -175,6 +181,7 @@ button:disabled,
 input:not([type="radio"]):not([type="checkbox"]),
 select,
 textarea {
+    /* Kiểu chung cho trường nhập liệu; radio/checkbox được tạo kiểu riêng bên dưới. */
     min-height: 44px;
     max-width: 100%;
     border: 1px solid var(--border-subtle);
@@ -282,6 +289,7 @@ main {
 }
 
 .lecturer-main {
+    /* Vùng nội dung dashboard giảng viên, có khoảng cách với header. */
     width: 100%;
     max-width: 1440px;
     margin: 0 auto;
@@ -350,6 +358,7 @@ textarea {
 }
 
 .table-actions {
+    /* Gom nhiều hành động của cùng một quiz thành hàng có khoảng cách đồng đều. */
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -480,6 +489,7 @@ textarea {
 }
 
 .table-action {
+    /* Liên kết thao tác trong bảng giữ cảm giác nút nhưng vẫn là link điều hướng. */
     display: inline-flex;
     min-height: 36px;
     align-items: center;
@@ -556,6 +566,7 @@ header form button:hover {
     text-decoration: underline;
 }
 
+/* Vỏ cuộn ngang cho bảng; dashboard sinh viên dùng cùng kiểu cho vùng dữ liệu. */
 .table-wrap,
 #state-data {
     overflow-x: auto;
@@ -565,6 +576,7 @@ header form button:hover {
     box-shadow: var(--shadow-soft);
 }
 
+/* Kiểu bảng mặc định; các hàng và cột bên dưới chia đường viền tinh tế. */
 table {
     width: 100%;
     border-collapse: separate;
@@ -637,6 +649,7 @@ tbody tr:hover td {
     color: var(--danger);
 }
 
+/* Màu trạng thái dùng chung cho lỗi, cảnh báo, thông báo và trạng thái rỗng. */
 .alert,
 .error,
 .error-message-box,
@@ -780,6 +793,7 @@ main > section {
     color: var(--text-primary);
 }
 
+/* Các quy tắc từ đây định dạng đồng hồ, câu hỏi, nút điều hướng và trang kết quả. */
 .quiz-controls {
     display: grid;
     gap: 16px;
@@ -925,6 +939,7 @@ form .btn-secondary {
     font-weight: 600;
 }
 
+/* Các khối manage-* tạo bố cục cho màn hình thêm/sửa, lên lịch và publish quiz. */
 .manage-quiz-page {
     width: min(100% - 48px, 920px);
     max-width: 920px;
@@ -1290,6 +1305,7 @@ dialog::backdrop {
     backdrop-filter: blur(8px);
 }
 
+/* Toast và dialog xác nhận là lớp giao diện nổi trên nội dung trang. */
 .toast-stack {
     position: fixed;
     z-index: 100;
@@ -1412,6 +1428,7 @@ dialog::backdrop {
     margin-top: 8px;
 }
 
+/* Trên màn hình nhỏ, xếp các cột thành một cột và giảm khoảng cách/padding. */
 @media (max-width: 700px) {
     .schedule-grid {
         grid-template-columns: 1fr;
@@ -1506,6 +1523,7 @@ dialog::backdrop {
     }
 }
 
+/* Tôn trọng cài đặt hệ điều hành giảm chuyển động để tránh hiệu ứng gây khó chịu. */
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,

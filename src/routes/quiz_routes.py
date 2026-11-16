@@ -1,3 +1,4 @@
+"""Route tạo quiz, quản lý câu hỏi và hiển thị trang cấu hình/publish."""
 from __future__ import annotations
 
 from flask import (
@@ -45,6 +46,7 @@ quiz_bp = Blueprint("quiz", __name__)
 def create_quiz_page():
     """Display the Create Quiz form."""
 
+    # Giá trị mặc định tạo form trống với thời lượng ban đầu 30 phút.
     return render_template(
         "create_quiz.html",
         error=None,
@@ -62,6 +64,7 @@ def create_quiz_page():
 def submit_create_quiz():
     """Validate and create a draft quiz."""
 
+    # Đọc dữ liệu form; việc kiểm tra quy tắc nghiệp vụ do service đảm nhiệm.
     title = request.form.get("title", "")
     description = request.form.get("description", "")
     duration = request.form.get("duration", "")
@@ -69,6 +72,7 @@ def submit_create_quiz():
     start_at = request.form.get("start_at", "")
     end_at = request.form.get("end_at", "")
 
+    # Service lưu quiz ở trạng thái nháp; lỗi nhập liệu được trả lại form.
     try:
         quiz_id = create_new_quiz(
             current_app.config["DATABASE_PATH"],
@@ -96,6 +100,7 @@ def submit_create_quiz():
             422,
         )
 
+    # Sau khi tạo, đưa giảng viên đến trang thêm câu hỏi/publish quiz vừa tạo.
     flash("Quiz created successfully.", "success")
     return redirect(url_for("lecturer.publish_page", quiz_id=quiz_id))
 
@@ -103,6 +108,7 @@ def submit_create_quiz():
 @quiz_bp.get("/quiz/<int:quiz_id>/questions")
 @role_required("lecturer")
 def questions_page(quiz_id: int):
+    # Service xác nhận quyền sở hữu trước khi cho phép xem quiz.
     try:
         get_questions_page_data(
             current_app.config["DATABASE_PATH"],
@@ -122,6 +128,7 @@ def questions_page(quiz_id: int):
 @quiz_bp.post("/quiz/<int:quiz_id>/questions")
 @role_required("lecturer")
 def add_quiz_question(quiz_id: int):
+    # Chuẩn hóa dữ liệu để giữ lại giá trị form nếu validation thất bại.
     db_path = current_app.config["DATABASE_PATH"]
     choices = request.form.getlist("choices")
 
@@ -132,6 +139,7 @@ def add_quiz_question(quiz_id: int):
         "points": request.form.get("points", ""),
     }
 
+    # Việc thêm câu hỏi và 4 lựa chọn được xử lý trong transaction của service.
     try:
         add_question(
             db_path,
@@ -184,6 +192,7 @@ def add_quiz_question(quiz_id: int):
 @quiz_bp.post("/quiz/<int:quiz_id>/questions/<int:question_id>/edit")
 @role_required("lecturer")
 def edit_quiz_question(quiz_id: int, question_id: int):
+    # Form sửa dùng cùng quy trình chuẩn hóa và kiểm tra như form thêm mới.
     db_path = current_app.config["DATABASE_PATH"]
     choices = request.form.getlist("choices")
     form = {

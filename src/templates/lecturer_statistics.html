@@ -1,5 +1,6 @@
 
 <!DOCTYPE html>
+<!-- Thống kê quiz: số bài đã nộp, điểm trung bình và tỷ lệ đúng theo từng câu. -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -25,6 +26,7 @@
         <h1>Quiz statistics</h1>
         <p class="muted">{{ quiz.title }}</p>
 
+        <!-- Thẻ tổng quan tổng số lượt đã nộp và điểm trung bình (thang 0–100%). -->
         <!-- Summary cards -->
         <section class="attempt-summary">
             <div>
@@ -38,6 +40,7 @@
             </div>
         </section>
 
+        <!-- Bảng chi tiết hiệu suất sinh viên cho từng câu hỏi. -->
         <!-- Question statistics -->
         <div class="title-row">
             <h2>Question statistics</h2>

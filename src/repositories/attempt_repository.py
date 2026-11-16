@@ -1,5 +1,5 @@
+"""Các truy vấn database về lượt làm bài, câu trả lời và kết quả."""
 from __future__ import annotations
-"""Database access for quiz attempts and answers."""
 
 import sqlite3
 
@@ -39,6 +39,7 @@ def get_open_attempt(
     student_id: int,
     quiz_id: int,
 ) -> sqlite3.Row | None:
+    # Chỉ trả một lượt chưa có submitted_at; attempt_id mới nhất được ưu tiên.
     return connection.execute(
         """
         SELECT attempt_id, student_id, quiz_id, started_at, submitted_at, score
@@ -73,6 +74,7 @@ def count_submitted_attempts(
     student_id: int,
     quiz_id: int,
 ) -> int:
+    # Lượt đang làm không tính vào hạn mức số lần nộp của sinh viên.
     return connection.execute(
         """
         SELECT COUNT(*) FROM attempt
@@ -84,6 +86,7 @@ def count_submitted_attempts(
 
 def list_quiz_attempts(connection: sqlite3.Connection, quiz_id: int) -> list[dict]:
     """Return all student attempts for a quiz, including attempts in progress."""
+    # LEFT JOIN giữ cả attempt chưa có đáp án trong danh sách kết quả.
     rows = connection.execute(
         """
         SELECT
@@ -117,6 +120,7 @@ def get_attempt_answers(
     attempt_id: int,
 ) -> list[dict]:
     """Return each question, the student's answer, and its correct answer."""
+    # Kết hợp câu hỏi, lựa chọn đã chọn và lựa chọn đúng để phục vụ trang review.
     rows = connection.execute(
         """
         SELECT
@@ -154,6 +158,7 @@ def create_attempt(
     quiz_id: int,
     started_at: str,
 ) -> int:
+    # Repository chỉ thực hiện INSERT và trả lại khóa chính mới được tạo.
     cursor = connection.execute(
         "INSERT INTO attempt (student_id, quiz_id, started_at) VALUES (?, ?, ?)",
         (student_id, quiz_id, started_at),
@@ -166,6 +171,7 @@ def list_questions_with_choices(
     quiz_id: int,
 ) -> list[dict]:
     """Return the quiz's questions in position order, each with its choices."""
+    # Tạo danh sách câu trước, rồi gom lựa chọn để tránh trả dữ liệu phẳng lặp câu.
     questions = [
         {
             "question_id": row["question_id"],
@@ -184,6 +190,7 @@ def list_questions_with_choices(
             (quiz_id,),
         )
     ]
+    # Ánh xạ ID sang dict để gắn lựa chọn đúng câu mà không tìm kiếm tuyến tính.
     by_id = {question["question_id"]: question for question in questions}
 
     for row in connection.execute(
@@ -222,6 +229,7 @@ def choice_belongs_to_question(
     question_id: int,
     quiz_id: int,
 ) -> bool:
+    # Ba điều kiện đảm bảo lựa chọn đúng câu và câu thuộc quiz cần làm.
     row = connection.execute(
         """
         SELECT 1
@@ -240,6 +248,7 @@ def upsert_answer(
     question_id: int,
     choice_id: int,
 ) -> None:
+    # UNIQUE(attempt_id, question_id) khiến câu trả lời cũ được thay thế khi đổi đáp án.
     connection.execute(
         """
         INSERT INTO answer (attempt_id, question_id, choice_id)
@@ -251,6 +260,7 @@ def upsert_answer(
 
 
 def count_correct_answers(connection: sqlite3.Connection, attempt_id: int) -> int:
+    # Chỉ đếm lựa chọn được đánh dấu đúng trong bảng choice.
     return connection.execute(
         """
         SELECT COUNT(*)
@@ -269,6 +279,7 @@ def mark_submitted(
     score: float,
 ) -> int:
     """Submit an open attempt; returns 0 when it was already submitted (BR6)."""
+    # Điều kiện submitted_at IS NULL bảo vệ việc nộp một lần (idempotency).
     cursor = connection.execute(
         """
         UPDATE attempt

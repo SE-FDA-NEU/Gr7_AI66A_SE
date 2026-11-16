@@ -1,3 +1,4 @@
+"""Nghiệp vụ tạo/sửa câu hỏi và kiểm tra quyền sở hữu quiz."""
 from __future__ import annotations
 import sqlite3
 from contextlib import closing
@@ -35,6 +36,7 @@ def _get_owned_quiz(
     lecturer_id: int,
     quiz_id: int,
 ) -> sqlite3.Row:
+    # Tách lỗi không tồn tại và không phải chủ sở hữu để route trả đúng status.
     quiz = repo.get_quiz(connection, quiz_id)
     if quiz is None:
         raise QuestionError(404, errors.QUIZ_NOT_FOUND)
@@ -44,6 +46,7 @@ def _get_owned_quiz(
 
 
 def _to_int(value: str | None) -> int | None:
+    # Chỉ nhận chữ số ASCII để dữ liệu form nhất quán trên mọi locale.
     if value is None or not value.isascii() or not value.isdecimal():
         return None
     try:
@@ -58,6 +61,7 @@ def _validate(
     correct_index: str,
     points: str,
 ) -> tuple[str, list[str], int, int]:
+    # Thu thập nhiều lỗi cùng lúc để người dùng sửa form trong một lần.
     messages: list[str] = []
 
     content = content.strip()
@@ -68,6 +72,7 @@ def _validate(
     if len(choices) != CHOICE_COUNT or not all(choices):
         messages.append(errors.CHOICES_REQUIRED)
 
+    # Chỉ số đáp án đúng bắt đầu từ 0 và phải trỏ vào một trong bốn lựa chọn.
     correct = _to_int(correct_index)
     if correct is None or not 0 <= correct < CHOICE_COUNT:
         messages.append(errors.SELECT_CORRECT_OPTION)
@@ -76,6 +81,7 @@ def _validate(
     if points_value is None or not 1 <= points_value <= MAX_POINTS:
         messages.append(errors.INVALID_POINTS)
 
+    # Không để dữ liệu chưa hợp lệ đi đến tầng repository/database.
     if messages:
         raise InvalidQuestion(messages)
     if correct is None or points_value is None:
@@ -110,6 +116,7 @@ def add_question(
 ) -> int:
     with closing(get_connection(db_path)) as connection:
         with connection:
+            # Giữ transaction nhất quán khi tính vị trí mới và thêm câu hỏi.
             connection.execute("BEGIN IMMEDIATE")
             _get_owned_quiz(connection, lecturer_id, quiz_id)
 
@@ -127,6 +134,7 @@ def add_question(
                 points,
                 repo.next_position(connection, quiz_id),
             )
+            # Lưu bốn lựa chọn; chỉ phần tử có index đúng được đánh dấu đáp án.
             for index, text in enumerate(choices):
                 repo.insert_choice(connection, question_id, text, index == correct)
 
@@ -145,6 +153,7 @@ def update_question(
 ) -> None:
     with closing(get_connection(db_path)) as connection:
         with connection:
+            # Khóa ghi để cập nhật nội dung, điểm và đáp án như một thao tác duy nhất.
             connection.execute("BEGIN IMMEDIATE")
             _get_owned_quiz(connection, lecturer_id, quiz_id)
             if repo.get_question(connection, quiz_id, question_id) is None:

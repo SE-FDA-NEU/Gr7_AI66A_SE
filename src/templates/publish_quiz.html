@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Màn quản lý quiz: xem trạng thái, thêm/sửa câu hỏi, cấu hình lịch và publish/đóng. -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/hig.css') }}">
 </head>
 <body>
+{# Giá trị mặc định giúp form vẫn render được khi GET bình thường hoặc validation lỗi. #}
 {% set form = form|default({'content': '', 'choices': ['', '', '', ''], 'correct_index': '', 'points': '1'}) %}
 {% set messages = messages|default([]) %}
 {% set show_add_form = show_add_form|default(false) %}
@@ -14,6 +16,7 @@
 {% set max_points = max_points|default(2147483647) %}
 {% set question_count = questions|length %}
 
+<!-- Khu vực đầu trang và thông tin tổng quan của quiz hiện tại. -->
 <main class="manage-quiz-page">
     <header class="manage-quiz-header">
         <a class="button button-secondary" href="{{ url_for('lecturer.lecturer_dashboard') }}">Back to Dashboard</a>
@@ -36,6 +39,7 @@
         <div class="alert alert-warning" role="alert">{{ validation_error }}</div>
     {% endif %}
 
+    <!-- Form tạo câu hỏi; show_add_form tự mở lại khi dữ liệu gửi lên chưa hợp lệ. -->
     <details class="manage-disclosure card" {% if show_add_form %}open{% endif %}>
         <summary class="manage-disclosure-summary">
             <span>
@@ -98,6 +102,7 @@
         </div>
     </details>
 
+    <!-- Danh sách câu hỏi và form sửa lồng trong từng câu; edit_form giữ dữ liệu lỗi. -->
     <details class="manage-disclosure card"{% if editing_question_id %} open{% endif %}>
         <summary class="manage-disclosure-summary">
             <span>
@@ -196,6 +201,7 @@
         </div>
     </details>
 
+    <!-- Cấu hình lịch, thời lượng và số lần làm; thời gian nhập là UTC+7. -->
     <section class="card manage-schedule-card" aria-labelledby="schedule-heading">
         <div class="section-heading">
             <div>
@@ -262,6 +268,7 @@
         </form>
     </section>
 
+    <!-- Nút hành động phụ thuộc trạng thái: quiz published có thể đóng, còn lại có thể publish. -->
     <section class="card manage-publish-card" aria-labelledby="publish-heading">
         <div class="section-heading">
             <div>

@@ -1,4 +1,4 @@
-"""Cookie and HTTP security-header configuration.
+"""Thiết lập cookie và HTTP security headers cho Flask.
 
 Kept in one module so the policy is easy to review and to test.
 """
@@ -23,6 +23,7 @@ PERMISSIONS_POLICY = (
 
 
 def _env_flag(name: str) -> bool | None:
+    """Đọc biến môi trường dạng bật/tắt; báo lỗi nếu giá trị không hợp lệ."""
     raw = os.environ.get(name)
     if raw is None or raw.strip() == "":
         return None
@@ -44,6 +45,7 @@ def configure_cookies(app: Flask, test_config: dict | None = None) -> None:
     """
     # Flask's own default for this key is False, so "already in app.config"
     # cannot tell whether someone chose it: only an explicit test_config can.
+    # Cấu hình tường minh trong test thắng biến môi trường và giá trị mặc định.
     if not test_config or "SESSION_COOKIE_SECURE" not in test_config:
         forced = _env_flag("SESSION_COOKIE_SECURE")
         app.config["SESSION_COOKIE_SECURE"] = (
@@ -57,6 +59,7 @@ def configure_cookies(app: Flask, test_config: dict | None = None) -> None:
 
 
 def build_csp(nonce: str) -> str:
+    """Tạo Content-Security-Policy; nonce chỉ cấp quyền cho script đã được render."""
     # Scripts: only same-origin files and inline <script nonce="...">.
     # Styles: templates still use inline <style> blocks and style="..."
     # attributes, so 'unsafe-inline' is kept for styles only (low risk
@@ -76,6 +79,7 @@ def build_csp(nonce: str) -> str:
 
 
 def init_security_headers(app: Flask) -> None:
+    # Nonce mới cho mỗi request giúp trình duyệt chỉ chạy script được cho phép.
     @app.before_request
     def make_csp_nonce():
         g.csp_nonce = secrets.token_urlsafe(16)
@@ -86,6 +90,7 @@ def init_security_headers(app: Flask) -> None:
 
     @app.after_request
     def set_security_headers(response):
+        # Các header dưới đây giảm nguy cơ nhúng trang, đoán MIME và truy cập tính năng không dùng.
         headers = response.headers
         nonce = g.get("csp_nonce") or secrets.token_urlsafe(16)
         headers.setdefault("Content-Security-Policy", build_csp(nonce))

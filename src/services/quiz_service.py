@@ -1,3 +1,4 @@
+"""Nghiệp vụ quiz: lịch, quyền sở hữu, tạo nháp, publish và trạng thái sinh viên."""
 from __future__ import annotations
 from pathlib import Path
 
@@ -36,21 +37,25 @@ class InvalidQuiz(Exception):
 
 
 def _parse_schedule(start_local: str, end_local: str) -> tuple[str | None, str | None]:
+    # Form có thể gửi chuỗi rỗng; coi trường rỗng là không đặt thời điểm.
     start_local = (start_local or "").strip()
     end_local = (end_local or "").strip()
 
+    # Chuyển giờ nhập tại Việt Nam sang UTC trước khi lưu vào database.
     try:
         start_at = local_input_to_utc(start_local) if start_local else None
         end_at = local_input_to_utc(end_local) if end_local else None
     except ValueError as error:
         raise InvalidQuiz("Enter valid start and end times.") from error
 
+    # Deadline phải sau thời điểm mở; kiểm tra trên timestamp UTC đã chuẩn hóa.
     if start_at and end_at and parse_utc_timestamp(end_at) <= parse_utc_timestamp(start_at):
         raise InvalidQuiz("The end time must be later than the start time.")
     return start_at, end_at
 
 
 def _format_schedule(start_at: str | None, end_at: str | None) -> str:
+    # Tạo mô tả lịch dễ đọc cho dashboard, kể cả khi chỉ có một mốc thời gian.
     if not start_at and not end_at:
         return "No schedule"
     start_display = format_vietnam_time(start_at) if start_at else "Available immediately"
@@ -73,9 +78,11 @@ def get_student_dashboard_data(db_path: str | Path):
     Lấy danh sách quiz đã publish
     cho màn hình Dashboard sinh viên.
     """
+    # Mỗi thao tác service tự mở/đóng kết nối để không rò rỉ kết nối giữa request.
     conn = get_connection(db_path)
 
     try:
+        # Đồng bộ quiz hết hạn trước khi tạo danh sách cho người học.
         close_expired_published_quizzes(
             conn, utc_now_naive().strftime("%Y-%m-%dT%H:%M:%S")
         )
@@ -111,6 +118,7 @@ def get_quiz_publish_details(db_path: str | Path, lecturer_id: int, quiz_id: int
             conn, utc_now_naive().strftime("%Y-%m-%dT%H:%M:%S")
         )
         conn.commit()
+        # Tải dữ liệu quiz trước; lỗi không tồn tại và lỗi quyền có mã khác nhau.
         quiz = get_quiz_by_id(conn, quiz_id)
         if not quiz:
             raise QuizServiceError(404, errors.QUIZ_NOT_FOUND)
@@ -122,6 +130,7 @@ def get_quiz_publish_details(db_path: str | Path, lecturer_id: int, quiz_id: int
         questions = get_quiz_questions_with_choices(conn, quiz_id)
 
         # Kiểm tra tính hợp lệ theo BR3
+        # Chuẩn bị kết quả kiểm tra để template có thể bật/tắt nút publish.
         is_publishable = True
         validation_error = None
 
@@ -139,6 +148,7 @@ def get_quiz_publish_details(db_path: str | Path, lecturer_id: int, quiz_id: int
                     validation_error = errors.quiz_question_missing_correct_choice(q["position"])
                     break
 
+        # Quiz hết hạn chỉ được publish lại sau khi đổi deadline hợp lệ.
         if quiz["closed_by_deadline"]:
             if quiz["end_at"] == quiz["last_published_end_at"]:
                 is_publishable = False
@@ -179,6 +189,7 @@ def publish_quiz(db_path: str | Path, lecturer_id: int, quiz_id: int) -> dict:
             conn, utc_now_naive().strftime("%Y-%m-%dT%H:%M:%S")
         )
         conn.commit()
+        # Khóa ghi trước khi kiểm tra rồi cập nhật để tránh hai lần publish đồng thời.
         conn.execute("BEGIN IMMEDIATE")
         quiz = get_quiz_by_id(conn, quiz_id)
         if not quiz:
@@ -190,6 +201,7 @@ def publish_quiz(db_path: str | Path, lecturer_id: int, quiz_id: int) -> dict:
             conn.rollback()
             raise QuizServiceError(403, errors.NOT_QUIZ_OWNER)
 
+        # Các trạng thái xung đột được kiểm tra trước khi validate câu hỏi.
         if quiz["status"] == "published":
             conn.rollback()
             raise QuizServiceError(409, errors.QUIZ_ALREADY_PUBLISHED)
@@ -222,6 +234,7 @@ def publish_quiz(db_path: str | Path, lecturer_id: int, quiz_id: int) -> dict:
                 conn.rollback()
                 raise QuizServiceError(422, errors.quiz_question_missing_correct_choice(q["position"]))
 
+        # Chỉ ghi trạng thái sau khi toàn bộ quy tắc publish đều đạt.
         update_quiz_publication(conn, quiz_id, quiz["end_at"])
         conn.commit()
 
@@ -248,6 +261,7 @@ def close_quiz(db_path: str | Path, lecturer_id: int, quiz_id: int) -> dict:
             conn, utc_now_naive().strftime("%Y-%m-%dT%H:%M:%S")
         )
         conn.commit()
+        # Cũng khóa ghi để trạng thái không đổi giữa lúc kiểm tra và lúc đóng.
         conn.execute("BEGIN IMMEDIATE")
         quiz = get_quiz_by_id(conn, quiz_id)
         if not quiz:
@@ -268,6 +282,7 @@ def close_quiz(db_path: str | Path, lecturer_id: int, quiz_id: int) -> dict:
             conn.rollback()
             raise QuizServiceError(409, errors.QUIZ_ALREADY_CLOSED)
 
+        # Đánh dấu đóng bởi giảng viên, khác với đóng tự động theo deadline.
         update_quiz_closed_by_lecturer(conn, quiz_id)
         conn.commit()
 
@@ -295,6 +310,7 @@ def get_student_quiz_statuses(db_path: str | Path, student_id: int):
         conn.commit()
         quizzes = list_published_quizzes_with_question_count(conn)
 
+        # Tính trạng thái riêng theo từng sinh viên, không chỉ dựa vào trạng thái quiz.
         for quiz in quizzes:
             quiz_id = quiz["quiz_id"]
             submitted_count = count_submitted_attempts(conn, student_id, quiz_id)
@@ -307,6 +323,7 @@ def get_student_quiz_statuses(db_path: str | Path, student_id: int):
                 format_vietnam_time(quiz["start_at"]) if quiz["start_at"] else ""
             )
 
+            # Thứ tự ưu tiên: hết lượt -> đang làm -> chưa mở -> hết hạn -> chưa bắt đầu.
             if quiz["attempts_remaining"] == 0:
                 quiz["status"] = "submitted"
 
@@ -353,12 +370,14 @@ def create_new_quiz(
     - New quiz status is draft.
     """
 
+    # Làm sạch chuỗi trước khi kiểm tra và lưu.
     title = title.strip()
     description = description.strip()
 
     if not title:
         raise InvalidQuiz("Quiz title is required.")
 
+    # Quiz không giới hạn thời lượng cần giá trị DB dương hợp lệ nhưng bỏ qua bộ đếm.
     if duration_unlimited:
         duration_minutes = 1
     else:
@@ -370,6 +389,7 @@ def create_new_quiz(
         if duration_minutes <= 0:
             raise InvalidQuiz("Duration must be a positive number.")
 
+    # Từ đây lịch đã hợp lệ và lưu bằng UTC để so sánh nhất quán ở server.
     start_utc, end_utc = _parse_schedule(start_at, end_at)
     conn = get_connection(db_path)
 
@@ -404,6 +424,7 @@ def update_quiz_schedule(
     """Update quiz scheduling settings after confirming the lecturer owns it."""
     conn = get_connection(db_path)
     try:
+        # Xác minh quiz tồn tại và thuộc người gọi trước khi thay đổi cấu hình.
         quiz = get_quiz_by_id(conn, quiz_id)
         if quiz is None:
             raise QuizServiceError(404, errors.QUIZ_NOT_FOUND)
@@ -411,6 +432,7 @@ def update_quiz_schedule(
             raise QuizServiceError(403, errors.NOT_QUIZ_OWNER)
 
         start_utc, end_utc = _parse_schedule(start_local, end_local)
+        # Nếu form chỉ sửa lịch thì giữ nguyên thời lượng và số lượt tối đa.
         if (
             duration is None
             and duration_unlimited is None
@@ -418,6 +440,7 @@ def update_quiz_schedule(
         ):
             save_quiz_schedule(conn, quiz_id, start_utc, end_utc)
         else:
+            # Giữ nguyên giá trị cũ cho các trường không được gửi từ form.
             unlimited = (
                 bool(duration_unlimited)
                 if duration_unlimited is not None

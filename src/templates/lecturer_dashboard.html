@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Dashboard giảng viên/trợ giảng: hiển thị quiz và các thao tác theo vai trò. -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -38,6 +39,7 @@
         </span>
     </header>
     <main class="lecturer-main">
+            <!-- TA xem tất cả quiz; giảng viên xem quiz của mình và có thể tạo quiz mới. -->
             <div class="title-row">
                 <div>
                     <h1>{{ 'All Quizzes' if session.get('role') == 'ta' else 'My Quizzes' }}</h1>
@@ -48,6 +50,7 @@
                 {% endif %}
             </div>
 
+            <!-- Hiển thị bảng khi có dữ liệu; nếu không thì đưa ra trạng thái rỗng. -->
             {% if quizzes %}
             <div class="table-wrap">
             <table>

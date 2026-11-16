@@ -86,7 +86,7 @@ def get_student_dashboard_data(db_path: str | Path):
         conn.close()
 
 
-def get_lecturer_dashboard_data(db_path: str | Path, lecturer_id: int):
+def get_lecturer_dashboard_data(db_path, lecturer_id: int, role: str = "lecturer"):
     """Lấy danh sách quiz thuộc về giảng viên đang đăng nhập."""
     conn = get_connection(db_path)
     try:
@@ -94,7 +94,7 @@ def get_lecturer_dashboard_data(db_path: str | Path, lecturer_id: int):
             conn, utc_now_naive().strftime("%Y-%m-%dT%H:%M:%S")
         )
         conn.commit()
-        quizzes = list_quizzes_by_lecturer(conn, lecturer_id)
+        quizzes = list_quizzes_by_lecturer(conn, None if role == "ta" else lecturer_id)
         return quizzes
     finally:
         conn.close()

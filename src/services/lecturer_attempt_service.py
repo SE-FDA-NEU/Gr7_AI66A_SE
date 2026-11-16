@@ -20,11 +20,11 @@ class LecturerAttemptError(Exception):
         self.message = message
 
 
-def _owned_quiz(connection, lecturer_id: int, quiz_id: int):
+def _owned_quiz(connection, lecturer_id: int, quiz_id: int, role: str = "lecturer"):
     quiz = get_quiz_by_id(connection, quiz_id)
     if quiz is None:
         raise LecturerAttemptError(404, errors.QUIZ_NOT_FOUND)
-    if quiz["lecturer_id"] != lecturer_id:
+    if role != "ta" and quiz["lecturer_id"] != lecturer_id:
         raise LecturerAttemptError(403, errors.NOT_QUIZ_OWNER)
     return quiz
 
@@ -33,9 +33,10 @@ def get_quiz_attempts(
     db_path: str | Path,
     lecturer_id: int,
     quiz_id: int,
+    role: str = "lecturer"
 ) -> dict:
     with closing(get_connection(db_path)) as connection:
-        quiz = _owned_quiz(connection, lecturer_id, quiz_id)
+        quiz = _owned_quiz(connection, lecturer_id, quiz_id, role)
         attempts = attempt_repository.list_quiz_attempts(connection, quiz_id)
         for attempt in attempts:
             attempt["started_at_display"] = format_vietnam_time(attempt["started_at"])
@@ -52,9 +53,10 @@ def get_quiz_attempt_detail(
     lecturer_id: int,
     quiz_id: int,
     attempt_id: int,
+    role: str = "lecturer"
 ) -> dict:
     with closing(get_connection(db_path)) as connection:
-        quiz = _owned_quiz(connection, lecturer_id, quiz_id)
+        quiz = _owned_quiz(connection, lecturer_id, quiz_id, role)
         attempt = connection.execute(
             """
             SELECT
@@ -89,10 +91,11 @@ def get_quiz_statistics(
     db_path: str | Path,
     lecturer_id: int,
     quiz_id: int,
+    role: str = "lecturer"
 ) -> dict:
     """Return submitted-attempt and per-question statistics for an owned quiz."""
     with closing(get_connection(db_path)) as connection:
-        quiz = _owned_quiz(connection, lecturer_id, quiz_id)
+        quiz = _owned_quiz(connection, lecturer_id, quiz_id, role)
         summary = connection.execute(
             """
             SELECT COUNT(*) AS submitted_attempts,

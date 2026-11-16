@@ -70,6 +70,8 @@ tables. The attempt timer (US06, US11) does not add new containers.
 | GET | /student/quiz/:id/submitted | timeout=1 (optional) | 200 · "Quiz submitted", "Submitted at 18 Oct 2026, 15:15 (UTC+7)", auto-submit notice when timeout=1 (US08) · "Score: 8/10 (80%)" (US09; shown here instead of the `/student/quiz/:id/grade` route listed in requirements.md, see testing.md) | 302 → /login · 403 wrong role (BR1) · 404 not submitted yet |
 | GET | /lecturer/dashboard | — | 200 · lecturer's quiz list (US14) | 403 not a lecturer (BR1) |
 
+> **Note (TA access):** Teaching assistants (`ta`) share the lecturer dashboard in read-only mode, allowing them to view the attempt list, attempt details, and audit history across all quizzes; a dedicated TA dashboard is deferred to a future sprint.
+
 ## 4. Walking skeleton
 
 - Selected route: `GET /student/dashboard`

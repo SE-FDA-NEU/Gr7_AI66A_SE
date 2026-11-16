@@ -141,7 +141,7 @@ def update_quiz_status(conn, quiz_id: int, new_status: str) -> None:
     conn.commit()
 
 
-def list_quizzes_by_lecturer(conn, lecturer_id: int) -> list[dict]:
+def list_quizzes_by_lecturer(conn, lecturer_id: int | None) -> list[dict]:
     """Truy vấn danh sách quiz thuộc sở hữu của một giảng viên."""
     cursor = conn.cursor()
     query = """
@@ -155,10 +155,10 @@ def list_quizzes_by_lecturer(conn, lecturer_id: int) -> list[dict]:
             q.end_at,
             (SELECT COUNT(*) FROM attempt a WHERE a.quiz_id = q.quiz_id) AS attempt_count
         FROM quiz q
-        WHERE q.lecturer_id = ?
+        WHERE (? IS NULL OR q.lecturer_id = ?)
         ORDER BY q.quiz_id ASC;
     """
-    cursor.execute(query, (lecturer_id,))
+    cursor.execute(query, (lecturer_id, lecturer_id))
     rows = cursor.fetchall()
     
     quizzes = []

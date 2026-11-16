@@ -14,9 +14,14 @@ def record_audit_event(
     actor_id: int,
     action: str,
     metadata: dict[str, Any] | None = None,
+    timestamp: str | None = None,
 ) -> int:
-    """Append a new audit record to the history log."""
-    now_str = utc_now_naive().strftime(TIMESTAMP_FORMAT)
+    """Append a new audit record to the history log.
+
+    `timestamp` lets the caller reuse the time it already stored on the attempt
+    (e.g. submitted_at), so the audit row and the attempt agree exactly.
+    """
+    now_str = timestamp or utc_now_naive().strftime(TIMESTAMP_FORMAT)
     metadata_json = json.dumps(metadata) if metadata else None
 
     cursor = connection.execute(
@@ -33,7 +38,8 @@ def get_attempt_audit_history(
     connection: sqlite3.Connection,
     attempt_id: int,
     lecturer_id: int,
-) -> tuple[list[sqlite3.Row] | None, str | None]:
+    role: str = "lecturer"
+):
     """
     Retrieve chronological audit logs for an attempt.
     Enforces lecturer ownership over the quiz.
@@ -52,7 +58,7 @@ def get_attempt_audit_history(
     if not attempt:
         return None, "ATTEMPT_NOT_FOUND"
 
-    if attempt["lecturer_id"] != lecturer_id:
+    if role != "ta" and attempt["lecturer_id"] != lecturer_id:
         return None, "NOT_QUIZ_OWNER"
 
     logs = connection.execute(

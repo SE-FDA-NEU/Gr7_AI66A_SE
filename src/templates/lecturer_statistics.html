@@ -1,34 +1,98 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Quiz statistics - {{ quiz.title }} - Mini LMS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/hig.css') }}">
 </head>
 <body>
     <main>
-        <a href="{{ url_for('lecturer.lecturer_dashboard') }}">Back to dashboard</a>
-        <h1>Quiz statistics</h1>
-        <h2>{{ quiz.title }}</h2>
-        <p>Total submitted attempts: <strong>{{ submitted_attempts }}</strong></p>
-        <p>Average score: <strong>{{ "%.0f"|format(average_score * 100) }}%</strong></p>
+        <!-- Navigation -->
+        <nav class="question-page-actions" aria-label="Statistics navigation">
+            <a class="btn btn-secondary"
+               href="{{ url_for('lecturer.lecturer_dashboard') }}">
+                Back to dashboard
+            </a>
+            <a class="btn btn-secondary"
+               href="{{ url_for('lecturer.quiz_attempts', quiz_id=quiz.quiz_id) }}">
+                Student attempts
+            </a>
+        </nav>
 
-        <h2>Question statistics</h2>
+        <!-- Page heading -->
+        <h1>Quiz statistics</h1>
+        <p class="muted">{{ quiz.title }}</p>
+
+        <!-- Summary cards -->
+        <section class="attempt-summary">
+            <div>
+                <span class="attempt-summary-label">Total submitted attempts</span>
+                <strong>{{ submitted_attempts }}</strong>
+            </div>
+
+            <div>
+                <span class="attempt-summary-label">Average score</span>
+                <strong>{{ "%.0f"|format(average_score * 100) }}%</strong>
+            </div>
+        </section>
+
+        <!-- Question statistics -->
+        <div class="title-row">
+            <h2>Question statistics</h2>
+            <p class="muted">
+                Performance breakdown for each question
+            </p>
+        </div>
+
         {% if questions %}
-        <table>
-            <thead><tr><th>Question</th><th>Correct answers</th><th>Correct-answer rate</th></tr></thead>
-            <tbody>
-            {% for question in questions %}
-            <tr>
-                <td>{{ question.position }}. {{ question.content }}</td>
-                <td>{{ question.correct_answers }} / {{ question.submitted_attempts }}</td>
-                <td>{{ "%.0f"|format(question.correct_rate * 100) }}%</td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 55%">Question</th>
+                        <th>Correct answers</th>
+                        <th>Correct-answer rate</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for question in questions %}
+                    <tr>
+                        <td>
+                            <strong>Question {{ question.position }}</strong>
+                            <p style="margin: 6px 0 0;">
+                                {{ question.content }}
+                            </p>
+                        </td>
+
+                        <td>
+                            {{ question.correct_answers }}
+                            / {{ question.submitted_attempts }}
+                        </td>
+
+                        <td>
+                            <strong>
+                                {{ "%.0f"|format(question.correct_rate * 100) }}%
+                            </strong>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
         {% else %}
-        <p>No questions have been added to this quiz.</p>
+        <section class="empty attempts-empty">
+            <h2>No questions available</h2>
+            <p class="muted">
+                This quiz does not have any questions yet.
+            </p>
+        </section>
         {% endif %}
     </main>
+
+    {% include "_toasts.html" %}
 </body>
 </html>

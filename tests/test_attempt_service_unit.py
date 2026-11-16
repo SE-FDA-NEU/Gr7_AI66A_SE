@@ -140,7 +140,12 @@ def test_us13_expiry_boundary_auto_submits_at_exact_deadline(
 ):
     connection, _, _ = take_page_service
     quiz = attempt_service.repo.get_quiz(None, 42)
-    attempt = {"attempt_id": 7, "quiz_id": 42, "started_at": "2026-10-26T08:00:00"}
+    attempt = {
+        "attempt_id": 7,
+        "student_id": 3,
+        "quiz_id": 42,
+        "started_at": "2026-10-26T08:00:00",
+    }
     finalize = Mock(return_value=True)
     monkeypatch.setattr(attempt_service, "_finalize", finalize)
     monkeypatch.setattr(

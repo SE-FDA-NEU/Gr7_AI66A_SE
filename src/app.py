@@ -12,13 +12,14 @@ from traceback import walk_tb
 from dotenv import load_dotenv
 
 from flask import Flask, g, redirect, request, url_for
+from flask_wtf.csrf import CSRFError, CSRFProtect
 from werkzeug.exceptions import HTTPException
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 load_dotenv(PROJECT_ROOT / ".env")
 
-from src.errors import render_error
+from src.errors import CSRF_FAILED, render_error
 from src.db import ensure_quiz_schema_columns, get_connection
 from src.init_db import ensure_database
 from src.routes.api_routes import api_bp
@@ -26,6 +27,8 @@ from src.routes.auth_routes import auth_bp
 from src.routes.lecturer_routes import lecturer_bp
 from src.routes.quiz_routes import quiz_bp
 from src.routes.student_routes import student_bp
+
+csrf = CSRFProtect()
 
 
 def log_server_exception(error: Exception, status_code: int = 500):
@@ -56,10 +59,20 @@ def create_app(test_config=None):
         DATABASE_PATH=os.environ.get('DATABASE_PATH', 'data/minilms.db'),
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
+        # The default 1-hour token lifetime would reject a student's answer or a
+        # lecturer's edit after a long quiz or a long editing session. The token
+        # is tied to the session cookie instead, which ends with the browser.
+        WTF_CSRF_TIME_LIMIT=None,
     )
 
     if test_config:
         app.config.update(test_config)
+
+    # Protection is always on, except that automated tests that do not
+    # exercise CSRF may skip tokens. A test opts back in with
+    # {"WTF_CSRF_ENABLED": True}.
+    if "WTF_CSRF_ENABLED" not in app.config:
+        app.config["WTF_CSRF_ENABLED"] = not app.testing
 
     if not app.config["SECRET_KEY"]:
         if app.testing or app.debug:
@@ -89,10 +102,16 @@ def create_app(test_config=None):
     def start_request_timer():
         g.request_started_at = perf_counter()
 
+    # Registered after start_request_timer on purpose: Flask runs before_request
+    # hooks in registration order, and a rejected CSRF check must still pass
+    # through log_request, which needs the timer.
+    csrf.init_app(app)
+
     @app.after_request
     def log_request(response):
         # Route templates omit user-controlled path values; never log raw URLs,
         # query strings, headers, cookies, bodies, or response content.
+        started_at = g.get("request_started_at")
         print(json.dumps({
             "event": "http_request",
             "method": request.method if request.method in {
@@ -100,9 +119,17 @@ def create_app(test_config=None):
             } else "OTHER",
             "path": request.url_rule.rule if request.url_rule else "<unmatched>",
             "status_code": response.status_code,
-            "duration_ms": round((perf_counter() - g.request_started_at) * 1000, 3),
+            "duration_ms": (
+                None if started_at is None
+                else round((perf_counter() - started_at) * 1000, 3)
+            ),
         }), flush=True)
         return response
+
+    @app.errorhandler(CSRFError)
+    def handle_csrf_error(error):
+        # error.description says why the token failed; show a fixed message.
+        return render_error(400, CSRF_FAILED)
 
     @app.errorhandler(HTTPException)
     def handle_http_error(error):

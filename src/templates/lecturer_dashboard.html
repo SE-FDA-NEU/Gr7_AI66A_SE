@@ -32,6 +32,7 @@
         <span>
             {{ name }} ·
             <form class="logout-form" method="post" action="{{ url_for('auth.logout') }}" data-confirm="Are you sure you want to sign out?" data-confirm-title="Sign out" data-confirm-label="Sign out">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button class="logout-button" type="submit">Log out</button>
             </form>
         </span>

@@ -57,6 +57,7 @@
             {% endif %}
 
             <form class="manage-question-form" method="post" action="{{ url_for('quiz.add_quiz_question', quiz_id=quiz.quiz_id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <label for="question-content">Question</label>
                 <textarea id="question-content" name="content" rows="3" required>{{ form.content }}</textarea>
 
@@ -130,6 +131,7 @@
                                 method="post"
                                 action="{{ url_for('quiz.edit_quiz_question', quiz_id=quiz.quiz_id, question_id=question.question_id) }}"
                             >
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 {% if editing_question_id == question.question_id and edit_messages %}
                                     <div class="alert alert-error" role="alert">
                                         <p>Please review the following:</p>
@@ -205,6 +207,7 @@
             <div class="alert alert-error" role="alert">{{ schedule_error }}</div>
         {% endif %}
         <form method="post" action="{{ url_for('lecturer.handle_quiz_schedule', quiz_id=quiz.quiz_id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-grid">
                 <div class="manage-duration-field">
                     <label for="duration">Time limit</label>
@@ -269,10 +272,12 @@
         <div class="form-actions manage-availability-actions">
             {% if quiz.status == "published" %}
                 <form method="post" action="{{ url_for('lecturer.handle_close_quiz', quiz_id=quiz.quiz_id) }}" data-confirm="Are you sure you want to close this quiz?" data-confirm-title="Close quiz" data-confirm-label="Close quiz">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button class="button button-secondary" type="submit">Close Quiz</button>
                 </form>
             {% else %}
                 <form method="post" action="{{ url_for('lecturer.handle_publish_quiz', quiz_id=quiz.quiz_id) }}" data-confirm="Are you sure you want to publish this quiz?" data-confirm-title="Publish quiz" data-confirm-label="Publish quiz">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" {% if not is_publishable %}disabled aria-describedby="publish-block-reason"{% endif %}>
                         {{ "Publish Quiz" if quiz.status == "draft" else "Publish Quiz Again" }}
                     </button>

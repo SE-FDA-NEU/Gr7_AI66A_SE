@@ -33,7 +33,8 @@ def get_attempt_audit_history(
     connection: sqlite3.Connection,
     attempt_id: int,
     lecturer_id: int,
-) -> tuple[list[sqlite3.Row] | None, str | None]:
+    role: str = "lecturer"
+):
     """
     Retrieve chronological audit logs for an attempt.
     Enforces lecturer ownership over the quiz.
@@ -52,7 +53,7 @@ def get_attempt_audit_history(
     if not attempt:
         return None, "ATTEMPT_NOT_FOUND"
 
-    if attempt["lecturer_id"] != lecturer_id:
+    if role != "ta" and attempt["lecturer_id"] != lecturer_id:
         return None, "NOT_QUIZ_OWNER"
 
     logs = connection.execute(

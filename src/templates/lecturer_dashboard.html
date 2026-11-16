@@ -39,10 +39,12 @@
     <main class="lecturer-main">
             <div class="title-row">
                 <div>
-                    <h1>My Quizzes</h1>
+                    <h1>{{ 'All Quizzes' if session.get('role') == 'ta' else 'My Quizzes' }}</h1>
                     <p class="muted">Manage your quizzes, create new ones, and track student attempts.</p>
                 </div>
-                <a class="button" href="{{ url_for('quiz.create_quiz_page') }}">+ Create Quiz</a>
+                {% if session.get('role') != 'ta' %}
+                    <a class="button" href="{{ url_for('quiz.create_quiz_page') }}">+ Create Quiz</a>
+                {% endif %}
             </div>
 
             {% if quizzes %}
@@ -69,10 +71,14 @@
                             </a>
                         </td>
                         <td class="actions">
-                            <div class="table-actions">
-                                <a class="table-action" href="{{ url_for('lecturer.publish_page', quiz_id=q.quiz_id) }}">Manage Quiz</a>
-                                <a class="table-action" href="{{ url_for('lecturer.quiz_statistics', quiz_id=q.quiz_id) }}">Statistics</a>
-                            </div>
+                            {% if session.get('role') == 'ta' %}
+                                <span class="muted">View only</span>
+                            {% else %}
+                                <div class="table-actions">
+                                    <a class="table-action" href="{{ url_for('lecturer.publish_page', quiz_id=q.quiz_id) }}">Manage Quiz</a>
+                                    <a class="table-action" href="{{ url_for('lecturer.quiz_statistics', quiz_id=q.quiz_id) }}">Statistics</a>
+                                </div>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -84,7 +90,9 @@
                 <div class="empty-icon" aria-hidden="true">▤</div>
                 <h2>You have no quizzes yet</h2>
                 <p class="muted">Create your first quiz to get started.</p>
-                <a class="button" href="{{ url_for('quiz.create_quiz_page') }}">+ Create Quiz</a>
+                {% if session.get('role') != 'ta' %} 
+                    <a class="button" href="{{ url_for('quiz.create_quiz_page') }}">+ Create Quiz</a> 
+                {% endif %}
             </section>
             {% endif %}
     </main>

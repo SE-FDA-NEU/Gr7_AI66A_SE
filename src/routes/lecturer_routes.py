@@ -47,6 +47,7 @@ def lecturer_dashboard():
     quizzes = get_lecturer_dashboard_data(
         current_app.config["DATABASE_PATH"],
         session["user_id"],
+        role=session["role"]
     )
     return render_template(
         "lecturer_dashboard.html",
@@ -63,6 +64,7 @@ def quiz_attempts(quiz_id: int):
             current_app.config["DATABASE_PATH"],
             session["user_id"],
             quiz_id,
+            role=session["role"]
         )
     except LecturerAttemptError as error:
         return render_error(error.status_code, error.message)
@@ -79,6 +81,7 @@ def quiz_attempt_detail(quiz_id: int, attempt_id: int):
             session["user_id"],
             quiz_id,
             attempt_id,
+            role=session["role"]
         )
     except LecturerAttemptError as error:
         return render_error(error.status_code, error.message)
@@ -110,6 +113,7 @@ def view_attempt_audit_history(quiz_id: int, attempt_id: int):
             connection,
             attempt_id,
             session["user_id"],
+            role=session["role"]
         )
 
     if error == "ATTEMPT_NOT_FOUND":

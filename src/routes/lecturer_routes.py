@@ -90,13 +90,14 @@ def quiz_attempt_detail(quiz_id: int, attempt_id: int):
 
 
 @lecturer_bp.get("/lecturer/quiz/<int:quiz_id>/statistics")
-@role_required("lecturer")
+@role_required("lecturer", "ta")
 def quiz_statistics(quiz_id: int):
     try:
         data = get_quiz_statistics(
             current_app.config["DATABASE_PATH"],
             session["user_id"],
             quiz_id,
+            role=session["role"]
         )
     except LecturerAttemptError as error:
         return render_error(error.status_code, error.message)

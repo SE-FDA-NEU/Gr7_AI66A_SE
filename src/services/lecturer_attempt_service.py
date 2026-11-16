@@ -91,10 +91,11 @@ def get_quiz_statistics(
     db_path: str | Path,
     lecturer_id: int,
     quiz_id: int,
+    role: str = "lecturer"
 ) -> dict:
     """Return submitted-attempt and per-question statistics for an owned quiz."""
     with closing(get_connection(db_path)) as connection:
-        quiz = _owned_quiz(connection, lecturer_id, quiz_id)
+        quiz = _owned_quiz(connection, lecturer_id, quiz_id, role)
         summary = connection.execute(
             """
             SELECT COUNT(*) AS submitted_attempts,

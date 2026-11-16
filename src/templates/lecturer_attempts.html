@@ -10,7 +10,9 @@
     <main>
         <nav class="question-page-actions" aria-label="Attempt navigation">
             <a class="btn btn-secondary" href="{{ url_for('lecturer.lecturer_dashboard') }}">Back to dashboard</a>
-            <a class="btn btn-secondary" href="{{ url_for('lecturer.publish_page', quiz_id=quiz.quiz_id) }}">Quiz details</a>
+            {% if session.get('role') != 'ta' %}
+                <a class="btn btn-secondary" href="{{ url_for('lecturer.publish_page', quiz_id=quiz.quiz_id) }}">Quiz details</a>
+            {% endif %}
         </nav>
 
         <h1>Student attempts</h1>

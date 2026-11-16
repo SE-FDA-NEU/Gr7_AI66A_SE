@@ -11,6 +11,7 @@
         <nav class="question-page-actions" aria-label="Attempt detail navigation">
             <a class="btn btn-secondary" href="{{ url_for('lecturer.quiz_attempts', quiz_id=quiz.quiz_id) }}">Back to attempts</a>
             <a class="btn btn-secondary" href="{{ url_for('lecturer.lecturer_dashboard') }}">Dashboard</a>
+            <a class="btn btn-secondary" href="{{ url_for('lecturer.view_attempt_audit_history', quiz_id=quiz.quiz_id, attempt_id=attempt.attempt_id) }}">Audit log</a>
         </nav>
 
         <h1>{{ attempt.student_name }}</h1>

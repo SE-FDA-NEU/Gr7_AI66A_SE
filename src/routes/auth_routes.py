@@ -12,8 +12,10 @@ from flask import (
 )
 
 from src.auth import authenticate_user
+from src.client_identity import client_key
 from src.db import get_connection
 from src.errors import error_message
+from src.repositories.auth_repository import DEFAULT_CLIENT_FAILURE_LIMIT
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -47,7 +49,17 @@ def login():
 
     connection = get_connection(current_app.config["DATABASE_PATH"])
     try:
-        result = authenticate_user(connection, email, password)
+        result = authenticate_user(
+            connection,
+            email,
+            password,
+            client_key=client_key(
+                request.remote_addr, current_app.config["SECRET_KEY"]
+            ),
+            client_failure_limit=current_app.config.get(
+                "LOGIN_CLIENT_FAILURE_LIMIT", DEFAULT_CLIENT_FAILURE_LIMIT
+            ),
+        )
     finally:
         connection.close()
 

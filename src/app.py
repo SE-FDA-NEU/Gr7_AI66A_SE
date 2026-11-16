@@ -20,7 +20,12 @@ sys.path.insert(0, str(PROJECT_ROOT))
 load_dotenv(PROJECT_ROOT / ".env")
 
 from src.errors import CSRF_FAILED, render_error
-from src.db import ensure_quiz_schema_columns, get_connection
+from src.client_identity import apply_proxy_fix
+from src.db import (
+    ensure_login_lockout_schema,
+    ensure_quiz_schema_columns,
+    get_connection,
+)
 from src.init_db import ensure_database
 from src.routes.api_routes import api_bp
 from src.routes.auth_routes import auth_bp
@@ -53,6 +58,7 @@ def log_server_exception(error: Exception, status_code: int = 500):
 
 def create_app(test_config=None):
     app = Flask(__name__)
+    apply_proxy_fix(app, test_config)
 
     app.config.from_mapping(
         DEBUG=False,
@@ -94,6 +100,7 @@ def create_app(test_config=None):
         connection = get_connection(database_path)
         try:
             ensure_quiz_schema_columns(connection)
+            ensure_login_lockout_schema(connection)
         finally:
             connection.close()
 

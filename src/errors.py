@@ -9,6 +9,11 @@ ERROR_MESSAGES = {
     429: "Too many failed attempts. Try again in 15 minutes.",
 }
 
+CSRF_FAILED = (
+    "Your form could not be verified, so nothing was changed. "
+    "Reload the page and try again."
+)
+
 QUIZ_NOT_FOUND = (
     "This quiz could not be found. It may have been removed. "
     "Go back to the dashboard to choose another quiz."

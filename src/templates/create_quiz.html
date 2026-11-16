@@ -188,6 +188,7 @@
                 data-confirm-title="Create quiz"
                 data-confirm-label="Create quiz"
             >
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <!-- QUIZ TITLE -->
                 <div class="form-group">

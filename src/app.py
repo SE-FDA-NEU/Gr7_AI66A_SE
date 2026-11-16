@@ -27,6 +27,7 @@ from src.routes.auth_routes import auth_bp
 from src.routes.lecturer_routes import lecturer_bp
 from src.routes.quiz_routes import quiz_bp
 from src.routes.student_routes import student_bp
+from src.security import configure_cookies, init_security_headers
 
 csrf = CSRFProtect()
 
@@ -59,6 +60,7 @@ def create_app(test_config=None):
         DATABASE_PATH=os.environ.get('DATABASE_PATH', 'data/minilms.db'),
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
+        # SESSION_COOKIE_SECURE is decided in configure_cookies() below.
         # The default 1-hour token lifetime would reject a student's answer or a
         # lecturer's edit after a long quiz or a long editing session. The token
         # is tied to the session cookie instead, which ends with the browser.
@@ -67,6 +69,9 @@ def create_app(test_config=None):
 
     if test_config:
         app.config.update(test_config)
+
+    configure_cookies(app, test_config)
+    init_security_headers(app)
 
     # Protection is always on, except that automated tests that do not
     # exercise CSRF may skip tokens. A test opts back in with

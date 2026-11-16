@@ -63,7 +63,7 @@
             <button type="submit">Submit quiz</button>
         </form>
     </main>
-    <script>
+    <script nonce="{{ csp_nonce }}">
         // Display only: the server decides whether time is up.
         (function () {
             var timer = document.getElementById("timer");

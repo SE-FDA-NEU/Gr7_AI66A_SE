@@ -21,6 +21,7 @@ from src.services.lecturer_attempt_service import (
     LecturerAttemptError,
     get_quiz_attempt_detail,
     get_quiz_attempts,
+    get_quiz_statistics,
 )
 from src.services.quiz_service import (
     InvalidQuiz,
@@ -30,12 +31,6 @@ from src.services.quiz_service import (
     get_quiz_publish_details,
     publish_quiz,
     update_quiz_schedule,
-)
-from src.services.lecturer_attempt_service import (
-    LecturerAttemptError,
-    get_quiz_attempt_detail,
-    get_quiz_attempts,
-    get_quiz_statistics,
 )
 
 lecturer_bp = Blueprint("lecturer", __name__)

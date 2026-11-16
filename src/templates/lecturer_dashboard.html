@@ -72,7 +72,7 @@
                         </td>
                         <td class="actions">
                             {% if session.get('role') == 'ta' %}
-                                <span class="muted">View only</span>
+                                <a class="table-action" href="{{ url_for('lecturer.quiz_statistics', quiz_id=q.quiz_id) }}">Statistics</a>
                             {% else %}
                                 <div class="table-actions">
                                     <a class="table-action" href="{{ url_for('lecturer.publish_page', quiz_id=q.quiz_id) }}">Manage Quiz</a>

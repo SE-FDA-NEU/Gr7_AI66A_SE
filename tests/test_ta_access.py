@@ -108,7 +108,6 @@ def test_ta_attempt_pages_hide_the_quiz_management_link(client):
         ("post", "/lecturer/quiz/1/schedule"),
         ("post", "/quiz/1/questions"),
         ("post", "/quiz/1/questions/1/edit"),
-        ("get", "/lecturer/quiz/1/statistics"),
         ("get", "/student/dashboard"),
         ("post", "/student/quiz/1/start"),
     ],
@@ -120,6 +119,12 @@ def test_ta_cannot_write_or_use_student_pages(client, method, url):
 
     assert response.status_code == 403
 
+def test_ta_can_view_quiz_statistics(client, ta_user):
+    login(client, TA_EMAIL)
+
+    response = client.get("/lecturer/quiz/1/statistics")
+
+    assert response.status_code == 200
 
 def test_other_lecturer_still_cannot_read_audit_of_a_quiz_it_does_not_own(client):
     login(client, "nam.lecturer@example.edu")  # does not own quiz 1

@@ -6,6 +6,7 @@ from pathlib import Path
 from src import errors
 from src.db import get_connection
 from src.repositories import attempt_repository as repo
+from src.repositories.audit_repository import record_audit_event
 from src.repositories.quiz_repository import close_expired_published_quizzes
 from src.time_utils import (
     TIMESTAMP_FORMAT,
@@ -133,7 +134,15 @@ def _auto_submit_if_expired(connection, attempt, quiz) -> None:
     if deadline is None or _now() < deadline:
         return
 
-    _finalize(connection, attempt, deadline)
+    if _finalize(connection, attempt, deadline):
+        record_audit_event(
+            connection,
+            attempt["attempt_id"],
+            attempt["student_id"],
+            "AUTO_SUBMITTED",
+            {"reason": "time_expired"},
+            timestamp=deadline.strftime(TIMESTAMP_FORMAT),
+        )
     connection.commit()
     raise AutoSubmitted(quiz["quiz_id"])
 
@@ -205,11 +214,16 @@ def start_attempt(db_path: str | Path, student_id: int, quiz_id: int) -> dict:
         attempt = repo.get_open_attempt(connection, student_id, quiz_id)
         if attempt is None:
             _check_schedule_allows_start(quiz, _now())
+            started_at = _now().strftime(TIMESTAMP_FORMAT)
             attempt_id = repo.create_attempt(
+                connection, student_id, quiz_id, started_at
+            )
+            record_audit_event(
                 connection,
+                attempt_id,
                 student_id,
-                quiz_id,
-                _now().strftime(TIMESTAMP_FORMAT),
+                "ATTEMPT_STARTED",
+                timestamp=started_at,
             )
             attempt = repo.get_attempt(connection, attempt_id)
 
@@ -284,6 +298,14 @@ def save_answer(
             raise AttemptError(400, errors.INVALID_CHOICE)
 
         repo.upsert_answer(connection, attempt_id, question_id, choice_id)
+        record_audit_event(
+            connection,
+            attempt_id,
+            student_id,
+            "ANSWER_SAVED",
+            {"question_id": question_id, "choice_id": choice_id},
+            timestamp=_now().strftime(TIMESTAMP_FORMAT),
+        )
         connection.commit()
     finally:
         connection.close()
@@ -328,8 +350,16 @@ def submit_attempt(
         if review["unanswered_numbers"] and not confirmed:
             raise UnansweredNotConfirmed(review)
 
-        if not _finalize(connection, attempt, _now()):
+        submitted_at = _now()
+        if not _finalize(connection, attempt, submitted_at):
             raise AttemptError(409, errors.ALREADY_SUBMITTED)
+        record_audit_event(
+            connection,
+            attempt_id,
+            student_id,
+            "ATTEMPT_SUBMITTED",
+            timestamp=submitted_at.strftime(TIMESTAMP_FORMAT),
+        )
         connection.commit()
     except Exception:
         connection.rollback()

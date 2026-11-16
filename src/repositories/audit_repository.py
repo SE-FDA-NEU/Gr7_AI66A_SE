@@ -14,9 +14,14 @@ def record_audit_event(
     actor_id: int,
     action: str,
     metadata: dict[str, Any] | None = None,
+    timestamp: str | None = None,
 ) -> int:
-    """Append a new audit record to the history log."""
-    now_str = utc_now_naive().strftime(TIMESTAMP_FORMAT)
+    """Append a new audit record to the history log.
+
+    `timestamp` lets the caller reuse the time it already stored on the attempt
+    (e.g. submitted_at), so the audit row and the attempt agree exactly.
+    """
+    now_str = timestamp or utc_now_naive().strftime(TIMESTAMP_FORMAT)
     metadata_json = json.dumps(metadata) if metadata else None
 
     cursor = connection.execute(
